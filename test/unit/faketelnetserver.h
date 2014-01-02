@@ -27,10 +27,9 @@
 #define FAKETELNETSERVER_H
 
 #include <QObject>
-#include <QThread>
 
-class QThread;
-class ServerWorker;
+class QTcpServer;
+class QTcpSocket;
 
 class FakeTelnetServer : public QObject
 {
@@ -59,21 +58,15 @@ public:
     void hasConnectionFromClient();
     void hasReceivedCommand(Commands command, Options option);
 
-signals:
-    void listen();
-    void waitForNewConnection();
-    void sendToClient(const QByteArray &data);
-    void receiveFromClient();
-
 public slots:
-    void clientConnected(bool available, bool timeout);
-    void receivedData(const QByteArray &data);
+    void clientConnected();
+    void receivedData();
 
 private:
-    QThread serverThread;
-    ServerWorker *worker;
+    QTcpServer *tcpServer;
+    QTcpSocket *clientSocket;
+
     bool connectionAvailable;
-    bool connectionTimeout;
     QByteArray lastDataReceived;
 };
 

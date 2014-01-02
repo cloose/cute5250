@@ -26,7 +26,6 @@
 #include "faketelnetserver.h"
 
 #include <QDebug>
-#include <QEventLoop>
 #include <QTcpServer>
 #include <QTcpSocket>
 #include <QtTest>
@@ -44,103 +43,24 @@ char *toString<uchar>(const uchar &value)
 
 }
 
-class ServerWorker : public QObject
-{
-    Q_OBJECT
-
-public:
-    explicit ServerWorker(QObject *parent = 0);
-
-signals:
-    void clientConnected(bool available, bool timeout);
-    void receivedData(const QByteArray &data);
-
-public slots:
-    void listenOnTelnetPort();
-    void waitForNewConnection();
-    void sendToClient(const QByteArray &data);
-    void receiveFromClient();
-
-private:
-    QTcpServer *tcpServer;
-    QTcpSocket *clientSocket;
-};
-
-ServerWorker::ServerWorker(QObject *parent) :
-    QObject(parent),
-    tcpServer(new QTcpServer(this)),
-    clientSocket(0)
-{
-}
-
-void ServerWorker::listenOnTelnetPort()
-{
-    tcpServer->listen(QHostAddress::Any, 23);
-}
-
-void ServerWorker::waitForNewConnection()
-{
-    bool timeout;
-    bool available = tcpServer->waitForNewConnection(5000, &timeout);
-
-    if (available) {
-        clientSocket = tcpServer->nextPendingConnection();
-    }
-
-    emit clientConnected(available, timeout);
-}
-
-void ServerWorker::sendToClient(const QByteArray &data)
-{
-    if (!clientSocket) return;
-
-    clientSocket->write(data);
-    clientSocket->waitForBytesWritten();
-}
-
-void ServerWorker::receiveFromClient()
-{
-    if (!clientSocket) return;
-
-    QByteArray data;
-
-    if (clientSocket->waitForReadyRead(5000)) {
-        data = clientSocket->readAll();
-    }
-
-    emit receivedData(data);
-}
-
 
 FakeTelnetServer::FakeTelnetServer(QObject *parent) :
     QObject(parent),
-    worker(0),
-    connectionAvailable(false),
-    connectionTimeout(false)
+    tcpServer(new QTcpServer(this)),
+    clientSocket(0),
+    connectionAvailable(false)
 {
-    worker = new ServerWorker();
-    worker->moveToThread(&serverThread);
-
-    connect(&serverThread, &QThread::finished, worker, &QObject::deleteLater);
-    connect(this, &FakeTelnetServer::listen, worker, &ServerWorker::listenOnTelnetPort);
-    connect(this, &FakeTelnetServer::waitForNewConnection, worker, &ServerWorker::waitForNewConnection);
-    connect(this, &FakeTelnetServer::sendToClient, worker, &ServerWorker::sendToClient);
-    connect(this, &FakeTelnetServer::receiveFromClient, worker, &ServerWorker::receiveFromClient);
-    connect(worker, &ServerWorker::clientConnected, this, &FakeTelnetServer::clientConnected);
-    connect(worker, &ServerWorker::receivedData, this, &FakeTelnetServer::receivedData);
-
-    serverThread.start();
+    connect(tcpServer, &QTcpServer::newConnection,
+            this, &FakeTelnetServer::clientConnected);
 }
 
 FakeTelnetServer::~FakeTelnetServer()
 {
-    serverThread.quit();
-    serverThread.wait();
 }
 
 void FakeTelnetServer::listenOnTelnetPort()
 {
-    emit listen();
+    tcpServer->listen(QHostAddress::Any, 23);
 }
 
 void FakeTelnetServer::sendCommandToClient(FakeTelnetServer::Commands command, FakeTelnetServer::Options option)
@@ -150,19 +70,21 @@ void FakeTelnetServer::sendCommandToClient(FakeTelnetServer::Commands command, F
     data[0] = (uchar)FakeTelnetServer::IAC;
     data[1] = (uchar)command;
     data[2] = (uchar)option;
-    emit sendToClient(data);
+
+    if (!clientSocket) return;
+
+    clientSocket->write(data);
+    clientSocket->waitForBytesWritten();
 }
 
 void FakeTelnetServer::hasConnectionFromClient()
 {
-    emit waitForNewConnection();
-    QTRY_VERIFY(connectionAvailable);
+    QTRY_VERIFY_WITH_TIMEOUT(connectionAvailable, 10000);
 }
 
 void FakeTelnetServer::hasReceivedCommand(FakeTelnetServer::Commands command, FakeTelnetServer::Options option)
 {
     if (lastDataReceived.isEmpty()) {
-        emit receiveFromClient();
         QTRY_VERIFY(!lastDataReceived.isEmpty());
     }
 
@@ -175,15 +97,16 @@ void FakeTelnetServer::hasReceivedCommand(FakeTelnetServer::Commands command, Fa
     lastDataReceived.remove(0, 3);
 }
 
-void FakeTelnetServer::clientConnected(bool available, bool timeout)
+void FakeTelnetServer::clientConnected()
 {
-    connectionAvailable = available;
-    connectionTimeout = timeout;
+    connectionAvailable = true;
+    clientSocket = tcpServer->nextPendingConnection();
+
+    connect(clientSocket, &QTcpSocket::readyRead,
+            this, &FakeTelnetServer::receivedData);
 }
 
-void FakeTelnetServer::receivedData(const QByteArray &data)
+void FakeTelnetServer::receivedData()
 {
-    lastDataReceived = data;
+    lastDataReceived = clientSocket->readAll();
 }
-
-#include "faketelnetserver.moc"
