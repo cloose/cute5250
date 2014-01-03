@@ -13,9 +13,9 @@ before_script:
   - mkdir build
   - cd build
   - export LD_LIBRARY_PATH="../../lib:$LD_LIBRARY_PATH"         
-  - export CTEST_OUTPUT_ON_FAILURE       
   
 script:
   - cmake ..
-  - make all test
+  - make all 
+  - make test --output-on-failure
   - sudo make install
