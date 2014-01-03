@@ -42,6 +42,9 @@ public:
     explicit TelnetClient(QObject *parent = 0);
     ~TelnetClient();
 
+    void setTerminalType(const QString &terminalType);
+    QString terminalType() const;
+
     void connectToHost(const QString &hostName, quint16 port = 23);
 
 private:

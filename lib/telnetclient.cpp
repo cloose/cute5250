@@ -33,6 +33,8 @@ namespace q5250 {
 namespace Command {
 
 enum Commands {
+    SE = 240,
+    SB = 250,
     WILL = 251,
     WONT = 252,
     DO = 253,
@@ -43,6 +45,13 @@ enum Commands {
 Commands fromByte(const unsigned char byte)
 {
     return (Commands)byte;
+}
+
+bool isOptionCommand(const unsigned char byte)
+{
+    Commands command = fromByte(byte);
+    return command == Command::WILL || command == Command::WONT ||
+           command == Command::DO || command == Command::DONT;
 }
 
 }
@@ -68,6 +77,15 @@ Options fromByte(const unsigned char byte)
 
 }
 
+namespace SubnegotiationCommand {
+
+enum {
+    IS = 0,
+    SEND = 1
+};
+
+}
+
 class TelnetClient::Private : public QObject
 {
     Q_OBJECT
@@ -79,6 +97,7 @@ public:
 
     TelnetClient *q;
     QTcpSocket *socket;
+    QString terminalType;
     QByteArray buffer;
 
     bool connected;
@@ -87,11 +106,17 @@ public:
     int parseCommand(const QByteArray &data);
 
     void sendCommand(Command::Commands command, Option::Options option);
+    void sendCommand(const char *command, int length);
+    void sendString(const QString &str);
 
     bool isOptionAllowed(Option::Options option);
 
     bool isOptionCommand(const QByteArray &data);
-    bool isCommand(const unsigned char byte);
+    bool isSubnegotiationCommand(const QByteArray &data);
+
+    QByteArray subnegotiationParameters(const QByteArray &data);
+
+    void stateTerminalType(const QByteArray &data);
 
 public slots:
     void socketConnected();
@@ -101,7 +126,8 @@ public slots:
 TelnetClient::Private::Private(TelnetClient *parent) :
     q(parent),
     socket(0),
-    connected(false)
+    connected(false),
+    terminalType("UNKNOWN")
 {
     setSocket(new QTcpSocket(this));
 }
@@ -169,6 +195,22 @@ int TelnetClient::Private::parseCommand(const QByteArray &data)
         return 3;
     }
 
+    if (isSubnegotiationCommand(data)) {
+        QByteArray parameters = subnegotiationParameters(data);
+
+        Option::Options option = Option::fromByte(parameters[0]);
+        switch (option) {
+        case Option::TERMINAL_TYPE:
+            stateTerminalType(parameters);
+            break;
+
+        default:
+            break;
+        }
+
+        return parameters.size() + 4;
+    }
+
     return 0;
 }
 
@@ -184,6 +226,17 @@ void TelnetClient::Private::sendCommand(Command::Commands command, Option::Optio
     socket->write(replyData);
 }
 
+void TelnetClient::Private::sendCommand(const char *command, int length)
+{
+    QByteArray replyData(command, length);
+    socket->write(replyData);
+}
+
+void TelnetClient::Private::sendString(const QString &str)
+{
+    socket->write(str.toLocal8Bit());
+}
+
 bool TelnetClient::Private::isOptionAllowed(Option::Options option)
 {
     // the following telnet options are supported
@@ -195,14 +248,37 @@ bool TelnetClient::Private::isOptionAllowed(Option::Options option)
 
 bool TelnetClient::Private::isOptionCommand(const QByteArray &data)
 {
-    return data.size() >= 3 && isCommand(data[1]);
+    return data.size() >= 3 && Command::isOptionCommand(data[1]);
 }
 
-bool TelnetClient::Private::isCommand(const unsigned char byte)
+bool TelnetClient::Private::isSubnegotiationCommand(const QByteArray &data)
 {
-    Command::Commands command = (Command::Commands)byte;
-    return command == Command::WILL || command == Command::WONT ||
-            command == Command::DO || command == Command::DONT;
+    return data.size() >= 4 && Command::fromByte(data[1]) == Command::SB;
+}
+
+QByteArray TelnetClient::Private::subnegotiationParameters(const QByteArray &data)
+{
+    for (int i = 2; i < data.size() - 1; ++i) {
+        if (Command::fromByte(data[i]) == Command::IAC && Command::fromByte(data[i+1]) == Command::SE) {
+            return data.mid(2, i-2);
+        }
+    }
+
+    return QByteArray();
+}
+
+void TelnetClient::Private::stateTerminalType(const QByteArray &data)
+{
+    if (data[1] != SubnegotiationCommand::SEND)
+        return;
+
+    const char c1[4] = { Command::IAC, Command::SB, Option::TERMINAL_TYPE, SubnegotiationCommand::IS };
+    sendCommand(c1, sizeof(c1));
+
+    sendString(terminalType);
+
+    const char c2[2] = { Command::IAC, Command::SE };
+    sendCommand(c2, sizeof(c2));
 }
 
 void TelnetClient::Private::socketConnected()
@@ -224,6 +300,16 @@ TelnetClient::TelnetClient(QObject *parent) :
 
 TelnetClient::~TelnetClient()
 {
+}
+
+void TelnetClient::setTerminalType(const QString &terminalType)
+{
+    d->terminalType = terminalType;
+}
+
+QString TelnetClient::terminalType() const
+{
+    return d->terminalType;
 }
 
 void TelnetClient::connectToHost(const QString &hostName, quint16 port)

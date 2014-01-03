@@ -37,6 +37,8 @@ class FakeTelnetServer : public QObject
 
 public:
     enum Commands {
+        SE = 240,
+        SB = 250,
         WILL = 251,
         WONT = 252,
         DO = 253,
@@ -51,14 +53,21 @@ public:
         NEW_ENVIRON = 39
     };
 
+    enum SubnegotiationCommands {
+        IS = 0,
+        SEND = 1
+    };
+
     explicit FakeTelnetServer(QObject *parent = 0);
     ~FakeTelnetServer();
 
     void listenOnTelnetPort();
     void sendCommandToClient(Commands command, Options option);
+    void sendSubnegotiationToClient(Options option, SubnegotiationCommands command);
 
     void hasConnectionFromClient();
     void hasReceivedCommand(Commands command, Options option);
+    void hasReceivedTerminalType(const QString &terminalType);
 
 public slots:
     void clientConnected();

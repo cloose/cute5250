@@ -17,6 +17,7 @@ private Q_SLOTS:
     void acknowledgesEndOfRecordOption();
     void acknowledgesTransmitBinaryOption();
     void repliesToMultipleOptions();
+    void statesTerminalTypeOnRequest();
 };
 
 
@@ -92,6 +93,23 @@ void TelnetClientTest::repliesToMultipleOptions()
 
     server.hasReceivedCommand(FakeTelnetServer::WILL, FakeTelnetServer::NEW_ENVIRON);
     server.hasReceivedCommand(FakeTelnetServer::WILL, FakeTelnetServer::TERMINAL_TYPE);
+}
+
+void TelnetClientTest::statesTerminalTypeOnRequest()
+{
+    FakeTelnetServer server;
+    TelnetClient client;
+
+    server.listenOnTelnetPort();
+    client.connectToHost("localhost");
+    server.hasConnectionFromClient();
+
+    server.sendSubnegotiationToClient(FakeTelnetServer::TERMINAL_TYPE, FakeTelnetServer::SEND);
+    server.hasReceivedTerminalType("UNKNOWN");
+
+    client.setTerminalType("IBM-3477-FC");
+    server.sendSubnegotiationToClient(FakeTelnetServer::TERMINAL_TYPE, FakeTelnetServer::SEND);
+    server.hasReceivedTerminalType("IBM-3477-FC");
 }
 
 QTEST_MAIN(TelnetClientTest)

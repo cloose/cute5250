@@ -60,7 +60,7 @@ FakeTelnetServer::~FakeTelnetServer()
 
 void FakeTelnetServer::listenOnTelnetPort()
 {
-    tcpServer->listen(QHostAddress::Any, 23);
+    QVERIFY2(tcpServer->listen(QHostAddress::Any, 23), qPrintable(tcpServer->errorString()));
 }
 
 void FakeTelnetServer::sendCommandToClient(FakeTelnetServer::Commands command, FakeTelnetServer::Options option)
@@ -70,6 +70,23 @@ void FakeTelnetServer::sendCommandToClient(FakeTelnetServer::Commands command, F
     data[0] = (uchar)FakeTelnetServer::IAC;
     data[1] = (uchar)command;
     data[2] = (uchar)option;
+
+    if (!clientSocket) return;
+
+    clientSocket->write(data);
+    clientSocket->waitForBytesWritten();
+}
+
+void FakeTelnetServer::sendSubnegotiationToClient(FakeTelnetServer::Options option, FakeTelnetServer::SubnegotiationCommands command)
+{
+    QByteArray data;
+    data.resize(6);
+    data[0] = (uchar)FakeTelnetServer::IAC;
+    data[1] = (uchar)FakeTelnetServer::SB;
+    data[2] = (uchar)option;
+    data[3] = (uchar)command;
+    data[4] = (uchar)FakeTelnetServer::IAC;
+    data[5] = (uchar)FakeTelnetServer::SE;
 
     if (!clientSocket) return;
 
@@ -95,6 +112,31 @@ void FakeTelnetServer::hasReceivedCommand(FakeTelnetServer::Commands command, Fa
 
     // consume received command
     lastDataReceived.remove(0, 3);
+}
+
+void FakeTelnetServer::hasReceivedTerminalType(const QString &terminalType)
+{
+    if (lastDataReceived.isEmpty()) {
+        QTRY_VERIFY(!lastDataReceived.isEmpty());
+    }
+
+    QVERIFY2(lastDataReceived.size() >= 4, "did not receive a complete subnegotiation command");
+    QCOMPARE((uchar)lastDataReceived[0], (uchar)FakeTelnetServer::IAC);
+    QCOMPARE((uchar)lastDataReceived[1], (uchar)FakeTelnetServer::SB);
+    QCOMPARE((uchar)lastDataReceived[2], (uchar)FakeTelnetServer::TERMINAL_TYPE);
+    QCOMPARE((uchar)lastDataReceived[3], (uchar)FakeTelnetServer::IS);
+
+    QByteArray parameterData;
+    for (int i = 4; i < lastDataReceived.size() - 1; ++i) {
+        if (lastDataReceived[i] == FakeTelnetServer::IAC && lastDataReceived[i+1] == FakeTelnetServer::SE) {
+            parameterData = lastDataReceived.mid(4, i-4);
+        }
+    }
+    QString actualTerminalType = QString::fromLocal8Bit(parameterData);
+    QCOMPARE(actualTerminalType, terminalType);
+
+    // consume received command
+    lastDataReceived.remove(0, parameterData.size() + 6);
 }
 
 void FakeTelnetServer::clientConnected()
