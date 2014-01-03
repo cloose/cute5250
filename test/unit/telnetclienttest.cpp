@@ -17,6 +17,7 @@ private Q_SLOTS:
     void acknowledgesEndOfRecordOption();
     void acknowledgesTransmitBinaryOption();
     void deniesOfferToUseUnsupportedOption();
+    void doesnotAcknowledgeRequestForEnteredModes();
     void repliesToMultipleOptions();
     void statesTerminalTypeOnRequest();
 };
@@ -94,6 +95,24 @@ void TelnetClientTest::deniesOfferToUseUnsupportedOption()
 
     server.hasReceivedCommand(FakeTelnetServer::DONT, FakeTelnetServer::ECHO);
     server.hasReceivedCommand(FakeTelnetServer::DONT, FakeTelnetServer::SUPPRESS_GO_AHEAD);
+}
+
+void TelnetClientTest::doesnotAcknowledgeRequestForEnteredModes()
+{
+    // RFC854 requires that we don't acknowledge
+    // requests to enter a mode we're already in
+    FakeTelnetServer server;
+    TelnetClient client;
+
+    server.listenOnTelnetPort();
+    client.connectToHost("localhost");
+    server.hasConnectionFromClient();
+
+    server.sendCommandToClient(FakeTelnetServer::DO, FakeTelnetServer::TERMINAL_TYPE);
+    server.hasReceivedCommand(FakeTelnetServer::WILL, FakeTelnetServer::TERMINAL_TYPE);
+
+    server.sendCommandToClient(FakeTelnetServer::DO, FakeTelnetServer::TERMINAL_TYPE);
+    server.hasReceivedNoCommand();
 }
 
 void TelnetClientTest::repliesToMultipleOptions()

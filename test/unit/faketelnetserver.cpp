@@ -114,6 +114,11 @@ void FakeTelnetServer::hasReceivedCommand(FakeTelnetServer::Commands command, Fa
     lastDataReceived.remove(0, 3);
 }
 
+void FakeTelnetServer::hasReceivedNoCommand()
+{
+    QTRY_VERIFY(lastDataReceived.isEmpty());
+}
+
 void FakeTelnetServer::hasReceivedTerminalType(const QString &terminalType)
 {
     if (lastDataReceived.isEmpty()) {
@@ -128,7 +133,8 @@ void FakeTelnetServer::hasReceivedTerminalType(const QString &terminalType)
 
     QByteArray parameterData;
     for (int i = 4; i < lastDataReceived.size() - 1; ++i) {
-        if (lastDataReceived[i] == FakeTelnetServer::IAC && lastDataReceived[i+1] == FakeTelnetServer::SE) {
+        if ((uchar)lastDataReceived[i] == (uchar)FakeTelnetServer::IAC &&
+            (uchar)lastDataReceived[i+1] == (uchar)FakeTelnetServer::SE) {
             parameterData = lastDataReceived.mid(4, i-4);
         }
     }

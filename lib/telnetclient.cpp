@@ -99,6 +99,7 @@ public:
     QTcpSocket *socket;
     QString terminalType;
     QByteArray buffer;
+    QMap<Option::Options, bool> modes;
 
     bool connected;
 
@@ -119,6 +120,9 @@ public:
     QByteArray subnegotiationParameters(const QByteArray &data);
 
     void stateTerminalType(const QByteArray &data);
+
+    void setMode(Command::Commands command, Option::Options option);
+    bool replyNeeded(Command::Commands command, Option::Options option);
 
 public slots:
     void socketConnected();
@@ -184,9 +188,11 @@ int TelnetClient::Private::parseCommand(const QByteArray &data)
         Command::Commands command = Command::fromByte(data[1]);
         Option::Options option = Option::fromByte(data[2]);
 
-        bool allowed = isOptionAllowed(option);
-
-        sendCommand(replyFor(command, allowed), option);
+        if (replyNeeded(command, option)) {
+            bool allowed = isOptionAllowed(option);
+            sendCommand(replyFor(command, allowed), option);
+            setMode(command, option);
+        }
 
         return 3;
     }
@@ -296,6 +302,30 @@ void TelnetClient::Private::stateTerminalType(const QByteArray &data)
 
     const char c2[2] = { (char)Command::IAC, (char)Command::SE };
     sendCommand(c2, sizeof(c2));
+}
+
+void TelnetClient::Private::setMode(Command::Commands command, Option::Options option)
+{
+    if (command != Command::DO && command != Command::DONT)
+        return;
+
+    modes[option] = (command == Command::DO);
+}
+
+bool TelnetClient::Private::replyNeeded(Command::Commands command, Option::Options option)
+{
+    if (command == Command::DO || command == Command::DONT) {
+
+        // RFC854 requires that we don't acknowledge
+        // requests to enter a mode we're already in
+        if (command == Command::DO && modes[option])
+            return false;
+
+        if (command == Command::DONT && !modes[option])
+            return false;
+    }
+
+    return true;
 }
 
 void TelnetClient::Private::socketConnected()

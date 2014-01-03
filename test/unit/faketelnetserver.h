@@ -69,6 +69,7 @@ public:
 
     void hasConnectionFromClient();
     void hasReceivedCommand(Commands command, Options option);
+    void hasReceivedNoCommand();
     void hasReceivedTerminalType(const QString &terminalType);
 
 public slots:
