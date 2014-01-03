@@ -189,7 +189,8 @@ bool TelnetClient::Private::isOptionAllowed(Option::Options option)
     // the following telnet options are supported
     return option == Option::END_OF_RECORD ||
            option == Option::NEW_ENVIRON   ||
-           option == Option::TERMINAL_TYPE;
+           option == Option::TERMINAL_TYPE ||
+           option == Option::TRANSMIT_BINARY;
 }
 
 bool TelnetClient::Private::isOptionCommand(const QByteArray &data)
