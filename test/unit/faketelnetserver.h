@@ -48,6 +48,8 @@ public:
 
     enum Options {
         TRANSMIT_BINARY = 0,
+        ECHO = 1,
+        SUPPRESS_GO_AHEAD = 3,
         TERMINAL_TYPE = 24,
         END_OF_RECORD = 25,
         NEW_ENVIRON = 39

@@ -105,6 +105,8 @@ public:
     void consume();
     int parseCommand(const QByteArray &data);
 
+    Command::Commands replyFor(Command::Commands command, bool allowed);
+
     void sendCommand(Command::Commands command, Option::Options option);
     void sendCommand(const char *command, int length);
     void sendString(const QString &str);
@@ -184,13 +186,7 @@ int TelnetClient::Private::parseCommand(const QByteArray &data)
 
         bool allowed = isOptionAllowed(option);
 
-        if (command == Command::DO && allowed) {
-            sendCommand(Command::WILL, option);
-        }
-
-        if (command == Command::WILL && allowed) {
-            sendCommand(Command::DO, option);
-        }
+        sendCommand(replyFor(command, allowed), option);
 
         return 3;
     }
@@ -212,6 +208,27 @@ int TelnetClient::Private::parseCommand(const QByteArray &data)
     }
 
     return 0;
+}
+
+Command::Commands TelnetClient::Private::replyFor(Command::Commands command, bool allowed)
+{
+    switch (command) {
+    case Command::DO:
+        return allowed ? Command::WILL : Command::WONT;
+        break;
+
+    case Command::DONT:
+        return Command::WONT;
+
+    case Command::WILL:
+        return allowed ? Command::DO : Command::DONT;
+
+    case Command::WONT:
+        return Command::DONT;
+
+    default:
+        break;
+    }
 }
 
 void TelnetClient::Private::sendCommand(Command::Commands command, Option::Options option)

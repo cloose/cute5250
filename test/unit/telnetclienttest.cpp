@@ -16,6 +16,7 @@ private Q_SLOTS:
     void acknowledgesTerminalTypeOption();
     void acknowledgesEndOfRecordOption();
     void acknowledgesTransmitBinaryOption();
+    void deniesOfferToUseUnsupportedOption();
     void repliesToMultipleOptions();
     void statesTerminalTypeOnRequest();
 };
@@ -77,6 +78,22 @@ void TelnetClientTest::acknowledgesTransmitBinaryOption()
 
     server.hasReceivedCommand(FakeTelnetServer::WILL, FakeTelnetServer::TRANSMIT_BINARY);
     server.hasReceivedCommand(FakeTelnetServer::DO, FakeTelnetServer::TRANSMIT_BINARY);
+}
+
+void TelnetClientTest::deniesOfferToUseUnsupportedOption()
+{
+    FakeTelnetServer server;
+    TelnetClient client;
+
+    server.listenOnTelnetPort();
+    client.connectToHost("localhost");
+    server.hasConnectionFromClient();
+
+    server.sendCommandToClient(FakeTelnetServer::WILL, FakeTelnetServer::ECHO);
+    server.sendCommandToClient(FakeTelnetServer::WILL, FakeTelnetServer::SUPPRESS_GO_AHEAD);
+
+    server.hasReceivedCommand(FakeTelnetServer::DONT, FakeTelnetServer::ECHO);
+    server.hasReceivedCommand(FakeTelnetServer::DONT, FakeTelnetServer::SUPPRESS_GO_AHEAD);
 }
 
 void TelnetClientTest::repliesToMultipleOptions()
