@@ -12,12 +12,13 @@ class TelnetClientTest : public QObject
     Q_OBJECT
 
 private Q_SLOTS:
-    void clientAcknowledgesNewEnvironOption();
-    void clientAcknowledgesTerminalTypeOption();
+    void acknowledgesNewEnvironOption();
+    void acknowledgesTerminalTypeOption();
+    void repliesToMultipleOptions();
 };
 
 
-void TelnetClientTest::clientAcknowledgesNewEnvironOption()
+void TelnetClientTest::acknowledgesNewEnvironOption()
 {
     FakeTelnetServer server;
     TelnetClient client;
@@ -30,7 +31,7 @@ void TelnetClientTest::clientAcknowledgesNewEnvironOption()
     server.hasReceivedCommand(FakeTelnetServer::WILL, FakeTelnetServer::NEW_ENVIRON);
 }
 
-void TelnetClientTest::clientAcknowledgesTerminalTypeOption()
+void TelnetClientTest::acknowledgesTerminalTypeOption()
 {
     FakeTelnetServer server;
     TelnetClient client;
@@ -40,6 +41,22 @@ void TelnetClientTest::clientAcknowledgesTerminalTypeOption()
     server.hasConnectionFromClient();
 
     server.sendCommandToClient(FakeTelnetServer::DO, FakeTelnetServer::TERMINAL_TYPE);
+    server.hasReceivedCommand(FakeTelnetServer::WILL, FakeTelnetServer::TERMINAL_TYPE);
+}
+
+void TelnetClientTest::repliesToMultipleOptions()
+{
+    FakeTelnetServer server;
+    TelnetClient client;
+
+    server.listenOnTelnetPort();
+    client.connectToHost("localhost");
+    server.hasConnectionFromClient();
+
+    server.sendCommandToClient(FakeTelnetServer::DO, FakeTelnetServer::NEW_ENVIRON);
+    server.sendCommandToClient(FakeTelnetServer::DO, FakeTelnetServer::TERMINAL_TYPE);
+
+    server.hasReceivedCommand(FakeTelnetServer::WILL, FakeTelnetServer::NEW_ENVIRON);
     server.hasReceivedCommand(FakeTelnetServer::WILL, FakeTelnetServer::TERMINAL_TYPE);
 }
 

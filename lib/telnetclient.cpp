@@ -40,14 +40,31 @@ enum Commands {
     IAC = 255
 };
 
+Commands fromByte(const unsigned char byte)
+{
+    return (Commands)byte;
+}
+
 }
 
 namespace Option {
 
 enum Options {
-    TERMINAL_TYPE = 24,
-    NEW_ENVIRON = 39
+    TRANSMIT_BINARY = 0,    // RFC856
+    ECHO = 1,               // RFC857
+    SUPPRESS_GO_AHEAD = 3,  // RFC858
+    STATUS = 5,             // RFC859
+    LOGOUT = 18,            // RFC727
+    TERMINAL_TYPE = 24,     // RFC1091
+    END_OF_RECORD = 25,     // RFC885
+    NAWS = 31,              // RFC1073
+    NEW_ENVIRON = 39        // RFC1572
 };
+
+Options fromByte(const unsigned char byte)
+{
+    return (Options)byte;
+}
 
 }
 
@@ -62,18 +79,15 @@ public:
 
     TelnetClient *q;
     QTcpSocket *socket;
+    QByteArray buffer;
 
     bool connected;
 
-    bool isCommand(unsigned char byte, Command::Commands command)
-    {
-        return (Command::Commands)byte == command;
-    }
+    void consume();
+    int parseCommand(const QByteArray &data);
 
-    bool isOption(unsigned char byte, Option::Options option)
-    {
-        return (Option::Options)byte == option;
-    }
+    bool isOptionCommand(const QByteArray &data);
+    bool isCommand(const unsigned char byte);
 
 public slots:
     void socketConnected();
@@ -104,6 +118,74 @@ void TelnetClient::Private::setSocket(QTcpSocket *s)
     }
 }
 
+void TelnetClient::Private::consume()
+{
+    int currentPos = 0;
+    int previousPos = -1;
+
+    while (previousPos < currentPos && currentPos < buffer.size()) {
+        previousPos = currentPos;
+
+        const uchar c = (uchar)buffer[currentPos];
+        switch (c) {
+        case Command::IAC:
+            currentPos += parseCommand(buffer.mid(currentPos));
+            break;
+
+        default:
+            break;
+        }
+    }
+
+    if (currentPos < buffer.size()) {
+        buffer = buffer.mid(currentPos);
+    } else {
+        buffer.clear();
+    }
+}
+
+int TelnetClient::Private::parseCommand(const QByteArray &data)
+{
+    if (data.isEmpty()) return 0;
+
+    if (isOptionCommand(data)) {
+        Command::Commands command = Command::fromByte(data[1]);
+        Option::Options option = Option::fromByte(data[2]);
+
+        QByteArray replyData;
+        replyData.resize(3);
+
+        if (command == Command::DO && option == Option::NEW_ENVIRON) {
+            replyData[0] = Command::IAC;
+            replyData[1] = Command::WILL;
+            replyData[2] = Option::NEW_ENVIRON;
+        }
+        if (command == Command::DO && option == Option::TERMINAL_TYPE) {
+            replyData[0] = Command::IAC;
+            replyData[1] = Command::WILL;
+            replyData[2] = Option::TERMINAL_TYPE;
+        }
+
+        socket->write(replyData);
+
+        return 3;
+    }
+
+    return 0;
+}
+
+bool TelnetClient::Private::isOptionCommand(const QByteArray &data)
+{
+    return data.size() >= 3 && isCommand(data[1]);
+}
+
+bool TelnetClient::Private::isCommand(const unsigned char byte)
+{
+    Command::Commands command = (Command::Commands)byte;
+    return command == Command::WILL || command == Command::WONT ||
+            command == Command::DO || command == Command::DONT;
+}
+
 void TelnetClient::Private::socketConnected()
 {
     connected = true;
@@ -111,24 +193,8 @@ void TelnetClient::Private::socketConnected()
 
 void TelnetClient::Private::socketReadyRead()
 {
-    QByteArray receivedData = socket->readAll();
-
-    QByteArray data;
-    data.resize(3);
-
-    if (isCommand(receivedData[1], Command::DO) && isOption(receivedData[2], Option::NEW_ENVIRON)) {
-        data[0] = Command::IAC;
-        data[1] = Command::WILL;
-        data[2] = Option::NEW_ENVIRON;
-    }
-
-    if (isCommand(receivedData[1], Command::DO) && isOption(receivedData[2], Option::TERMINAL_TYPE)) {
-        data[0] = Command::IAC;
-        data[1] = Command::WILL;
-        data[2] = Option::TERMINAL_TYPE;
-    }
-
-    socket->write(data);
+    buffer.append(socket->readAll());
+    consume();
 }
 
 TelnetClient::TelnetClient(QObject *parent) :
