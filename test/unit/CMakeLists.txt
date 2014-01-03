@@ -1,6 +1,3 @@
-# generate output when test fails
-set(CTEST_OUTPUT_ON_FAILURE TRUE)
-
 include_directories(${CMAKE_SOURCE_DIR}/lib)
 
 ### telnet client unit test ###
