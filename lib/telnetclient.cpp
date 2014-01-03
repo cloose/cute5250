@@ -289,12 +289,12 @@ void TelnetClient::Private::stateTerminalType(const QByteArray &data)
     if (data[1] != SubnegotiationCommand::SEND)
         return;
 
-    const char c1[4] = { Command::IAC, Command::SB, Option::TERMINAL_TYPE, SubnegotiationCommand::IS };
+    const char c1[4] = { (char)Command::IAC, (char)Command::SB, Option::TERMINAL_TYPE, SubnegotiationCommand::IS };
     sendCommand(c1, sizeof(c1));
 
     sendString(terminalType);
 
-    const char c2[2] = { Command::IAC, Command::SE };
+    const char c2[2] = { (char)Command::IAC, (char)Command::SE };
     sendCommand(c2, sizeof(c2));
 }
 
