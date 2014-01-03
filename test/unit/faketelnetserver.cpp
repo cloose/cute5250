@@ -116,7 +116,8 @@ void FakeTelnetServer::hasReceivedCommand(FakeTelnetServer::Commands command, Fa
 
 void FakeTelnetServer::hasReceivedNoCommand()
 {
-    QTRY_VERIFY(lastDataReceived.isEmpty());
+    QTest::qWait(2000);
+    QVERIFY(lastDataReceived.isEmpty());
 }
 
 void FakeTelnetServer::hasReceivedTerminalType(const QString &terminalType)
