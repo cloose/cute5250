@@ -12,10 +12,11 @@ before_install:
 before_script:
   - mkdir build
   - cd build
-  - export LD_LIBRARY_PATH="../../lib:$LD_LIBRARY_PATH"         
+  - export LD_LIBRARY_PATH="../../lib:$LD_LIBRARY_PATH"
+  - export CTEST_OUTPUT_ON_FAILURE=true         
   
 script:
   - cmake ..
   - make all 
-  - make test --output-on-failure
+  - make test
   - sudo make install

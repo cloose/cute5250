@@ -86,6 +86,10 @@ public:
     void consume();
     int parseCommand(const QByteArray &data);
 
+    void sendCommand(Command::Commands command, Option::Options option);
+
+    bool isOptionAllowed(Option::Options option);
+
     bool isOptionCommand(const QByteArray &data);
     bool isCommand(const unsigned char byte);
 
@@ -152,26 +156,40 @@ int TelnetClient::Private::parseCommand(const QByteArray &data)
         Command::Commands command = Command::fromByte(data[1]);
         Option::Options option = Option::fromByte(data[2]);
 
-        QByteArray replyData;
-        replyData.resize(3);
+        bool allowed = isOptionAllowed(option);
 
-        if (command == Command::DO && option == Option::NEW_ENVIRON) {
-            replyData[0] = Command::IAC;
-            replyData[1] = Command::WILL;
-            replyData[2] = Option::NEW_ENVIRON;
-        }
-        if (command == Command::DO && option == Option::TERMINAL_TYPE) {
-            replyData[0] = Command::IAC;
-            replyData[1] = Command::WILL;
-            replyData[2] = Option::TERMINAL_TYPE;
+        if (command == Command::DO && allowed) {
+            sendCommand(Command::WILL, option);
         }
 
-        socket->write(replyData);
+        if (command == Command::WILL && allowed) {
+            sendCommand(Command::DO, option);
+        }
 
         return 3;
     }
 
     return 0;
+}
+
+void TelnetClient::Private::sendCommand(Command::Commands command, Option::Options option)
+{
+    QByteArray replyData;
+    replyData.resize(3);
+
+    replyData[0] = Command::IAC;
+    replyData[1] = command;
+    replyData[2] = option;
+
+    socket->write(replyData);
+}
+
+bool TelnetClient::Private::isOptionAllowed(Option::Options option)
+{
+    // the following telnet options are supported
+    return option == Option::END_OF_RECORD ||
+           option == Option::NEW_ENVIRON   ||
+           option == Option::TERMINAL_TYPE;
 }
 
 bool TelnetClient::Private::isOptionCommand(const QByteArray &data)
