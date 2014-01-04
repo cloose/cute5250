@@ -45,9 +45,10 @@ message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 
 find_package(Qt5Core REQUIRED)
 find_package(Qt5Network REQUIRED)
+find_package(Qt5Widgets REQUIRED)
 
 ### Subdirs ###
 
 add_subdirectory(lib)
-#add_subdirectory(src)
+add_subdirectory(src)
 add_subdirectory(test)
