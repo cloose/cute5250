@@ -30,6 +30,17 @@
 
 namespace q5250 {
 
+
+void OutputData(const QByteArray &data)
+{
+//    qDebug() << "--- SERVER ---";
+//    for (int i = 0; i < data.size(); ++i) {
+//        qDebug() << QString::number(uchar(data[i]), 16)
+//                 << QString::number(uchar(data[i]))
+//                 << data[i];
+//    }
+}
+
 namespace Command {
 
 enum Commands {
@@ -100,6 +111,7 @@ public:
     QString terminalType;
     QByteArray buffer;
     QMap<Option::Options, bool> modes;
+    QList<QPair<unsigned char, unsigned char>> sentOptions;
 
     bool connected;
 
@@ -123,6 +135,9 @@ public:
 
     void setMode(Command::Commands command, Option::Options option);
     bool replyNeeded(Command::Commands command, Option::Options option);
+
+    void addSentOption(const unsigned char command, const unsigned char option);
+    bool alreadySent(const unsigned char command, const unsigned char option);
 
 public slots:
     void socketConnected();
@@ -169,6 +184,9 @@ void TelnetClient::Private::consume()
             break;
 
         default:
+            QByteArray data = buffer.mid(currentPos);
+            emit q->dataReceived(data);
+            currentPos += data.size();
             break;
         }
     }
@@ -245,6 +263,11 @@ void TelnetClient::Private::sendCommand(Command::Commands command, Option::Optio
     replyData[0] = Command::IAC;
     replyData[1] = command;
     replyData[2] = option;
+
+    if (alreadySent(replyData[1], replyData[2]))
+        return;
+
+    addSentOption(replyData[1], replyData[2]);
 
     socket->write(replyData);
 }
@@ -328,6 +351,22 @@ bool TelnetClient::Private::replyNeeded(Command::Commands command, Option::Optio
     return true;
 }
 
+void TelnetClient::Private::addSentOption(const unsigned char command, const unsigned char option)
+{
+    sentOptions.append(QPair<unsigned char, unsigned char>(command, option));
+}
+
+bool TelnetClient::Private::alreadySent(const unsigned char command, const unsigned char option)
+{
+    QPair<unsigned char, unsigned char> value(command, option);
+    if (sentOptions.contains(value)) {
+        sentOptions.removeAll(value);
+        return true;
+    }
+
+    return false;
+}
+
 void TelnetClient::Private::socketConnected()
 {
     connected = true;
@@ -336,6 +375,7 @@ void TelnetClient::Private::socketConnected()
 void TelnetClient::Private::socketReadyRead()
 {
     buffer.append(socket->readAll());
+    OutputData(buffer);
     consume();
 }
 
@@ -366,6 +406,7 @@ void TelnetClient::connectToHost(const QString &hostName, quint16 port)
         return;
     }
 
+    qDebug() << "client connects to host" << hostName << "on port" << port;
     d->socket->connectToHost(hostName, port);
 }
 

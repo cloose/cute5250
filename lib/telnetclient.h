@@ -47,6 +47,9 @@ public:
 
     void connectToHost(const QString &hostName, quint16 port = 23);
 
+signals:
+    void dataReceived(const QByteArray &data);
+
 private:
     class Private;
     std::unique_ptr<Private> d;

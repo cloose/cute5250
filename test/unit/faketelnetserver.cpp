@@ -94,9 +94,17 @@ void FakeTelnetServer::sendSubnegotiationToClient(FakeTelnetServer::Options opti
     clientSocket->waitForBytesWritten();
 }
 
+void FakeTelnetServer::sendDataToClient(const QByteArray &data)
+{
+    if (!clientSocket) return;
+
+    clientSocket->write(data);
+    clientSocket->waitForBytesWritten();
+}
+
 void FakeTelnetServer::hasConnectionFromClient()
 {
-    QTRY_VERIFY_WITH_TIMEOUT(connectionAvailable, 10000);
+    QTRY_VERIFY_WITH_TIMEOUT(connectionAvailable, 15000);
 }
 
 void FakeTelnetServer::hasReceivedCommand(FakeTelnetServer::Commands command, FakeTelnetServer::Options option)
@@ -148,6 +156,7 @@ void FakeTelnetServer::hasReceivedTerminalType(const QString &terminalType)
 
 void FakeTelnetServer::clientConnected()
 {
+    qDebug() << Q_FUNC_INFO;
     connectionAvailable = true;
     clientSocket = tcpServer->nextPendingConnection();
 

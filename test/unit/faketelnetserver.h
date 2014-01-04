@@ -66,6 +66,7 @@ public:
     void listenOnTelnetPort();
     void sendCommandToClient(Commands command, Options option);
     void sendSubnegotiationToClient(Options option, SubnegotiationCommands command);
+    void sendDataToClient(const QByteArray &data);
 
     void hasConnectionFromClient();
     void hasReceivedCommand(Commands command, Options option);

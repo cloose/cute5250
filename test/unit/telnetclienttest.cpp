@@ -1,6 +1,7 @@
-#include <QNetworkProxyFactory>
-#include <QString>
 #include <QtTest>
+
+#include <QDataStream>
+#include <QString>
 
 #include <telnetclient.h>
 using q5250::TelnetClient;
@@ -21,6 +22,7 @@ private Q_SLOTS:
     void onlySendsAnOptionCommandOnce();
     void repliesToMultipleOptions();
     void statesTerminalTypeOnRequest();
+    void emitsDataThatIsNotACommand();
 };
 
 
@@ -163,6 +165,25 @@ void TelnetClientTest::statesTerminalTypeOnRequest()
     client.setTerminalType("IBM-3477-FC");
     server.sendSubnegotiationToClient(FakeTelnetServer::TERMINAL_TYPE, FakeTelnetServer::SEND);
     server.hasReceivedTerminalType("IBM-3477-FC");
+}
+
+void TelnetClientTest::emitsDataThatIsNotACommand()
+{
+    FakeTelnetServer server;
+    TelnetClient client;
+
+    server.listenOnTelnetPort();
+    client.connectToHost("localhost");
+    server.hasConnectionFromClient();
+
+    QSignalSpy spy(&client, SIGNAL(dataReceived(QByteArray)));
+
+    QByteArray data;
+    QDataStream stream(&data, QIODevice::WriteOnly);
+    stream << 0x00 << 0x85 << 0x12 << 0xa0;
+    server.sendDataToClient(data);
+
+    QVERIFY(spy.wait());
 }
 
 QTEST_MAIN(TelnetClientTest)
