@@ -1,13 +1,17 @@
 ### q5250 library ###
 
 set(q5250_SRCS
+    clearunitcommand.cpp
+    generaldatastream.cpp
     telnetclient.cpp
+    terminalemulation.cpp
+    terminalwidget.cpp
 )
 
 add_definitions(-DQ5250_LIBRARY)
 
 add_library(q5250 SHARED ${q5250_SRCS})
-qt5_use_modules(q5250 Core Network)
+qt5_use_modules(q5250 Core Network Widgets)
 
 target_include_directories(q5250 INTERFACE "$<INSTALL_INTERFACE:$<INSTALL_PREFIX>/${CMAKE_INSTALL_INCLUDEDIR}>")
 
