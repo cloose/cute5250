@@ -99,4 +99,9 @@ unsigned char GeneralDataStream::readByte() const
     return byte;
 }
 
+void GeneralDataStream::seekToPreviousByte()
+{
+    d->dataStream->device()->seek(d->dataStream->device()->pos()-1);
+}
+
 } // namespace q5250
