@@ -26,6 +26,7 @@
 #ifndef Q5250_CLEARUNITCOMMAND_H
 #define Q5250_CLEARUNITCOMMAND_H
 
+#include <QRect>
 #include "paintercommand.h"
 
 namespace q5250 {
@@ -37,6 +38,9 @@ public:
     virtual ~ClearUnitCommand() {}
 
     virtual void execute(QPainter *p);
+
+private:
+    QRect widgetRect;
 };
 
 } // namespace q5250

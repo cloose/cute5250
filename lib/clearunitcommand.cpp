@@ -31,7 +31,7 @@
 namespace q5250 {
 
 ClearUnitCommand::ClearUnitCommand(const QRect &rect) :
-    PainterCommand(rect)
+    widgetRect(rect)
 {
 }
 
