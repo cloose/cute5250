@@ -29,6 +29,7 @@
 #include <QPainter>
 #include <QQueue>
 
+#include "changepositioncommand.h"
 #include "clearunitcommand.h"
 #include "paintercommand.h"
 
@@ -64,6 +65,12 @@ void TerminalWidget::clearUnit()
 {
     qDebug() << "TERMINAL: CLEAR UNIT";
     d->paintQueue.enqueue(new ClearUnitCommand(rect()));
+}
+
+void TerminalWidget::positionCursor(uint column, uint row)
+{
+    qDebug() << "TERMINAL: POSITION CURSOR";
+    d->paintQueue.enqueue(new ChangePositionCommand(column, row));
 }
 
 void TerminalWidget::paintEvent(QPaintEvent *event)

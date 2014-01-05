@@ -1,11 +1,13 @@
 ### q5250 library ###
 
 set(q5250_SRCS
+    changepositioncommand.cpp
     clearunitcommand.cpp
     generaldatastream.cpp
     telnetclient.cpp
     terminalemulation.cpp
     terminalwidget.cpp
+    writetodisplayparser.cpp
 )
 
 add_definitions(-DQ5250_LIBRARY)

@@ -42,7 +42,9 @@ public:
     explicit TerminalWidget(QWidget *parent);
     ~TerminalWidget();
 
+public Q_SLOTS:
     void clearUnit();
+    void positionCursor(uint column, uint row);
 
 protected:
     void paintEvent(QPaintEvent *event);

@@ -29,6 +29,7 @@
 
 #include "generaldatastream.h"
 #include "terminalwidget.h"
+#include "writetodisplayparser.h"
 
 namespace q5250 {
 
@@ -73,6 +74,14 @@ void TerminalEmulation::dataReceived(const QByteArray &data)
             switch (byte) {
             case 0x11:
                 qDebug() << "SERVER: [GDS] WRITE TO DISPLAY";
+                {
+                    WriteToDisplayParser parser;
+
+                    connect(&parser, &WriteToDisplayParser::positionCursor,
+                            d->terminal, &TerminalWidget::positionCursor);
+
+                    parser.parse(dataStream);
+                }
                 break;
 
             case 0x40:
