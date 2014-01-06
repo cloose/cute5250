@@ -3,8 +3,6 @@
 
 #include <QObject>
 
-class QTextCodec;
-
 namespace q5250 {
 
 class GeneralDataStream;
@@ -20,9 +18,11 @@ public:
 
 signals:
     void positionCursor(uint col, uint row);
+    void displayText(const QByteArray &ebcdicText);
 
 private:
-    QTextCodec *codec;
+    bool isDataCharacter(const unsigned char byte);
+    bool isScreenAttribute(const unsigned char byte);
 };
 
 } // namespace q5250

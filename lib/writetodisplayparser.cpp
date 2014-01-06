@@ -1,7 +1,6 @@
 #include "writetodisplayparser.h"
 
 #include <QDebug>
-#include <QTextCodec>
 
 #include "generaldatastream.h"
 
@@ -29,7 +28,6 @@ enum {
 WriteToDisplayParser::WriteToDisplayParser(QObject *parent) :
     QObject(parent)
 {
-    codec = QTextCodec::codecForName("IBM500");
 }
 
 void WriteToDisplayParser::parse(GeneralDataStream &stream)
@@ -38,12 +36,39 @@ void WriteToDisplayParser::parse(GeneralDataStream &stream)
     unsigned char cc1 = stream.readByte();
     unsigned char cc2 = stream.readByte();
 
+    bool isText = false;
+    QByteArray ebcdicText;
+
     while (!stream.atEnd()) {
         unsigned char byte = stream.readByte();
 
         if (byte == 0x04 /*ESC*/) {
             stream.seekToPreviousByte();
             return;
+        }
+
+        if (isDataCharacter(byte)) {
+            if (byte > 0x3f) {
+                isText = true;
+                ebcdicText += byte;
+            } else if (isScreenAttribute(byte)) {
+                if (isText) {
+                    emit displayText(ebcdicText);
+                    ebcdicText.clear();
+                    isText = false;
+                }
+
+                //FIXME
+                //emit setColor(byte);
+            }
+
+            continue;
+        }
+
+        if (isText) {
+            emit displayText(ebcdicText);
+            ebcdicText.clear();
+            isText = false;
         }
 
         switch (byte) {
@@ -161,14 +186,58 @@ void WriteToDisplayParser::parse(GeneralDataStream &stream)
             break;
 
         default:
-            QByteArray encodedByte;
-            encodedByte.append(byte);
-
-            qDebug() << "SERVER --> [GDS:WTD]" << QString::number(byte, 16) << (char)byte
-                        << codec->toUnicode(encodedByte);
             break;
         }
     }
+}
+
+bool WriteToDisplayParser::isDataCharacter(const unsigned char byte)
+{
+    // The data characters are greater than or equal to X'20'
+    // and less than or equal to X'FE'.
+    //
+    // The null character (X'00'), duplicate character (X'1C'), field mark character (X'1E'),
+    // ideographic shift-in (X'OE'), and ideographic shift-out (X'0F') are also valid data characters.
+
+    // FIXME
+    static const quint8 NULL_CHAR             = 0x00;
+    static const quint8 DUPLICATE_CHAR        = 0x1c;
+    static const quint8 FIELD_MARK_CHAR       = 0x1e;
+    static const quint8 IDEOGRAPHIC_SHIFT_IN  = 0x0e;
+    static const quint8 IDEOGRAPHIC_SHIFT_OUT = 0x0f;
+
+    return ( (byte == NULL_CHAR)             ||
+             (byte == DUPLICATE_CHAR)        ||
+             (byte == FIELD_MARK_CHAR)       ||
+             (byte == IDEOGRAPHIC_SHIFT_IN)  ||
+             (byte == IDEOGRAPHIC_SHIFT_OUT) ||
+             (byte >= 0x20 && byte <= 0xfe) );
+}
+
+bool WriteToDisplayParser::isScreenAttribute(const unsigned char byte)
+{
+    enum ScreenAttributes
+    {
+        SA_GRN    = 0x20,
+        SA_GRN_RI = 0x21,
+        SA_WHT    = 0x22,
+        SA_WHT_RI = 0x23,
+        SA_ND     = 0x27,
+        SA_RED    = 0x28,
+        SA_RED_RI = 0x29,
+        SA_BLU    = 0x3a,
+        SA_BLU_RI = 0x3b
+    };
+
+    return ( (byte == SA_GRN)    ||
+             (byte == SA_GRN_RI) ||
+             (byte == SA_WHT)    ||
+             (byte == SA_WHT_RI) ||
+             (byte == SA_ND)     ||
+             (byte == SA_RED)    ||
+             (byte == SA_RED_RI) ||
+             (byte == SA_BLU)    ||
+             (byte == SA_BLU_RI) );
 }
 
 } // namespace q5250

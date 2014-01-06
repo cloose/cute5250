@@ -28,6 +28,7 @@
 #include <QDebug>
 #include <QPainter>
 #include <QQueue>
+#include <QTextCodec>
 
 #include "changepositioncommand.h"
 #include "clearunitcommand.h"
@@ -43,10 +44,12 @@ public:
     explicit Private();
 
     QQueue<PainterCommand*> paintQueue;
+    QTextCodec *codec;
 };
 
 TerminalWidget::Private::Private()
 {
+    codec = QTextCodec::codecForName("IBM500");
 }
 
 
@@ -71,6 +74,11 @@ void TerminalWidget::positionCursor(uint column, uint row)
 {
     qDebug() << "TERMINAL: POSITION CURSOR" << row << column;
     d->paintQueue.enqueue(new ChangePositionCommand(column, row));
+}
+
+void TerminalWidget::displayText(const QByteArray &ebcdicText)
+{
+    qDebug() << "TERMINAL: DISPLAY TEXT" << d->codec->toUnicode(ebcdicText);
 }
 
 void TerminalWidget::paintEvent(QPaintEvent *event)

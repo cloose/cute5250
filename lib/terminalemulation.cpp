@@ -79,6 +79,8 @@ void TerminalEmulation::dataReceived(const QByteArray &data)
 
                     connect(&parser, &WriteToDisplayParser::positionCursor,
                             d->terminal, &TerminalWidget::positionCursor);
+                    connect(&parser, &WriteToDisplayParser::displayText,
+                            d->terminal, &TerminalWidget::displayText);
 
                     parser.parse(dataStream);
                 }
