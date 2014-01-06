@@ -89,10 +89,21 @@ void TerminalEmulation::dataReceived(const QByteArray &data)
                 d->terminal->clearUnit();
                 break;
 
+            case 0x52:
+                qDebug() << "SERVER: [GDS] READ MDT FIELDS";
+                {
+                    // get control characters (see 5494 RCU 15.11)
+                    unsigned char cc1 = dataStream.readByte();
+                    unsigned char cc2 = dataStream.readByte();
+                }
+                break;
+
             default:
                 qDebug() << "** UNKNOWN **";
                 break;
             }
+        } else {
+            qDebug() << "SERVER: [GDS]" << QString::number(byte, 16);
         }
     }
 }

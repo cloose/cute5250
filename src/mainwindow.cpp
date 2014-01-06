@@ -2,7 +2,8 @@
 #include "ui_mainwindow.h"
 
 #include <QDebug>
-#include <QNetworkProxyFactory>
+#include <QTextCodec>
+//#include <QNetworkProxyFactory>
 
 #include <telnetclient.h>
 #include <terminalemulation.h>
@@ -17,13 +18,15 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
+    qDebug() << QTextCodec::availableCodecs();
     emulation = new TerminalEmulation(ui->terminalWidget);
 
     connect(client, &TelnetClient::dataReceived,
             emulation, &TerminalEmulation::dataReceived);
 
     client->setTerminalType("IBM-3477-FC");
-    client->connectToHost("pub1.rzkh.de");
+//    client->connectToHost("pub1.rzkh.de");
+    client->connectToHost("asknidev");
 }
 
 MainWindow::~MainWindow()

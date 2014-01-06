@@ -3,6 +3,8 @@
 
 #include <QObject>
 
+class QTextCodec;
+
 namespace q5250 {
 
 class GeneralDataStream;
@@ -18,6 +20,9 @@ public:
 
 signals:
     void positionCursor(uint col, uint row);
+
+private:
+    QTextCodec *codec;
 };
 
 } // namespace q5250

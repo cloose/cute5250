@@ -69,7 +69,7 @@ void TerminalWidget::clearUnit()
 
 void TerminalWidget::positionCursor(uint column, uint row)
 {
-    qDebug() << "TERMINAL: POSITION CURSOR";
+    qDebug() << "TERMINAL: POSITION CURSOR" << row << column;
     d->paintQueue.enqueue(new ChangePositionCommand(column, row));
 }
 

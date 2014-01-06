@@ -60,6 +60,8 @@ GeneralDataStream::Private::Private(const QByteArray &data) :
     qDebug() << "---GDS HEADER---"
              << QString::number(header.recordLength, 16)
              << QString::number(header.recordType, 16)
+             << QString::number(header.varHdrLen, 16)
+             << QString::number(header.flags, 16)
              << QString::number(header.opcode, 16);
 }
 

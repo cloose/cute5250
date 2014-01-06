@@ -1,6 +1,7 @@
 #include "writetodisplayparser.h"
 
 #include <QDebug>
+#include <QTextCodec>
 
 #include "generaldatastream.h"
 
@@ -28,6 +29,7 @@ enum {
 WriteToDisplayParser::WriteToDisplayParser(QObject *parent) :
     QObject(parent)
 {
+    codec = QTextCodec::codecForName("IBM500");
 }
 
 void WriteToDisplayParser::parse(GeneralDataStream &stream)
@@ -63,7 +65,9 @@ void WriteToDisplayParser::parse(GeneralDataStream &stream)
         case Order::RA:
             {
                 qDebug() << "SERVER --> [GDS:WTD] -- REPEAT TO ADDRESS --";
-
+                unsigned char row = stream.readByte();
+                unsigned char column = stream.readByte();
+                unsigned char character = stream.readByte();
             }
             break;
 
@@ -121,11 +125,47 @@ void WriteToDisplayParser::parse(GeneralDataStream &stream)
         case Order::SF:
             {
                 qDebug() << "SERVER --> [GDS:WTD] -- START OF FIELD --";
+                unsigned char ffw0 = stream.readByte();
+                qDebug() << "field format 0" << ffw0 << QString::number(ffw0, 16) << QString::number(ffw0, 2);
+                if (ffw0 & 0x40) {
+                    qDebug() << "Bit 14-15: FFW";
+                    qDebug() << "Bit 13: bypass field" << ((ffw0 & 0x20) == 0x20);
+                    qDebug() << "Bit 12: Duplication allowed" << ((ffw0 & 0x10) == 0x10);
+                    qDebug() << "Bit 11: Field was modified" << ((ffw0 & 0x08) == 0x08);
 
+                    unsigned char ffw1 = stream.readByte();
+                    qDebug() << "field format 1" << ffw1 << QString::number(ffw1, 16) << QString::number(ffw1, 2);
+
+                    unsigned char fcw0 = stream.readByte();
+                    qDebug() << "field control 0" << fcw0 << QString::number(fcw0, 16) << QString::number(fcw0, 2);
+
+                    if ((fcw0 & 0xe0) == 0x20) {
+                        qDebug() << "ATTRIBUTE";
+                    } else {
+                        unsigned char fcw1 = stream.readByte();
+                        qDebug() << "field control 1" << fcw1 << QString::number(fcw1, 16) << QString::number(fcw1, 2);
+
+                        if (fcw0 == 0x80) {
+                            qDebug() << "resequence";
+                        }
+                    }
+                } else {
+                    qDebug() << "ATTRIBUTE";
+                }
+
+                unsigned char fl0 = stream.readByte();
+                unsigned char fl1 = stream.readByte();
+                unsigned short fieldLength = (fl0 << 8) | fl1;
+                qDebug() << "field length" << fieldLength;
             }
             break;
 
         default:
+            QByteArray encodedByte;
+            encodedByte.append(byte);
+
+            qDebug() << "SERVER --> [GDS:WTD]" << QString::number(byte, 16) << (char)byte
+                        << codec->toUnicode(encodedByte);
             break;
         }
     }
