@@ -3,6 +3,7 @@
 set(q5250_SRCS
     changepositioncommand.cpp
     clearunitcommand.cpp
+    displaytextcommand.cpp
     generaldatastream.cpp
     telnetclient.cpp
     terminalemulation.cpp
