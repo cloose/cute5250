@@ -27,6 +27,7 @@
 
 #include <QDebug>
 
+#include "field.h"
 #include "generaldatastream.h"
 #include "terminalwidget.h"
 #include "writetodisplayparser.h"
@@ -85,6 +86,8 @@ void TerminalEmulation::dataReceived(const QByteArray &data)
                             d->terminal, &TerminalWidget::setDisplayAttribute);
                     connect(&parser, &WriteToDisplayParser::repeatCharacter,
                             d->terminal, &TerminalWidget::repeatCharacter);
+                    connect(&parser, &WriteToDisplayParser::displayField,
+                            d->terminal, &TerminalWidget::displayField);
 
                     parser.parse(dataStream);
                 }

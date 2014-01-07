@@ -3,7 +3,9 @@
 set(q5250_SRCS
     bufferaddress.cpp
     clearunitcommand.cpp
+    displayfieldcommand.cpp
     displaytextcommand.cpp
+    field.cpp
     generaldatastream.cpp
     repeatcharactercommand.cpp
     setbufferaddresscommand.cpp

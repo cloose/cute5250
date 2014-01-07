@@ -23,43 +23,38 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#ifndef Q5250_TERMINALWIDGET_H
-#define Q5250_TERMINALWIDGET_H
+#include "displayfieldcommand.h"
 
-#include "q5250_global.h"
+#include <QDebug>
+#include <QPainter>
 
-#include <memory>
-
-#include <QWidget>
+#include "bufferaddress.h"
 
 namespace q5250 {
 
-class Field;
-
-class Q5250SHARED_EXPORT TerminalWidget : public QWidget
+DisplayFieldCommand::DisplayFieldCommand(const Field& f) :
+    field(f)
 {
-    Q_OBJECT
+}
 
-public:
-    explicit TerminalWidget(QWidget *parent);
-    ~TerminalWidget();
+void DisplayFieldCommand::execute(QPainter* p)
+{
+    BufferAddress bufferAddress;
 
-public Q_SLOTS:
-    void clearUnit();
-    void positionCursor(uint column, uint row);
-    void displayText(const QByteArray &ebcdicText);
-    void setDisplayAttribute(const unsigned char attribute);
-    void repeatCharacter(uint column, uint row, uchar character);
-    void displayField(const Field &field);
+    qDebug() << "PAINT: DISPLAY FIELD AT" << bufferAddress.column() << bufferAddress.row();
 
-protected:
-    void paintEvent(QPaintEvent *event);
+//    // underline?
+//    if( m_attribute == 0x24 )
+//    {
 
-private:
-    class Private;
-    std::unique_ptr<Private> d;
-};
+    // convert buffer address to pixel
+    QFontMetrics fm = p->fontMetrics();
+    unsigned int x = bufferAddress.column() * fm.width('X'); //* fm.maxWidth();
+    unsigned int y = bufferAddress.row() * fm.height();
+    unsigned int width = field.length() * fm.width('X');
+
+    p->drawLine(x, y+2, x+width, y+2);
+//    }
+}
 
 } // namespace q5250
-
-#endif // Q5250_TERMINALWIDGET_H

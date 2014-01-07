@@ -23,43 +23,27 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#ifndef Q5250_TERMINALWIDGET_H
-#define Q5250_TERMINALWIDGET_H
+#ifndef Q5250_DISPLAYFIELDCOMMAND_H
+#define Q5250_DISPLAYFIELDCOMMAND_H
 
-#include "q5250_global.h"
-
-#include <memory>
-
-#include <QWidget>
+#include "paintercommand.h"
+#include <QString>
+#include "field.h"
 
 namespace q5250 {
 
-class Field;
-
-class Q5250SHARED_EXPORT TerminalWidget : public QWidget
+class DisplayFieldCommand : public PainterCommand
 {
-    Q_OBJECT
-
 public:
-    explicit TerminalWidget(QWidget *parent);
-    ~TerminalWidget();
+    explicit DisplayFieldCommand(const Field& f);
+    virtual ~DisplayFieldCommand() {}
 
-public Q_SLOTS:
-    void clearUnit();
-    void positionCursor(uint column, uint row);
-    void displayText(const QByteArray &ebcdicText);
-    void setDisplayAttribute(const unsigned char attribute);
-    void repeatCharacter(uint column, uint row, uchar character);
-    void displayField(const Field &field);
-
-protected:
-    void paintEvent(QPaintEvent *event);
+    virtual void execute(QPainter *p);
 
 private:
-    class Private;
-    std::unique_ptr<Private> d;
+    Field field;
 };
 
 } // namespace q5250
 
-#endif // Q5250_TERMINALWIDGET_H
+#endif // Q5250_DISPLAYFIELDCOMMAND_H

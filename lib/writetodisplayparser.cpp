@@ -2,6 +2,7 @@
 
 #include <QDebug>
 
+#include "field.h"
 #include "generaldatastream.h"
 
 namespace q5250 {
@@ -182,6 +183,9 @@ void WriteToDisplayParser::parse(GeneralDataStream &stream)
                 unsigned char fl1 = stream.readByte();
                 unsigned short fieldLength = (fl0 << 8) | fl1;
                 qDebug() << "field length" << fieldLength;
+
+                Field field(fieldLength);
+                emit displayField(field);
             }
             break;
 

@@ -31,7 +31,9 @@
 #include <QTextCodec>
 
 #include "clearunitcommand.h"
+#include "displayfieldcommand.h"
 #include "displaytextcommand.h"
+#include "field.h"
 #include "paintercommand.h"
 #include "repeatcharactercommand.h"
 #include "setbufferaddresscommand.h"
@@ -102,6 +104,11 @@ void TerminalWidget::repeatCharacter(uint column, uint row, uchar character)
 
     qDebug() << "TERMINAL: REPEAT" << d->codec->toUnicode(ebcdicChar) << "TO" << column << row;
     d->paintQueue.enqueue(new RepeatCharacterCommand(column, row, d->codec->toUnicode(ebcdicChar)));
+}
+
+void TerminalWidget::displayField(const Field &field)
+{
+    d->paintQueue.enqueue(new DisplayFieldCommand(field));
 }
 
 void TerminalWidget::paintEvent(QPaintEvent *event)

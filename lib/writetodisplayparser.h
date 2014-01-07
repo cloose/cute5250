@@ -5,6 +5,7 @@
 
 namespace q5250 {
 
+class Field;
 class GeneralDataStream;
 
 class WriteToDisplayParser : public QObject
@@ -21,6 +22,7 @@ signals:
     void displayText(const QByteArray &ebcdicText);
     void setDisplayAttribute(const unsigned char attribute);
     void repeatCharacter(uint col, uint row, uchar character);
+    void displayField(const Field &field);
 
 private:
     bool isDataCharacter(const unsigned char byte);
