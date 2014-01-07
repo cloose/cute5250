@@ -30,9 +30,12 @@
 #include <QQueue>
 #include <QTextCodec>
 
-#include "changepositioncommand.h"
 #include "clearunitcommand.h"
+#include "displaytextcommand.h"
 #include "paintercommand.h"
+#include "repeatcharactercommand.h"
+#include "setbufferaddresscommand.h"
+#include "setdisplayattributecommand.h"
 
 namespace q5250 {
 
@@ -72,20 +75,49 @@ void TerminalWidget::clearUnit()
 
 void TerminalWidget::positionCursor(uint column, uint row)
 {
-    qDebug() << "TERMINAL: POSITION CURSOR" << row << column;
-    d->paintQueue.enqueue(new ChangePositionCommand(column, row));
+    qDebug() << "TERMINAL: SET BUFFER ADDRESS" << row << column;
+    d->paintQueue.enqueue(new SetBufferAddressCommand(column, row));
 }
 
 void TerminalWidget::displayText(const QByteArray &ebcdicText)
 {
     qDebug() << "TERMINAL: DISPLAY TEXT" << d->codec->toUnicode(ebcdicText);
+    d->paintQueue.enqueue(new DisplayTextCommand(d->codec->toUnicode(ebcdicText)));
+}
+
+void TerminalWidget::setDisplayAttribute(const unsigned char attribute)
+{
+    d->paintQueue.enqueue(new SetDisplayAttributeCommand(attribute));
+}
+
+void TerminalWidget::repeatCharacter(uint column, uint row, uchar character)
+{
+    // ignore NUL character
+    if (character == '\0') {
+        return;
+    }
+
+    QByteArray ebcdicChar;
+    ebcdicChar += character;
+
+    qDebug() << "TERMINAL: REPEAT" << d->codec->toUnicode(ebcdicChar) << "TO" << column << row;
+    d->paintQueue.enqueue(new RepeatCharacterCommand(column, row, d->codec->toUnicode(ebcdicChar)));
 }
 
 void TerminalWidget::paintEvent(QPaintEvent *event)
 {
     Q_UNUSED(event);
 
+    QFont font("Monospace", 12);
+    font.setStyleHint(QFont::TypeWriter);
+
+    QFontMetrics fm(font);
+    qDebug() << "TERMINAL: FONT" << font << fm.maxWidth()
+             << fm.height() << fm.averageCharWidth()
+             << fm.width(' ') << fm.width('X') << fm.width('i');
+
     QPainter p(this);
+    p.setFont(font);
 
     while (!d->paintQueue.isEmpty()) {
         PainterCommand *command = d->paintQueue.dequeue();

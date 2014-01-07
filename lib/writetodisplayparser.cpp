@@ -51,15 +51,14 @@ void WriteToDisplayParser::parse(GeneralDataStream &stream)
             if (byte > 0x3f) {
                 isText = true;
                 ebcdicText += byte;
-            } else if (isScreenAttribute(byte)) {
-                if (isText) {
-                    emit displayText(ebcdicText);
-                    ebcdicText.clear();
-                    isText = false;
-                }
+            } else if (isDisplayAttribute(byte)) {
+//                if (isText) {
+//                    emit displayText(ebcdicText);
+//                    ebcdicText.clear();
+//                    isText = false;
+//                }
 
-                //FIXME
-                //emit setColor(byte);
+                emit setDisplayAttribute(byte);
             }
 
             continue;
@@ -93,6 +92,7 @@ void WriteToDisplayParser::parse(GeneralDataStream &stream)
                 unsigned char row = stream.readByte();
                 unsigned char column = stream.readByte();
                 unsigned char character = stream.readByte();
+                emit repeatCharacter(column, row, character);
             }
             break;
 
@@ -214,7 +214,7 @@ bool WriteToDisplayParser::isDataCharacter(const unsigned char byte)
              (byte >= 0x20 && byte <= 0xfe) );
 }
 
-bool WriteToDisplayParser::isScreenAttribute(const unsigned char byte)
+bool WriteToDisplayParser::isDisplayAttribute(const unsigned char byte)
 {
     enum ScreenAttributes
     {

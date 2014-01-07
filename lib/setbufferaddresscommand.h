@@ -23,18 +23,18 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#ifndef Q5250_CHANGEPOSITIONCOMMAND_H
-#define Q5250_CHANGEPOSITIONCOMMAND_H
+#ifndef Q5250_SETBUFFERADDRESSCOMMAND_H
+#define Q5250_SETBUFFERADDRESSCOMMAND_H
 
 #include "paintercommand.h"
 
 namespace q5250 {
 
-class ChangePositionCommand : public PainterCommand
+class SetBufferAddressCommand : public PainterCommand
 {
 public:
-    explicit ChangePositionCommand(unsigned int c, unsigned int r);
-    virtual ~ChangePositionCommand() {}
+    explicit SetBufferAddressCommand(unsigned int c, unsigned int r);
+    virtual ~SetBufferAddressCommand() {}
 
     virtual void execute(QPainter *p);
 
@@ -45,4 +45,4 @@ private:
 
 } // namespace q5250
 
-#endif // Q5250_CHANGEPOSITIONCOMMAND_H
+#endif // Q5250_SETBUFFERADDRESSCOMMAND_H

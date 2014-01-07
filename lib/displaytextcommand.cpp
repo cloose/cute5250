@@ -28,6 +28,8 @@
 #include <QDebug>
 #include <QPainter>
 
+#include "bufferaddress.h"
+
 namespace q5250 {
 
 DisplayTextCommand::DisplayTextCommand(const QString& t) :
@@ -37,7 +39,22 @@ DisplayTextCommand::DisplayTextCommand(const QString& t) :
 
 void DisplayTextCommand::execute(QPainter* p)
 {
-    qDebug() << "PAINT: DISPLAY TEXT" << text;
+    BufferAddress bufferAddress;
+
+    qDebug() << "PAINT: DISPLAY TEXT" << text << "AT" << bufferAddress.column() << bufferAddress.row();
+
+    // convert buffer address to pixel
+    QFontMetrics fm = p->fontMetrics();
+    unsigned int x = bufferAddress.column() * fm.width('X'); //* fm.maxWidth();
+    unsigned int y = bufferAddress.row() * fm.height();
+
+    // draw background
+//    p->boundingRect(x, y,)
+    p->setBackground(p->brush());
+    p->setBackgroundMode(Qt::OpaqueMode);
+    p->drawText(x, y, text);
+
+    bufferAddress += text.length();
 }
 
 } // namespace q5250

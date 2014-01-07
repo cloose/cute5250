@@ -81,6 +81,10 @@ void TerminalEmulation::dataReceived(const QByteArray &data)
                             d->terminal, &TerminalWidget::positionCursor);
                     connect(&parser, &WriteToDisplayParser::displayText,
                             d->terminal, &TerminalWidget::displayText);
+                    connect(&parser, &WriteToDisplayParser::setDisplayAttribute,
+                            d->terminal, &TerminalWidget::setDisplayAttribute);
+                    connect(&parser, &WriteToDisplayParser::repeatCharacter,
+                            d->terminal, &TerminalWidget::repeatCharacter);
 
                     parser.parse(dataStream);
                 }

@@ -1,10 +1,13 @@
 ### q5250 library ###
 
 set(q5250_SRCS
-    changepositioncommand.cpp
+    bufferaddress.cpp
     clearunitcommand.cpp
     displaytextcommand.cpp
     generaldatastream.cpp
+    repeatcharactercommand.cpp
+    setbufferaddresscommand.cpp
+    setdisplayattributecommand.cpp
     telnetclient.cpp
     terminalemulation.cpp
     terminalwidget.cpp

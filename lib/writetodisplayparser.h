@@ -19,10 +19,12 @@ public:
 signals:
     void positionCursor(uint col, uint row);
     void displayText(const QByteArray &ebcdicText);
+    void setDisplayAttribute(const unsigned char attribute);
+    void repeatCharacter(uint col, uint row, uchar character);
 
 private:
     bool isDataCharacter(const unsigned char byte);
-    bool isScreenAttribute(const unsigned char byte);
+    bool isDisplayAttribute(const unsigned char byte);
 };
 
 } // namespace q5250

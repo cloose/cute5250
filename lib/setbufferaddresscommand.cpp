@@ -23,22 +23,26 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#include "changepositioncommand.h"
+#include "setbufferaddresscommand.h"
 
 #include <QDebug>
-#include <QPainter>
+
+#include "bufferaddress.h"
 
 namespace q5250 {
 
-ChangePositionCommand::ChangePositionCommand(unsigned int c, unsigned int r) :
+SetBufferAddressCommand::SetBufferAddressCommand(unsigned int c, unsigned int r) :
     column(c),
     row(r)
 {
 }
 
-void ChangePositionCommand::execute(QPainter *p)
+void SetBufferAddressCommand::execute(QPainter *)
 {
-    qDebug() << "PAINT: change cursor position to " << column << ", " << row;
+    qDebug() << "PAINT: SET BUFFER ADDRESS TO " << column << ", " << row;
+
+    BufferAddress bufferAddress;
+    bufferAddress.setPosition(column, row);
 }
 
 } // namespace q5250

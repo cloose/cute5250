@@ -46,6 +46,8 @@ public Q_SLOTS:
     void clearUnit();
     void positionCursor(uint column, uint row);
     void displayText(const QByteArray &ebcdicText);
+    void setDisplayAttribute(const unsigned char attribute);
+    void repeatCharacter(uint column, uint row, uchar character);
 
 protected:
     void paintEvent(QPaintEvent *event);

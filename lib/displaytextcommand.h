@@ -37,12 +37,11 @@ public:
     explicit DisplayTextCommand(const QString& t);
     virtual ~DisplayTextCommand() {}
 
-    virtual void execute(QPainter* p);
+    virtual void execute(QPainter *p);
 
 private:
     QString text;
 };
-
 
 } // namespace q5250
 
