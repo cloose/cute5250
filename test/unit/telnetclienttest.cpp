@@ -115,7 +115,8 @@ void TelnetClientTest::doesnotAcknowledgeRequestForEnteredModes()
     server.hasReceivedCommand(FakeTelnetServer::WILL, FakeTelnetServer::TERMINAL_TYPE);
 
     server.sendCommandToClient(FakeTelnetServer::DO, FakeTelnetServer::TERMINAL_TYPE);
-    server.hasReceivedNoCommand();
+    server.sendCommandToClient(FakeTelnetServer::DO, FakeTelnetServer::NEW_ENVIRON);
+    server.hasReceivedCommand(FakeTelnetServer::WILL, FakeTelnetServer::NEW_ENVIRON);
 }
 
 void TelnetClientTest::onlySendsAnOptionCommandOnce()
@@ -131,7 +132,8 @@ void TelnetClientTest::onlySendsAnOptionCommandOnce()
     server.hasReceivedCommand(FakeTelnetServer::DONT, FakeTelnetServer::ECHO);
 
     server.sendCommandToClient(FakeTelnetServer::WONT, FakeTelnetServer::ECHO);
-    server.hasReceivedNoCommand();
+    server.sendCommandToClient(FakeTelnetServer::DO, FakeTelnetServer::TERMINAL_TYPE);
+    server.hasReceivedCommand(FakeTelnetServer::WILL, FakeTelnetServer::TERMINAL_TYPE);
 }
 
 void TelnetClientTest::repliesToMultipleOptions()
