@@ -60,7 +60,7 @@ FakeTelnetServer::~FakeTelnetServer()
 
 void FakeTelnetServer::listenOnTelnetPort()
 {
-    QVERIFY2(tcpServer->listen(QHostAddress::Any, 23), qPrintable(tcpServer->errorString()));
+    QVERIFY2(tcpServer->listen(QHostAddress::Any, 8023), qPrintable(tcpServer->errorString()));
 }
 
 void FakeTelnetServer::sendCommandToClient(FakeTelnetServer::Commands command, FakeTelnetServer::Options option)
