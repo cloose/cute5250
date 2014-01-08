@@ -3,7 +3,6 @@
 
 #include <QDebug>
 #include <QTextCodec>
-//#include <QNetworkProxyFactory>
 
 #include <telnetclient.h>
 #include <terminalemulation.h>

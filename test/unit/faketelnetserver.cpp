@@ -60,7 +60,7 @@ FakeTelnetServer::~FakeTelnetServer()
 
 void FakeTelnetServer::listenOnTelnetPort()
 {
-    QVERIFY2(tcpServer->listen(QHostAddress::Any, 23), qPrintable(tcpServer->errorString()));
+    QVERIFY2(tcpServer->listen(QHostAddress::Any, 8023), qPrintable(tcpServer->errorString()));
 }
 
 void FakeTelnetServer::sendCommandToClient(FakeTelnetServer::Commands command, FakeTelnetServer::Options option)
@@ -120,12 +120,6 @@ void FakeTelnetServer::hasReceivedCommand(FakeTelnetServer::Commands command, Fa
 
     // consume received command
     lastDataReceived.remove(0, 3);
-}
-
-void FakeTelnetServer::hasReceivedNoCommand()
-{
-    QTest::qWait(2000);
-    QVERIFY(lastDataReceived.isEmpty());
 }
 
 void FakeTelnetServer::hasReceivedTerminalType(const QString &terminalType)

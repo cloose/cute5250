@@ -40,6 +40,7 @@ public:
     explicit GeneralDataStream(const QByteArray &data);
     ~GeneralDataStream();
 
+    bool isValid() const;
     bool atEnd() const;
     unsigned char readByte() const;
     void seekToPreviousByte();

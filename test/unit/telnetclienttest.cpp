@@ -32,7 +32,7 @@ void TelnetClientTest::acknowledgesNewEnvironOption()
     TelnetClient client;
 
     server.listenOnTelnetPort();
-    client.connectToHost("localhost");
+    client.connectToHost("localhost", 8023);
     server.hasConnectionFromClient();
 
     server.sendCommandToClient(FakeTelnetServer::DO, FakeTelnetServer::NEW_ENVIRON);
@@ -45,7 +45,7 @@ void TelnetClientTest::acknowledgesTerminalTypeOption()
     TelnetClient client;
 
     server.listenOnTelnetPort();
-    client.connectToHost("localhost");
+    client.connectToHost("localhost", 8023);
     server.hasConnectionFromClient();
 
     server.sendCommandToClient(FakeTelnetServer::DO, FakeTelnetServer::TERMINAL_TYPE);
@@ -58,7 +58,7 @@ void TelnetClientTest::acknowledgesEndOfRecordOption()
     TelnetClient client;
 
     server.listenOnTelnetPort();
-    client.connectToHost("localhost");
+    client.connectToHost("localhost", 8023);
     server.hasConnectionFromClient();
 
     server.sendCommandToClient(FakeTelnetServer::DO, FakeTelnetServer::END_OF_RECORD);
@@ -74,7 +74,7 @@ void TelnetClientTest::acknowledgesTransmitBinaryOption()
     TelnetClient client;
 
     server.listenOnTelnetPort();
-    client.connectToHost("localhost");
+    client.connectToHost("localhost", 8023);
     server.hasConnectionFromClient();
 
     server.sendCommandToClient(FakeTelnetServer::DO, FakeTelnetServer::TRANSMIT_BINARY);
@@ -90,7 +90,7 @@ void TelnetClientTest::deniesOfferToUseUnsupportedOption()
     TelnetClient client;
 
     server.listenOnTelnetPort();
-    client.connectToHost("localhost");
+    client.connectToHost("localhost", 8023);
     server.hasConnectionFromClient();
 
     server.sendCommandToClient(FakeTelnetServer::WILL, FakeTelnetServer::ECHO);
@@ -108,14 +108,15 @@ void TelnetClientTest::doesnotAcknowledgeRequestForEnteredModes()
     TelnetClient client;
 
     server.listenOnTelnetPort();
-    client.connectToHost("localhost");
+    client.connectToHost("localhost", 8023);
     server.hasConnectionFromClient();
 
     server.sendCommandToClient(FakeTelnetServer::DO, FakeTelnetServer::TERMINAL_TYPE);
     server.hasReceivedCommand(FakeTelnetServer::WILL, FakeTelnetServer::TERMINAL_TYPE);
 
     server.sendCommandToClient(FakeTelnetServer::DO, FakeTelnetServer::TERMINAL_TYPE);
-    server.hasReceivedNoCommand();
+    server.sendCommandToClient(FakeTelnetServer::DO, FakeTelnetServer::NEW_ENVIRON);
+    server.hasReceivedCommand(FakeTelnetServer::WILL, FakeTelnetServer::NEW_ENVIRON);
 }
 
 void TelnetClientTest::onlySendsAnOptionCommandOnce()
@@ -124,14 +125,15 @@ void TelnetClientTest::onlySendsAnOptionCommandOnce()
     TelnetClient client;
 
     server.listenOnTelnetPort();
-    client.connectToHost("localhost");
+    client.connectToHost("localhost", 8023);
     server.hasConnectionFromClient();
 
     server.sendCommandToClient(FakeTelnetServer::WONT, FakeTelnetServer::ECHO);
     server.hasReceivedCommand(FakeTelnetServer::DONT, FakeTelnetServer::ECHO);
 
     server.sendCommandToClient(FakeTelnetServer::WONT, FakeTelnetServer::ECHO);
-    server.hasReceivedNoCommand();
+    server.sendCommandToClient(FakeTelnetServer::DO, FakeTelnetServer::TERMINAL_TYPE);
+    server.hasReceivedCommand(FakeTelnetServer::WILL, FakeTelnetServer::TERMINAL_TYPE);
 }
 
 void TelnetClientTest::repliesToMultipleOptions()
@@ -140,7 +142,7 @@ void TelnetClientTest::repliesToMultipleOptions()
     TelnetClient client;
 
     server.listenOnTelnetPort();
-    client.connectToHost("localhost");
+    client.connectToHost("localhost", 8023);
     server.hasConnectionFromClient();
 
     server.sendCommandToClient(FakeTelnetServer::DO, FakeTelnetServer::NEW_ENVIRON);
@@ -156,7 +158,7 @@ void TelnetClientTest::statesTerminalTypeOnRequest()
     TelnetClient client;
 
     server.listenOnTelnetPort();
-    client.connectToHost("localhost");
+    client.connectToHost("localhost", 8023);
     server.hasConnectionFromClient();
 
     server.sendSubnegotiationToClient(FakeTelnetServer::TERMINAL_TYPE, FakeTelnetServer::SEND);
@@ -173,7 +175,7 @@ void TelnetClientTest::emitsDataThatIsNotACommand()
     TelnetClient client;
 
     server.listenOnTelnetPort();
-    client.connectToHost("localhost");
+    client.connectToHost("localhost", 8023);
     server.hasConnectionFromClient();
 
     QSignalSpy spy(&client, SIGNAL(dataReceived(QByteArray)));

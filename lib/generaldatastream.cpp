@@ -30,6 +30,9 @@
 
 namespace q5250 {
 
+static const quint16 GDS_RECORD_TYPE = 0x12a0;
+static const qint64 GDS_HEADER_LENGTH = 9;
+
 class GeneralDataStream::Private
 {
 public:
@@ -47,6 +50,7 @@ public:
     ~Private();
 
     void readHeader();
+    bool atStart();
 
     QDataStream *dataStream;
     Header header;
@@ -58,11 +62,12 @@ GeneralDataStream::Private::Private(const QByteArray &data) :
     readHeader();
 
     qDebug() << "---GDS HEADER---"
-             << QString::number(header.recordLength, 16)
-             << QString::number(header.recordType, 16)
-             << QString::number(header.varHdrLen, 16)
-             << QString::number(header.flags, 16)
-             << QString::number(header.opcode, 16);
+             << "LEN" << QString::number(header.recordLength, 16)
+             << "SIZE" << QString::number(data.size(), 16)
+             << "TYPE" << QString::number(header.recordType, 16)
+             << "VARHDRLEN" << QString::number(header.varHdrLen, 16)
+             << "FLAGS" << QString::number(header.flags, 2)
+             << "OPCODE" << QString::number(header.opcode, 16);
 }
 
 GeneralDataStream::Private::~Private()
@@ -80,6 +85,11 @@ void GeneralDataStream::Private::readHeader()
                 >> header.opcode;
 }
 
+bool GeneralDataStream::Private::atStart()
+{
+    return dataStream->device()->pos() == GDS_HEADER_LENGTH + 1;
+}
+
 GeneralDataStream::GeneralDataStream(const QByteArray &data) :
     d(new Private(data))
 {
@@ -87,6 +97,11 @@ GeneralDataStream::GeneralDataStream(const QByteArray &data) :
 
 GeneralDataStream::~GeneralDataStream()
 {
+}
+
+bool GeneralDataStream::isValid() const
+{
+    return d->header.recordType == GDS_RECORD_TYPE;
 }
 
 bool GeneralDataStream::atEnd() const
@@ -103,6 +118,10 @@ unsigned char GeneralDataStream::readByte() const
 
 void GeneralDataStream::seekToPreviousByte()
 {
+    if (d->atStart()) {
+        return;
+    }
+
     d->dataStream->device()->seek(d->dataStream->device()->pos()-1);
 }
 
