@@ -28,7 +28,6 @@
 #include <QDebug>
 
 #include "generaldatastream.h"
-#include "terminalwidget.h"
 #include "writetodisplayparser.h"
 
 namespace q5250 {
@@ -39,8 +38,6 @@ class TerminalEmulation::Private : public QObject
 
 public:
     explicit Private();
-
-    TerminalWidget *terminal;
 };
 
 TerminalEmulation::Private::Private()
@@ -48,11 +45,10 @@ TerminalEmulation::Private::Private()
 }
 
 
-TerminalEmulation::TerminalEmulation(TerminalWidget *terminal, QObject *parent) :
+TerminalEmulation::TerminalEmulation(QObject *parent) :
     QObject(parent),
     d(new Private())
 {
-    d->terminal = terminal;
 }
 
 TerminalEmulation::~TerminalEmulation()
@@ -65,7 +61,6 @@ void TerminalEmulation::dataReceived(const QByteArray &data)
 
     while (!dataStream.atEnd()) {
         unsigned char byte = dataStream.readByte();
-//        qDebug() << Q_FUNC_INFO << byte;
 
         if (byte == 0x04 /*ESC*/) {
             byte = dataStream.readByte();
@@ -78,7 +73,7 @@ void TerminalEmulation::dataReceived(const QByteArray &data)
                     WriteToDisplayParser parser;
 
                     connect(&parser, &WriteToDisplayParser::positionCursor,
-                            d->terminal, &TerminalWidget::positionCursor);
+                            this, &TerminalEmulation::setBufferAddress);
 
                     parser.parse(dataStream);
                 }
@@ -86,7 +81,7 @@ void TerminalEmulation::dataReceived(const QByteArray &data)
 
             case 0x40:
                 qDebug() << "SERVER: [GDS] CLEAR UNIT";
-                d->terminal->clearUnit();
+                emit clearUnit();
                 break;
 
             default:

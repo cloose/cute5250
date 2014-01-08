@@ -34,15 +34,17 @@
 
 namespace q5250 {
 
-class TerminalWidget;
-
 class Q5250SHARED_EXPORT TerminalEmulation : public QObject
 {
     Q_OBJECT
 
 public:
-    explicit TerminalEmulation(TerminalWidget *terminal, QObject *parent = 0);
+    explicit TerminalEmulation(QObject *parent = 0);
     ~TerminalEmulation();
+
+Q_SIGNALS:
+    void clearUnit();
+    void setBufferAddress(unsigned char column, unsigned char row);
 
 public Q_SLOTS:
     void dataReceived(const QByteArray &data);
