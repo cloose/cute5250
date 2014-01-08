@@ -49,6 +49,7 @@ void WriteToDisplayParser::parse(GeneralDataStream &stream)
         }
 
         if (isDataCharacter(byte)) {
+            qDebug() << Q_FUNC_INFO;
             if (byte > 0x3f) {
                 isText = true;
                 ebcdicText += byte;

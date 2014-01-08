@@ -2,6 +2,7 @@
 
 #include <QDataStream>
 #include <QString>
+#include <QTextCodec>
 
 #include <terminalemulation.h>
 using q5250::TerminalEmulation;
@@ -11,13 +12,24 @@ class TerminalEmulationTest : public QObject
     Q_OBJECT
 
 private Q_SLOTS:
+    void initTestCase();
+
     void notifiesClearUnitWhenReceived();
     void notifiesSetBufferAddressWhenReceived();
+    void notifiesRepeatCharacterWhenReceived();
+    void notifiesDisplayTextWhenReceived();
 
 private:
     QByteArray createGeneralDataStreamFromData(const QByteArray &data);
+
+    QTextCodec *ebcdic500;
 };
 
+
+void TerminalEmulationTest::initTestCase()
+{
+    ebcdic500 = QTextCodec::codecForName("IBM500");
+}
 
 void TerminalEmulationTest::notifiesClearUnitWhenReceived()
 {
@@ -59,6 +71,62 @@ void TerminalEmulationTest::notifiesSetBufferAddressWhenReceived()
     auto arguments = spy.takeFirst();
     QCOMPARE(arguments.at(0).toInt(), (int)expectedColumn);
     QCOMPARE(arguments.at(1).toInt(), (int)expectedRow);
+}
+
+void TerminalEmulationTest::notifiesRepeatCharacterWhenReceived()
+{
+    unsigned char expectedRow = 2;
+    unsigned char expectedColumn = 15;
+    unsigned char expectedCharacter = 0x82;     // 'b' on CP500
+
+    QByteArray data;
+    data.append(0x04);        // ESC
+    data.append(0x11);        // WTD
+    data.append((char)0x00);  // CC1
+    data.append((char)0x00);  // CC2
+    data.append(0x02);        // RA
+    data.append(expectedRow);
+    data.append(expectedColumn);
+    data.append(expectedCharacter);
+
+    TerminalEmulation emulation;
+
+    QSignalSpy spy(&emulation, SIGNAL(repeatCharacter(uint,uint,uchar)));
+
+    emulation.dataReceived(createGeneralDataStreamFromData(data));
+
+    QCOMPARE(spy.count(), 1);
+
+    auto arguments = spy.takeFirst();
+    QCOMPARE(arguments.at(0).toInt(), (int)expectedColumn);
+    QCOMPARE(arguments.at(1).toInt(), (int)expectedRow);
+    QCOMPARE(arguments.at(2).toInt(), (int)expectedCharacter);
+}
+
+void TerminalEmulationTest::notifiesDisplayTextWhenReceived()
+{
+    QByteArray ebcdicData = ebcdic500->fromUnicode(QStringLiteral("TestString"));
+
+    QByteArray data;
+    data.append(0x04);        // ESC
+    data.append(0x11);        // WTD
+    data.append((char)0x00);  // CC1
+    data.append((char)0x00);  // CC2
+    data.append(ebcdicData);
+
+    TerminalEmulation emulation;
+
+    QSignalSpy spy(&emulation, SIGNAL(displayText(QByteArray)));
+
+    emulation.dataReceived(createGeneralDataStreamFromData(data));
+
+    QCOMPARE(spy.count(), 1);
+
+    auto arguments = spy.takeFirst();
+
+    QByteArray actualData = arguments.at(0).toByteArray();
+    QCOMPARE(actualData, ebcdicData);
+    QCOMPARE(ebcdic500->toUnicode(actualData), QStringLiteral("TestString"));
 }
 
 QByteArray TerminalEmulationTest::createGeneralDataStreamFromData(const QByteArray &data)
