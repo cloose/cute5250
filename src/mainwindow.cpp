@@ -2,7 +2,6 @@
 #include "ui_mainwindow.h"
 
 #include <QDebug>
-#include <QNetworkProxyFactory>
 
 #include <telnetclient.h>
 #include <terminalemulation.h>
