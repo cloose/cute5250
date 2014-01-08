@@ -194,6 +194,13 @@ void WriteToDisplayParser::parse(GeneralDataStream &stream)
             break;
         }
     }
+
+    // emit not yet handled text
+    if (isText) {
+        emit displayText(ebcdicText);
+        ebcdicText.clear();
+        isText = false;
+    }
 }
 
 bool WriteToDisplayParser::isDataCharacter(const unsigned char byte)
