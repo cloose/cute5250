@@ -18,9 +18,11 @@ private Q_SLOTS:
     void notifiesSetBufferAddressWhenReceived();
     void notifiesRepeatCharacterWhenReceived();
     void notifiesDisplayTextWhenReceived();
+    void notifiesSetDisplayAttributeWhenReceived();
 
 private:
     QByteArray createGeneralDataStreamFromData(const QByteArray &data);
+    QByteArray createWriteToDisplayCommand(const QByteArray &data);
 
     QTextCodec *ebcdic500;
 };
@@ -52,10 +54,6 @@ void TerminalEmulationTest::notifiesSetBufferAddressWhenReceived()
     unsigned char expectedColumn = 15;
 
     QByteArray data;
-    data.append(0x04);        // ESC
-    data.append(0x11);        // WTD
-    data.append((char)0x00);  // CC1
-    data.append((char)0x00);  // CC2
     data.append(0x11);        // SBA
     data.append(expectedRow);
     data.append(expectedColumn);
@@ -64,7 +62,8 @@ void TerminalEmulationTest::notifiesSetBufferAddressWhenReceived()
 
     QSignalSpy spy(&emulation, SIGNAL(setBufferAddress(unsigned char,unsigned char)));
 
-    emulation.dataReceived(createGeneralDataStreamFromData(data));
+    emulation.dataReceived(createGeneralDataStreamFromData(
+                               createWriteToDisplayCommand(data)));
 
     QCOMPARE(spy.count(), 1);
 
@@ -80,11 +79,7 @@ void TerminalEmulationTest::notifiesRepeatCharacterWhenReceived()
     unsigned char expectedCharacter = 0x82;     // 'b' on CP500
 
     QByteArray data;
-    data.append(0x04);        // ESC
-    data.append(0x11);        // WTD
-    data.append((char)0x00);  // CC1
-    data.append((char)0x00);  // CC2
-    data.append(0x02);        // RA
+    data.append(0x02);              // RA
     data.append(expectedRow);
     data.append(expectedColumn);
     data.append(expectedCharacter);
@@ -93,7 +88,8 @@ void TerminalEmulationTest::notifiesRepeatCharacterWhenReceived()
 
     QSignalSpy spy(&emulation, SIGNAL(repeatCharacter(uint,uint,uchar)));
 
-    emulation.dataReceived(createGeneralDataStreamFromData(data));
+    emulation.dataReceived(createGeneralDataStreamFromData(
+                               createWriteToDisplayCommand(data)));
 
     QCOMPARE(spy.count(), 1);
 
@@ -107,18 +103,12 @@ void TerminalEmulationTest::notifiesDisplayTextWhenReceived()
 {
     QByteArray ebcdicData = ebcdic500->fromUnicode(QStringLiteral("TestString"));
 
-    QByteArray data;
-    data.append(0x04);        // ESC
-    data.append(0x11);        // WTD
-    data.append((char)0x00);  // CC1
-    data.append((char)0x00);  // CC2
-    data.append(ebcdicData);
-
     TerminalEmulation emulation;
 
     QSignalSpy spy(&emulation, SIGNAL(displayText(QByteArray)));
 
-    emulation.dataReceived(createGeneralDataStreamFromData(data));
+    emulation.dataReceived(createGeneralDataStreamFromData(
+                               createWriteToDisplayCommand(ebcdicData)));
 
     QCOMPARE(spy.count(), 1);
 
@@ -127,6 +117,29 @@ void TerminalEmulationTest::notifiesDisplayTextWhenReceived()
     QByteArray actualData = arguments.at(0).toByteArray();
     QCOMPARE(actualData, ebcdicData);
     QCOMPARE(ebcdic500->toUnicode(actualData), QStringLiteral("TestString"));
+}
+
+void TerminalEmulationTest::notifiesSetDisplayAttributeWhenReceived()
+{
+    QByteArray ebcdicData;
+    ebcdicData += 0x28;         // foreground red
+    ebcdicData += ebcdic500->fromUnicode(QStringLiteral("TestString"));
+    ebcdicData += 0x20;         // foreground green
+
+    TerminalEmulation emulation;
+
+    QSignalSpy spy(&emulation, SIGNAL(setDisplayAttribute(unsigned char)));
+
+    emulation.dataReceived(createGeneralDataStreamFromData(
+                               createWriteToDisplayCommand(ebcdicData)));
+
+    QCOMPARE(spy.count(), 2);
+
+    auto arguments = spy.takeFirst();
+    QCOMPARE(arguments.at(0).toInt(), (int)0x28);
+
+    arguments = spy.takeFirst();
+    QCOMPARE(arguments.at(0).toInt(), (int)0x20);
 }
 
 QByteArray TerminalEmulationTest::createGeneralDataStreamFromData(const QByteArray &data)
@@ -149,6 +162,19 @@ QByteArray TerminalEmulationTest::createGeneralDataStreamFromData(const QByteArr
     for (int i = 0; i < data.size(); ++i) {
         dataStream << (quint8)data[i];
     }
+
+    return result;
+}
+
+QByteArray TerminalEmulationTest::createWriteToDisplayCommand(const QByteArray &data)
+{
+    QByteArray result;
+
+    result += 0x04;        // ESC
+    result += 0x11;        // WTD
+    result += (char)0x00;  // CC1
+    result += (char)0x00;  // CC2
+    result += data;
 
     return result;
 }
