@@ -29,6 +29,7 @@
 #include <QPainter>
 
 #include "bufferaddress.h"
+#include "screenattributes.h"
 
 namespace q5250 {
 
@@ -41,20 +42,41 @@ void DisplayFieldCommand::execute(QPainter* p)
 {
     BufferAddress bufferAddress;
 
-    qDebug() << "PAINT: DISPLAY FIELD AT" << bufferAddress.column() << bufferAddress.row();
+    if (ScreenAttribute::IsNonDisplay(field.attribute())) {
+        qDebug() << "PAINT: NON DISPLAY FIELD" << QString::number(field.attribute(), 16);
+        return;
+    }
 
-//    // underline?
-//    if( m_attribute == 0x24 )
-//    {
+    qDebug() << "PAINT: DISPLAY FIELD AT" << bufferAddress.column() << bufferAddress.row() << "WITH ATTRIBUTE" << QString::number(field.attribute(), 16);
+
+//    if (ScreenAttribute::ShowUnderline(field.attribute())) {
+//        // convert buffer address to pixel
+//        QFontMetrics fm = p->fontMetrics();
+//        unsigned int x = bufferAddress.column() * fm.width('X'); //* fm.maxWidth();
+//        unsigned int y = bufferAddress.row() * fm.height();
+//        unsigned int width = field.length() * fm.width('X');
+
+//        p->drawLine(x, y+2, x+width, y+2);
+//    }
+
+//    // screen attribute
+//    bufferAddress += 1;
 
     // convert buffer address to pixel
     QFontMetrics fm = p->fontMetrics();
     unsigned int x = bufferAddress.column() * fm.width('X'); //* fm.maxWidth();
     unsigned int y = bufferAddress.row() * fm.height();
-    unsigned int width = field.length() * fm.width('X');
 
-    p->drawLine(x, y+2, x+width, y+2);
+//    p->save();
+
+//    if (ScreenAttribute::ShowUnderline(field.attribute())) {
+//        QFont font = p->font();
+//        font.setUnderline(true);
+//        p->setFont(font);
 //    }
+
+    p->drawText(x, y, QString(field.length(), QLatin1Char(' ')));
+//    p->restore();
 }
 
 } // namespace q5250

@@ -8,6 +8,7 @@ set(q5250_SRCS
     field.cpp
     generaldatastream.cpp
     repeatcharactercommand.cpp
+    screenattributes.cpp
     setbufferaddresscommand.cpp
     setdisplayattributecommand.cpp
     telnetclient.cpp

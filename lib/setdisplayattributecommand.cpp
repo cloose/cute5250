@@ -29,6 +29,7 @@
 #include <QPainter>
 
 #include "bufferaddress.h"
+#include "screenattributes.h"
 
 namespace q5250 {
 
@@ -39,21 +40,29 @@ SetDisplayAttributeCommand::SetDisplayAttributeCommand(unsigned char attribute) 
 
 void SetDisplayAttributeCommand::execute(QPainter *p)
 {
+    qDebug() << "PAINT: SET DISPLAY ATTRIBUTE" << QString::number(displayAttribute, 16);
+
+    // en-/disable underline
+    qDebug () << "PAINT: SET UNDERLINE TO" << ScreenAttribute::ShowUnderline(displayAttribute);
+    QFont font = p->font();
+    font.setUnderline(ScreenAttribute::ShowUnderline(displayAttribute));
+    p->setFont(font);
+
     switch( displayAttribute )
     {
-        case 0x20:
+        case ScreenAttribute::GREEN:
             p->setBrush(Qt::black);
             p->setPen(Qt::green);
             break;
-        case 0x21:
+        case ScreenAttribute::GREEN_RI:
             p->setBrush(Qt::green);
             p->setPen(Qt::black);
             break;
-        case 0x22:
+        case ScreenAttribute::WHITE:
             p->setBrush(Qt::black);
             p->setPen(Qt::white);
             break;
-        case 0x23:
+        case ScreenAttribute::WHITE_RI:
             p->setBrush(Qt::white);
             p->setPen(Qt::black);
             break;
@@ -61,13 +70,21 @@ void SetDisplayAttributeCommand::execute(QPainter *p)
             p->setBrush(Qt::black);
             p->setPen(Qt::black);
             break;
-        case 0x28:
+        case ScreenAttribute::RED:
             p->setBrush(Qt::black);
             p->setPen(Qt::red);
             break;
-        case 0x3a:
+        case ScreenAttribute::RED_RI:
+            p->setBrush(Qt::red);
+            p->setPen(Qt::black);
+            break;
+        case ScreenAttribute::BLUE:
             p->setBrush(Qt::black);
             p->setPen(Qt::blue);
+            break;
+        case ScreenAttribute::BLUE_RI:
+            p->setBrush(Qt::blue);
+            p->setPen(Qt::black);
             break;
         default:
             p->setBrush(Qt::black);

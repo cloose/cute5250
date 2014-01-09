@@ -4,6 +4,7 @@
 
 #include "field.h"
 #include "generaldatastream.h"
+#include "screenattributes.h"
 
 namespace q5250 {
 
@@ -49,7 +50,7 @@ void WriteToDisplayParser::parse(GeneralDataStream &stream)
         }
 
         if (isDataCharacter(byte)) {
-            qDebug() << Q_FUNC_INFO;
+//            qDebug() << Q_FUNC_INFO;
             if (byte > 0x3f) {
                 isText = true;
                 ebcdicText += byte;
@@ -85,6 +86,7 @@ void WriteToDisplayParser::parse(GeneralDataStream &stream)
                 for (int i = 4; i < orderLength; ++i) {
                     unsigned char commandKey = stream.readByte();
                 }
+                qDebug() << "error row" << errorRow;
             }
             break;
 
@@ -152,22 +154,39 @@ void WriteToDisplayParser::parse(GeneralDataStream &stream)
         case Order::SF:
             {
                 qDebug() << "SERVER --> [GDS:WTD] -- START OF FIELD --";
+
+                Field field;
+
                 unsigned char ffw0 = stream.readByte();
-                qDebug() << "field format 0" << ffw0 << QString::number(ffw0, 16) << QString::number(ffw0, 2);
+                qDebug() << "field format 0:" << ffw0 << QString::number(ffw0, 16) << QString::number(ffw0, 2);
                 if (ffw0 & 0x40) {
-                    qDebug() << "Bit 14-15: FFW";
-                    qDebug() << "Bit 13: bypass field" << ((ffw0 & 0x20) == 0x20);
-                    qDebug() << "Bit 12: Duplication allowed" << ((ffw0 & 0x10) == 0x10);
-                    qDebug() << "Bit 11: Field was modified" << ((ffw0 & 0x08) == 0x08);
+//                    qDebug() << "Bit 14-15: FFW";
+//                    qDebug() << "Bit 13: bypass field" << ((ffw0 & 0x20) == 0x20);
+//                    qDebug() << "Bit 12: Duplication allowed" << ((ffw0 & 0x10) == 0x10);
+//                    qDebug() << "Bit 11: Field was modified" << ((ffw0 & 0x08) == 0x08);
 
                     unsigned char ffw1 = stream.readByte();
-                    qDebug() << "field format 1" << ffw1 << QString::number(ffw1, 16) << QString::number(ffw1, 2);
+                    qDebug() << "field format 1:" << ffw1 << QString::number(ffw1, 16) << QString::number(ffw1, 2);
+
+                    unsigned short ffw = (ffw0 << 8) | ffw1;
+                    QString bin = QString("%1").arg(ffw, 16, 2, QLatin1Char('0'));
+                    qDebug() << "field format  :" << QString::number(ffw, 16) << bin;
+
+                    field.setFieldFormat((ffw0 << 8) | ffw1);
+                    qDebug() << "Bit 15-14: FFW";
+                    qDebug() << "Bit 13   : Bypass field        =" << field.isBypassField();
+                    qDebug() << "Bit 12   : Duplication allowed =" << field.isDuplicationAllowed();
+                    qDebug() << "Bit 11   : Field was modified  =" << field.isModified();
+                    qDebug() << "Bit 10-8 : Field Edit          =" << field.fieldEdit();
+                    qDebug() << "Bit 7    : Auto Enter          =" << field.isAutoEnterEnabled();
+                    qDebug() << "Bit 6    : Field Exit required =" << field.isFieldExitKeyRequired();
 
                     unsigned char fcw0 = stream.readByte();
                     qDebug() << "field control 0" << fcw0 << QString::number(fcw0, 16) << QString::number(fcw0, 2);
 
                     if ((fcw0 & 0xe0) == 0x20) {
                         qDebug() << "ATTRIBUTE";
+                        field.setAttribute(fcw0);
                     } else {
                         unsigned char fcw1 = stream.readByte();
                         qDebug() << "field control 1" << fcw1 << QString::number(fcw1, 16) << QString::number(fcw1, 2);
@@ -178,6 +197,7 @@ void WriteToDisplayParser::parse(GeneralDataStream &stream)
                     }
                 } else {
                     qDebug() << "ATTRIBUTE";
+                    field.setAttribute(ffw0);
                 }
 
                 unsigned char fl0 = stream.readByte();
@@ -185,7 +205,9 @@ void WriteToDisplayParser::parse(GeneralDataStream &stream)
                 unsigned short fieldLength = (fl0 << 8) | fl1;
                 qDebug() << "field length" << fieldLength;
 
-                Field field(fieldLength);
+                field.setLength(fieldLength);
+
+
                 emit displayField(field);
             }
             break;
@@ -228,28 +250,29 @@ bool WriteToDisplayParser::isDataCharacter(const unsigned char byte)
 
 bool WriteToDisplayParser::isDisplayAttribute(const unsigned char byte)
 {
-    enum ScreenAttributes
-    {
-        SA_GRN    = 0x20,
-        SA_GRN_RI = 0x21,
-        SA_WHT    = 0x22,
-        SA_WHT_RI = 0x23,
-        SA_ND     = 0x27,
-        SA_RED    = 0x28,
-        SA_RED_RI = 0x29,
-        SA_BLU    = 0x3a,
-        SA_BLU_RI = 0x3b
-    };
+//    enum ScreenAttributes
+//    {
+//        SA_GRN    = 0x20,
+//        SA_GRN_RI = 0x21,
+//        SA_WHT    = 0x22,
+//        SA_WHT_RI = 0x23,
+//        SA_ND     = 0x27,
+//        SA_RED    = 0x28,
+//        SA_RED_RI = 0x29,
+//        SA_BLU    = 0x3a,
+//        SA_BLU_RI = 0x3b
+//    };
 
-    return ( (byte == SA_GRN)    ||
-             (byte == SA_GRN_RI) ||
-             (byte == SA_WHT)    ||
-             (byte == SA_WHT_RI) ||
-             (byte == SA_ND)     ||
-             (byte == SA_RED)    ||
-             (byte == SA_RED_RI) ||
-             (byte == SA_BLU)    ||
-             (byte == SA_BLU_RI) );
+//    return ( (byte == SA_GRN)    ||
+//             (byte == SA_GRN_RI) ||
+//             (byte == SA_WHT)    ||
+//             (byte == SA_WHT_RI) ||
+//             (byte == SA_ND)     ||
+//             (byte == SA_RED)    ||
+//             (byte == SA_RED_RI) ||
+//             (byte == SA_BLU)    ||
+//             (byte == SA_BLU_RI) );
+    return byte >= ScreenAttribute::GREEN && byte <= ScreenAttribute::NON_DISPLAY4;
 }
 
 } // namespace q5250

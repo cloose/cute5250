@@ -4,6 +4,7 @@
 #include <QString>
 #include <QTextCodec>
 
+#include <field.h>
 #include <terminalemulation.h>
 using q5250::TerminalEmulation;
 
@@ -17,6 +18,7 @@ private Q_SLOTS:
     void notifiesClearUnitWhenReceived();
     void notifiesSetBufferAddressWhenReceived();
     void notifiesRepeatCharacterWhenReceived();
+    void notifiesDisplayFieldWhenReceived();
     void notifiesDisplayTextWhenReceived();
     void notifiesSetDisplayAttributeWhenReceived();
 
@@ -30,6 +32,7 @@ private:
 
 void TerminalEmulationTest::initTestCase()
 {
+    qRegisterMetaType<q5250::Field>();
     ebcdic500 = QTextCodec::codecForName("IBM500");
 }
 
@@ -97,6 +100,26 @@ void TerminalEmulationTest::notifiesRepeatCharacterWhenReceived()
     QCOMPARE(arguments.at(0).toInt(), (int)expectedColumn);
     QCOMPARE(arguments.at(1).toInt(), (int)expectedRow);
     QCOMPARE(arguments.at(2).toInt(), (int)expectedCharacter);
+}
+
+void TerminalEmulationTest::notifiesDisplayFieldWhenReceived()
+{
+    QByteArray data;
+    data += 0x1d;       // SF
+    data += 0x60;       // FFW 0
+    data += (char)0x00; // FFW 1
+
+    TerminalEmulation emulation;
+
+    QSignalSpy spy(&emulation, SIGNAL(displayField(q5250::Field)));
+
+    emulation.dataReceived(createGeneralDataStreamFromData(
+                               createWriteToDisplayCommand(data)));
+
+    QCOMPARE(spy.count(), 1);
+
+    auto arguments = spy.takeFirst();
+    QVERIFY(arguments.at(0).canConvert<q5250::Field>());
 }
 
 void TerminalEmulationTest::notifiesDisplayTextWhenReceived()

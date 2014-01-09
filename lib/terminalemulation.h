@@ -46,7 +46,7 @@ public:
 
 Q_SIGNALS:
     void clearUnit();
-    void displayField(const Field &field);
+    void displayField(const q5250::Field &field);
     void displayText(const QByteArray &ebcdicText);
     void repeatCharacter(uint col, uint row, uchar character);
     void setBufferAddress(unsigned char column, unsigned char row);

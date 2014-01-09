@@ -50,7 +50,7 @@ public Q_SLOTS:
     void displayText(const QByteArray &ebcdicText);
     void setDisplayAttribute(const unsigned char attribute);
     void repeatCharacter(uint column, uint row, uchar character);
-    void displayField(const Field &field);
+    void displayField(const q5250::Field &field);
 
 protected:
     void paintEvent(QPaintEvent *event);

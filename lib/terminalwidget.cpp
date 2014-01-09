@@ -108,6 +108,7 @@ void TerminalWidget::repeatCharacter(uint column, uint row, uchar character)
 
 void TerminalWidget::displayField(const Field &field)
 {
+    d->paintQueue.enqueue(new SetDisplayAttributeCommand(field.attribute()));
     d->paintQueue.enqueue(new DisplayFieldCommand(field));
 }
 

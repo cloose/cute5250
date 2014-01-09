@@ -49,9 +49,9 @@ void DisplayTextCommand::execute(QPainter* p)
     unsigned int y = bufferAddress.row() * fm.height();
 
     // draw background
-//    p->boundingRect(x, y,)
     p->setBackground(p->brush());
     p->setBackgroundMode(Qt::OpaqueMode);
+
     p->drawText(x, y, text);
 
     bufferAddress += text.length();

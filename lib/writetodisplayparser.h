@@ -22,7 +22,7 @@ signals:
     void displayText(const QByteArray &ebcdicText);
     void setDisplayAttribute(const unsigned char attribute);
     void repeatCharacter(uint col, uint row, uchar character);
-    void displayField(const Field &field);
+    void displayField(const q5250::Field &field);
 
 private:
     bool isDataCharacter(const unsigned char byte);
