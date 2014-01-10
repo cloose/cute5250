@@ -34,7 +34,11 @@ TelnetParser::TelnetParser(QObject *parent) :
 
 void TelnetParser::parse(const QByteArray &data)
 {
-    emit dataReceived(replaceEscapedIACBytes(data));
+    if (data.at(0) == '\xff') {
+        emit optionCommandReceived(data.at(1), data.at(2));
+    } else {
+        emit dataReceived(replaceEscapedIACBytes(data));
+    }
 }
 
 QByteArray TelnetParser::replaceEscapedIACBytes(const QByteArray &data)

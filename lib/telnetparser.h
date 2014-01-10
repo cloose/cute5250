@@ -42,6 +42,7 @@ public:
 
 Q_SIGNALS:
     void dataReceived(const QByteArray &data);
+    void optionCommandReceived(uchar command, uchar option);
 
 private:
     QByteArray replaceEscapedIACBytes(const QByteArray &data);
