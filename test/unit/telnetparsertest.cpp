@@ -23,7 +23,7 @@ class TelnetParserTest : public QObject
 private Q_SLOTS:
     void notifiesReceivedData();
     void replacesEscapedIACBytes();
-    void notifiesReceivedOptionCommands();
+    void notifiesAllReceivedOptionCommands();
 
 private:
     TelnetParser parser;
@@ -54,16 +54,23 @@ void TelnetParserTest::replacesEscapedIACBytes()
     QCOMPARE(spy[0][0].toByteArray(), QByteArray::fromRawData(expectedData, 3));
 }
 
-void TelnetParserTest::notifiesReceivedOptionCommands()
+void TelnetParserTest::notifiesAllReceivedOptionCommands()
 {
     QSignalSpy spy(&parser, SIGNAL(optionCommandReceived(uchar, uchar)));
 
-    const char data[] = { '\xff', '\xfd', '\0' };   // IAC DO TRANSMIT_BINARY
-    parser.parse(QByteArray::fromRawData(data, 3));
+    // IAC DO TRANSMIT_BINARY, IAC DO END_OF_RECORD
+    const char data[] = { '\xff', '\xfd', '\0', '\xff', '\xfd', '\x19' };
+    parser.parse(QByteArray::fromRawData(data, 6));
 
-    QCOMPARE(spy.count(), 1);
+    QCOMPARE(spy.count(), 2);
+
+    // IAC DO TRANSMIT-BINARY
     QCOMPARE((uchar)spy[0][0].toInt(), (uchar)data[1]);
     QCOMPARE((uchar)spy[0][1].toInt(), (uchar)data[2]);
+
+    // IAC DO END-OF-RECORD
+    QCOMPARE((uchar)spy[1][0].toInt(), (uchar)data[4]);
+    QCOMPARE((uchar)spy[1][1].toInt(), (uchar)data[5]);
 }
 
 QTEST_APPLESS_MAIN(TelnetParserTest)

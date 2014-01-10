@@ -34,10 +34,19 @@ TelnetParser::TelnetParser(QObject *parent) :
 
 void TelnetParser::parse(const QByteArray &data)
 {
-    if (data.at(0) == '\xff') {
-        emit optionCommandReceived(data.at(1), data.at(2));
-    } else {
-        emit dataReceived(replaceEscapedIACBytes(data));
+    int currentPos = 0;
+
+    while (currentPos < data.size()) {
+        const char byte = data.at(currentPos);
+
+        if (byte == '\xff') {
+            emit optionCommandReceived(data.at(currentPos+1), data.at(currentPos+2));
+            currentPos += 3;
+        } else {
+            QByteArray plainData = data.mid(currentPos);
+            currentPos += plainData.size();
+            emit dataReceived(replaceEscapedIACBytes(plainData));
+        }
     }
 }
 
