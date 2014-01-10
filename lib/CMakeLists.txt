@@ -12,6 +12,8 @@ set(q5250_SRCS
     setbufferaddresscommand.cpp
     setdisplayattributecommand.cpp
     telnetclient.cpp
+    telnetcommands.cpp
+    telnetparser.cpp
     terminalemulation.cpp
     terminalwidget.cpp
     writetodisplayparser.cpp

@@ -28,41 +28,27 @@
 #include <QDebug>
 #include <QTcpSocket>
 
+#include "telnetcommands.h"
+#include "telnetparser.h"
+
 namespace q5250 {
 
 
 void OutputData(const QByteArray &data)
 {
-//    qDebug() << "--- SERVER ---";
-//    for (int i = 0; i < data.size(); ++i) {
-//        qDebug() << QString::number(uchar(data[i]), 16)
-//                 << QString::number(uchar(data[i]))
-//                 << data[i];
-//    }
+    qDebug() << "--- SERVER ---";
+    for (int i = 0; i < data.size(); ++i) {
+        qDebug() << QString::number(uchar(data[i]), 16)
+                 << QString::number(uchar(data[i]))
+                 << data[i];
+    }
 }
 
 namespace Command {
 
-enum Commands {
-    SE = 240,
-    SB = 250,
-    WILL = 251,
-    WONT = 252,
-    DO = 253,
-    DONT = 254,
-    IAC = 255
-};
-
 Commands fromByte(const unsigned char byte)
 {
     return (Commands)byte;
-}
-
-bool isOptionCommand(const unsigned char byte)
-{
-    Commands command = fromByte(byte);
-    return command == Command::WILL || command == Command::WONT ||
-           command == Command::DO || command == Command::DONT;
 }
 
 }
@@ -115,9 +101,6 @@ public:
 
     bool connected;
 
-    void consume();
-    int parseCommand(const QByteArray &data);
-
     Command::Commands replyFor(Command::Commands command, bool allowed);
 
     void sendCommand(Command::Commands command, Option::Options option);
@@ -126,12 +109,9 @@ public:
 
     bool isOptionAllowed(Option::Options option);
 
-    bool isOptionCommand(const QByteArray &data);
-    bool isSubnegotiationCommand(const QByteArray &data);
-
     QByteArray subnegotiationParameters(const QByteArray &data);
 
-    void stateTerminalType(const QByteArray &data);
+    void stateTerminalType(uchar subnegotiationCommand);
 
     void setMode(Command::Commands command, Option::Options option);
     bool replyNeeded(Command::Commands command, Option::Options option);
@@ -142,6 +122,12 @@ public:
 public slots:
     void socketConnected();
     void socketReadyRead();
+
+    void optionCommandReceived(uchar commandByte, uchar optionByte);
+    void subnegotationReceived(uchar optionByte, uchar subnegotiationCommand);
+
+private:
+    TelnetParser parser;
 };
 
 TelnetClient::Private::Private(TelnetClient *parent) :
@@ -151,6 +137,13 @@ TelnetClient::Private::Private(TelnetClient *parent) :
     terminalType("UNKNOWN")
 {
     setSocket(new QTcpSocket(this));
+
+    connect(&parser, &TelnetParser::dataReceived,
+            q, &TelnetClient::dataReceived);
+    connect(&parser, &TelnetParser::optionCommandReceived,
+            this, &Private::optionCommandReceived);
+    connect(&parser, &TelnetParser::subnegotationReceived,
+            this, &Private::subnegotationReceived);
 }
 
 void TelnetClient::Private::setSocket(QTcpSocket *s)
@@ -169,70 +162,41 @@ void TelnetClient::Private::setSocket(QTcpSocket *s)
     }
 }
 
-void TelnetClient::Private::consume()
-{
-    int currentPos = 0;
-    int previousPos = -1;
+//int TelnetClient::Private::parseCommand(const QByteArray &data)
+//{
+//    if (data.isEmpty()) return 0;
 
-    while (previousPos < currentPos && currentPos < buffer.size()) {
-        previousPos = currentPos;
+//    if (isOptionCommand(data)) {
+//        Command::Commands command = Command::fromByte(data[1]);
+//        Option::Options option = Option::fromByte(data[2]);
 
-        const uchar c = (uchar)buffer[currentPos];
-        switch (c) {
-        case Command::IAC:
-            currentPos += parseCommand(buffer.mid(currentPos));
-            break;
+//        if (replyNeeded(command, option)) {
+//            bool allowed = isOptionAllowed(option);
+//            sendCommand(replyFor(command, allowed), option);
+//            setMode(command, option);
+//        }
 
-        default:
-            QByteArray data = buffer.mid(currentPos);
-            emit q->dataReceived(data);
-            currentPos += data.size();
-            break;
-        }
-    }
+//        return 3;
+//    }
 
-    if (currentPos < buffer.size()) {
-        buffer = buffer.mid(currentPos);
-    } else {
-        buffer.clear();
-    }
-}
+//    if (isSubnegotiationCommand(data)) {
+//        QByteArray parameters = subnegotiationParameters(data);
 
-int TelnetClient::Private::parseCommand(const QByteArray &data)
-{
-    if (data.isEmpty()) return 0;
+//        Option::Options option = Option::fromByte(parameters[0]);
+//        switch (option) {
+//        case Option::TERMINAL_TYPE:
+//            stateTerminalType(parameters);
+//            break;
 
-    if (isOptionCommand(data)) {
-        Command::Commands command = Command::fromByte(data[1]);
-        Option::Options option = Option::fromByte(data[2]);
+//        default:
+//            break;
+//        }
 
-        if (replyNeeded(command, option)) {
-            bool allowed = isOptionAllowed(option);
-            sendCommand(replyFor(command, allowed), option);
-            setMode(command, option);
-        }
+//        return parameters.size() + 4;
+//    }
 
-        return 3;
-    }
-
-    if (isSubnegotiationCommand(data)) {
-        QByteArray parameters = subnegotiationParameters(data);
-
-        Option::Options option = Option::fromByte(parameters[0]);
-        switch (option) {
-        case Option::TERMINAL_TYPE:
-            stateTerminalType(parameters);
-            break;
-
-        default:
-            break;
-        }
-
-        return parameters.size() + 4;
-    }
-
-    return 0;
-}
+//    return 0;
+//}
 
 Command::Commands TelnetClient::Private::replyFor(Command::Commands command, bool allowed)
 {
@@ -292,16 +256,6 @@ bool TelnetClient::Private::isOptionAllowed(Option::Options option)
            option == Option::TRANSMIT_BINARY;
 }
 
-bool TelnetClient::Private::isOptionCommand(const QByteArray &data)
-{
-    return data.size() >= 3 && Command::isOptionCommand(data[1]);
-}
-
-bool TelnetClient::Private::isSubnegotiationCommand(const QByteArray &data)
-{
-    return data.size() >= 4 && Command::fromByte(data[1]) == Command::SB;
-}
-
 QByteArray TelnetClient::Private::subnegotiationParameters(const QByteArray &data)
 {
     for (int i = 2; i < data.size() - 1; ++i) {
@@ -313,9 +267,9 @@ QByteArray TelnetClient::Private::subnegotiationParameters(const QByteArray &dat
     return QByteArray();
 }
 
-void TelnetClient::Private::stateTerminalType(const QByteArray &data)
+void TelnetClient::Private::stateTerminalType(uchar subnegotiationCommand)
 {
-    if (data[1] != SubnegotiationCommand::SEND)
+    if (subnegotiationCommand != SubnegotiationCommand::SEND)
         return;
 
     const char c1[4] = { (char)Command::IAC, (char)Command::SB, Option::TERMINAL_TYPE, SubnegotiationCommand::IS };
@@ -374,9 +328,35 @@ void TelnetClient::Private::socketConnected()
 
 void TelnetClient::Private::socketReadyRead()
 {
-    buffer.append(socket->readAll());
-    OutputData(buffer);
-    consume();
+//    buffer.append(socket->readAll());
+    buffer = socket->readAll();
+//    OutputData(buffer);
+    parser.parse(buffer);
+}
+
+void TelnetClient::Private::optionCommandReceived(uchar commandByte, uchar optionByte)
+{
+    Command::Commands command = Command::fromByte(commandByte);
+    Option::Options option = Option::fromByte(optionByte);
+
+    if (replyNeeded(command, option)) {
+        bool allowed = isOptionAllowed(option);
+        sendCommand(replyFor(command, allowed), option);
+        setMode(command, option);
+    }
+}
+
+void TelnetClient::Private::subnegotationReceived(uchar optionByte, uchar subnegotiationCommand)
+{
+    Option::Options option = Option::fromByte(optionByte);
+    switch (option) {
+    case Option::TERMINAL_TYPE:
+        stateTerminalType(subnegotiationCommand/*parameters*/);
+        break;
+
+    default:
+        break;
+    }
 }
 
 TelnetClient::TelnetClient(QObject *parent) :
