@@ -5,6 +5,7 @@ set(q5250_SRCS
     clearunitcommand.cpp
     generaldatastream.cpp
     telnetclient.cpp
+    telnetparser.cpp
     terminalemulation.cpp
     terminalwidget.cpp
     writetodisplayparser.cpp

@@ -25,6 +25,18 @@ qt5_use_modules(telnetclienttest Network Test)
 
 add_test(NAME telnetclienttest COMMAND telnetclienttest)
 
+### telnet parser unit test ###
+
+set(telnetparsertest_SRCS
+    telnetparsertest.cpp
+)
+
+add_executable(telnetparsertest ${telnetparsertest_SRCS})
+target_link_libraries(telnetparsertest q5250)
+qt5_use_modules(telnetparsertest Test)
+
+add_test(NAME telnetparsertest COMMAND telnetparsertest)
+
 ### terminal emulation unit test ###
 
 set(terminalemulationtest_SRCS
