@@ -1,16 +1,19 @@
 include_directories(${CMAKE_SOURCE_DIR}/lib)
 
-### generaldatastream unit test ###
+macro(create_test NAME)
+    add_executable(${NAME} ${NAME}.cpp)
+    target_link_libraries(${NAME} q5250)
+    qt5_use_modules(${NAME} Test)
 
-set(generaldatastreamtest_SRCS
-    generaldatastreamtest.cpp
-)
+    add_test(NAME ${NAME} COMMAND ${NAME})
+endmacro(create_test)
 
-add_executable(generaldatastreamtest ${generaldatastreamtest_SRCS})
-target_link_libraries(generaldatastreamtest q5250)
-qt5_use_modules(generaldatastreamtest Test)
+### unit tests ###
 
-add_test(NAME generaldatastreamtest COMMAND generaldatastreamtest)
+create_test(generaldatastreamtest)
+create_test(telnetcommandstest)
+create_test(telnetparsertest)
+create_test(terminalemulationtest)
 
 ### telnet client unit test ###
 
@@ -24,27 +27,3 @@ target_link_libraries(telnetclienttest q5250)
 qt5_use_modules(telnetclienttest Network Test)
 
 add_test(NAME telnetclienttest COMMAND telnetclienttest)
-
-### telnet parser unit test ###
-
-set(telnetparsertest_SRCS
-    telnetparsertest.cpp
-)
-
-add_executable(telnetparsertest ${telnetparsertest_SRCS})
-target_link_libraries(telnetparsertest q5250)
-qt5_use_modules(telnetparsertest Test)
-
-add_test(NAME telnetparsertest COMMAND telnetparsertest)
-
-### terminal emulation unit test ###
-
-set(terminalemulationtest_SRCS
-    terminalemulationtest.cpp
-)
-
-add_executable(terminalemulationtest ${terminalemulationtest_SRCS})
-target_link_libraries(terminalemulationtest q5250)
-qt5_use_modules(terminalemulationtest Test)
-
-add_test(NAME terminalemulationtest COMMAND terminalemulationtest)

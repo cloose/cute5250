@@ -28,6 +28,8 @@
 #include <QDebug>
 #include <QTcpSocket>
 
+#include "telnetcommands.h"
+
 namespace q5250 {
 
 
@@ -43,27 +45,27 @@ void OutputData(const QByteArray &data)
 
 namespace Command {
 
-enum Commands {
-    SE = 240,
-    SB = 250,
-    WILL = 251,
-    WONT = 252,
-    DO = 253,
-    DONT = 254,
-    IAC = 255
-};
+//enum Commands {
+//    SE = 240,
+//    SB = 250,
+//    WILL = 251,
+//    WONT = 252,
+//    DO = 253,
+//    DONT = 254,
+//    IAC = 255
+//};
 
 Commands fromByte(const unsigned char byte)
 {
     return (Commands)byte;
 }
 
-bool isOptionCommand(const unsigned char byte)
-{
-    Commands command = fromByte(byte);
-    return command == Command::WILL || command == Command::WONT ||
-           command == Command::DO || command == Command::DONT;
-}
+//bool isOptionCommand(const unsigned char byte)
+//{
+//    Commands command = fromByte(byte);
+//    return command == Command::WILL || command == Command::WONT ||
+//           command == Command::DO || command == Command::DONT;
+//}
 
 }
 

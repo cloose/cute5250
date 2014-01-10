@@ -24,6 +24,7 @@ private Q_SLOTS:
     void notifiesReceivedData();
     void replacesEscapedIACBytes();
     void notifiesAllReceivedOptionCommands();
+    void notifiesReceivedSubnegotationCommandWithoutParameters();
 
 private:
     TelnetParser parser;
@@ -71,6 +72,23 @@ void TelnetParserTest::notifiesAllReceivedOptionCommands()
     // IAC DO END-OF-RECORD
     QCOMPARE((uchar)spy[1][0].toInt(), (uchar)data[4]);
     QCOMPARE((uchar)spy[1][1].toInt(), (uchar)data[5]);
+}
+
+void TelnetParserTest::notifiesReceivedSubnegotationCommandWithoutParameters()
+{
+    QSignalSpy spy(&parser, SIGNAL(subnegotationReceived(uchar, uchar)));
+
+    // IAC SB TERMINAL-TYPE SEND IAC SE
+    const char data[] = { '\xff', '\xfa', '\x18', '\x01', '\xff', '\xf0' };
+    parser.parse(QByteArray::fromRawData(data, 6));
+
+    QCOMPARE(spy.count(), 1);
+
+    // TERMINAL-TYPE
+    QCOMPARE((uchar)spy[0][0].toInt(), (uchar)data[2]);
+
+    // SEND
+    QCOMPARE((uchar)spy[0][1].toInt(), (uchar)data[3]);
 }
 
 QTEST_APPLESS_MAIN(TelnetParserTest)

@@ -23,33 +23,22 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#ifndef Q5250_TELNETPARSER_H
-#define Q5250_TELNETPARSER_H
-
-#include "q5250_global.h"
-#include <QObject>
+#include "telnetcommands.h"
 
 namespace q5250 {
 
-class Q5250SHARED_EXPORT TelnetParser : public QObject
+bool Command::isInterpretAsCommand(unsigned char byte)
 {
-    Q_OBJECT
+    return byte == Command::IAC;
+}
 
-public:
-    explicit TelnetParser(QObject *parent = 0);
+bool Command::isOptionCommand(unsigned char byte)
+{
+    return byte == Command::WILL ||
+           byte == Command::WONT ||
+           byte == Command::DO   ||
+           byte == Command::DONT;
+}
 
-    void parse(const QByteArray &buffer);
-
-Q_SIGNALS:
-    void dataReceived(const QByteArray &data);
-    void optionCommandReceived(uchar command, uchar option);
-    void subnegotationReceived(uchar option, uchar subnegotiationCommand);
-
-private:
-    int parseCommand(const QByteArray &buffer);
-    QByteArray replaceEscapedIACBytes(const QByteArray &data);
-};
 
 } // namespace q5250
-
-#endif // Q5250_TELNETPARSER_H

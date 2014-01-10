@@ -25,6 +25,8 @@
  */
 #include "telnetparser.h"
 
+#include "telnetcommands.h"
+
 namespace q5250 {
 
 TelnetParser::TelnetParser(QObject *parent) :
@@ -32,22 +34,44 @@ TelnetParser::TelnetParser(QObject *parent) :
 {
 }
 
-void TelnetParser::parse(const QByteArray &data)
+void TelnetParser::parse(const QByteArray &buffer)
 {
     int currentPos = 0;
 
-    while (currentPos < data.size()) {
-        const char byte = data.at(currentPos);
+    while (currentPos < buffer.size()) {
+        const char byte = buffer.at(currentPos);
 
-        if (byte == '\xff') {
-            emit optionCommandReceived(data.at(currentPos+1), data.at(currentPos+2));
-            currentPos += 3;
+        if (Command::isInterpretAsCommand(byte)) {
+            currentPos += parseCommand(buffer.mid(currentPos));
         } else {
-            QByteArray plainData = data.mid(currentPos);
-            currentPos += plainData.size();
-            emit dataReceived(replaceEscapedIACBytes(plainData));
+            QByteArray data = buffer.mid(currentPos);
+            currentPos += data.size();
+            emit dataReceived(replaceEscapedIACBytes(data));
         }
     }
+}
+
+int TelnetParser::parseCommand(const QByteArray &buffer)
+{
+    if (buffer.isEmpty() && buffer.size() == 1)
+        return buffer.size();
+
+    uchar command = buffer.at(1);
+
+    if (buffer.size() >= 4 && command == Command::SB) {
+        uchar option = buffer.at(2);
+        uchar subnegotationCommand = buffer.at(3);
+        emit subnegotationReceived(option, subnegotationCommand);
+        return 6;
+    }
+
+    if (buffer.size() >= 3 && Command::isOptionCommand(command)) {
+        uchar option = buffer.at(2);
+        emit optionCommandReceived(command, option);
+        return 3;
+    }
+
+    return 1;
 }
 
 QByteArray TelnetParser::replaceEscapedIACBytes(const QByteArray &data)
