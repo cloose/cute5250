@@ -29,6 +29,8 @@
 
 namespace q5250 {
 
+static const int MIN_SUBNEGOTIATION_LENGTH = 6;
+
 TelnetParser::TelnetParser(QObject *parent) :
     QObject(parent)
 {
@@ -61,8 +63,9 @@ int TelnetParser::parseCommand(const QByteArray &buffer)
     if (buffer.size() >= 4 && command == Command::SB) {
         uchar option = buffer.at(2);
         uchar subnegotationCommand = buffer.at(3);
-        emit subnegotationReceived(option, subnegotationCommand);
-        return 6;
+        QByteArray parameters = subnegotiationParameters(buffer.mid(4));
+        emit subnegotationReceived(option, subnegotationCommand, parameters);
+        return MIN_SUBNEGOTIATION_LENGTH + parameters.size();
     }
 
     if (buffer.size() >= 3 && Command::isOptionCommand(command)) {
@@ -79,6 +82,17 @@ QByteArray TelnetParser::replaceEscapedIACBytes(const QByteArray &data)
     QByteArray result(data);
     result.replace("\xff\xff", "\xff");
     return result;
+}
+
+QByteArray TelnetParser::subnegotiationParameters(const QByteArray &data)
+{
+    for (int i = 0; i < data.size(); ++i) {
+        if (Command::isInterpretAsCommand(data[i]) && uchar(data[i+1]) == Command::SE) {
+            return data.mid(0, i);
+        }
+    }
+
+    return QByteArray();
 }
 
 } // namespace q5250

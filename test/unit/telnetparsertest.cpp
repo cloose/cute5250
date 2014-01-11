@@ -25,6 +25,7 @@ private Q_SLOTS:
     void replacesEscapedIACBytes();
     void notifiesAllReceivedOptionCommands();
     void notifiesReceivedSubnegotationCommandWithoutParameters();
+    void notifiesReceivedSubnegotationCommandWithParameters();
 
 private:
     TelnetParser parser;
@@ -76,19 +77,44 @@ void TelnetParserTest::notifiesAllReceivedOptionCommands()
 
 void TelnetParserTest::notifiesReceivedSubnegotationCommandWithoutParameters()
 {
-    QSignalSpy spy(&parser, SIGNAL(subnegotationReceived(uchar, uchar)));
+    QSignalSpy spy(&parser, SIGNAL(subnegotationReceived(uchar, uchar, QByteArray)));
+    QSignalSpy dataSpy(&parser, SIGNAL(dataReceived(QByteArray)));
 
     // IAC SB TERMINAL-TYPE SEND IAC SE
     const char data[] = { '\xff', '\xfa', '\x18', '\x01', '\xff', '\xf0' };
     parser.parse(QByteArray::fromRawData(data, 6));
 
     QCOMPARE(spy.count(), 1);
+    QCOMPARE(dataSpy.count(), 0);
 
     // TERMINAL-TYPE
     QCOMPARE((uchar)spy[0][0].toInt(), (uchar)data[2]);
 
     // SEND
     QCOMPARE((uchar)spy[0][1].toInt(), (uchar)data[3]);
+
+    QVERIFY(spy[0][2].toByteArray().isEmpty());
+}
+
+void TelnetParserTest::notifiesReceivedSubnegotationCommandWithParameters()
+{
+    QSignalSpy spy(&parser, SIGNAL(subnegotationReceived(uchar, uchar, QByteArray)));
+    QSignalSpy dataSpy(&parser, SIGNAL(dataReceived(QByteArray)));
+
+    // IAC SB NEW-ENVIRON SEND ABC IAC SE
+    const char data[] = { '\xff', '\xfa', '\x27', '\x01', 'A', 'B', 'C', '\xff', '\xf0' };
+    parser.parse(QByteArray::fromRawData(data, 9));
+
+    QCOMPARE(spy.count(), 1);
+    QCOMPARE(dataSpy.count(), 0);
+
+    // TERMINAL-TYPE
+    QCOMPARE((uchar)spy[0][0].toInt(), (uchar)data[2]);
+
+    // SEND
+    QCOMPARE((uchar)spy[0][1].toInt(), (uchar)data[3]);
+
+    QCOMPARE(spy[0][2].toByteArray(), QByteArray("ABC"));
 }
 
 QTEST_APPLESS_MAIN(TelnetParserTest)

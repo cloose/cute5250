@@ -43,11 +43,12 @@ public:
 Q_SIGNALS:
     void dataReceived(const QByteArray &data);
     void optionCommandReceived(uchar command, uchar option);
-    void subnegotationReceived(uchar option, uchar subnegotiationCommand);
+    void subnegotationReceived(uchar option, uchar subnegotiationCommand, const QByteArray& parameters);
 
 private:
     int parseCommand(const QByteArray &buffer);
     QByteArray replaceEscapedIACBytes(const QByteArray &data);
+    QByteArray subnegotiationParameters(const QByteArray &data);
 };
 
 } // namespace q5250
