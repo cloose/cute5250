@@ -3,6 +3,7 @@
 set(q5250_SRCS
     bufferaddress.cpp
     clearunitcommand.cpp
+    cursor.cpp
     displayfieldcommand.cpp
     displaytextcommand.cpp
     field.cpp

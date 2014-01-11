@@ -23,44 +23,27 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#ifndef Q5250_TERMINALEMULATION_H
-#define Q5250_TERMINALEMULATION_H
+#ifndef Q5250_CURSOR_H
+#define Q5250_CURSOR_H
 
-#include "q5250_global.h"
+#include <QPoint>
 
-#include <memory>
-
-#include <QObject>
-
-namespace q5250 {
-
-class Field;
-
-class Q5250SHARED_EXPORT TerminalEmulation : public QObject
+namespace q5250
 {
-    Q_OBJECT
 
+class Cursor
+{
 public:
-    explicit TerminalEmulation(QObject *parent = 0);
-    ~TerminalEmulation();
+    void setPosition(unsigned col, unsigned row);
 
-Q_SIGNALS:
-    void clearUnit();
-    void displayField(const q5250::Field &field);
-    void displayText(const QByteArray &ebcdicText);
-    void repeatCharacter(uint col, uint row, uchar character);
-    void setBufferAddress(unsigned char column, unsigned char row);
-    void setDisplayAttribute(const unsigned char attribute);
-
-public Q_SLOTS:
-    void dataReceived(const QByteArray &data);
-    void fieldAdded(const q5250::Field &field);
+    unsigned column() const { return position.x(); }
+    unsigned row() const { return position.y(); }
 
 private:
-    class Private;
-    std::unique_ptr<Private> d;
+    static QPoint position;
 };
+
 
 } // namespace q5250
 
-#endif // Q5250_TERMINALEMULATION_H
+#endif // Q5250_CURSOR_H

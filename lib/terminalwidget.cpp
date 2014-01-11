@@ -31,6 +31,7 @@
 #include <QTextCodec>
 
 #include "clearunitcommand.h"
+#include "cursor.h"
 #include "displayfieldcommand.h"
 #include "displaytextcommand.h"
 #include "field.h"
@@ -131,6 +132,15 @@ void TerminalWidget::paintEvent(QPaintEvent *event)
         PainterCommand *command = d->paintQueue.dequeue();
         command->execute(&p);
     }
+
+    // convert cursor position to pixel
+    Cursor cursor;
+    unsigned int x = cursor.column() * fm.width('X');
+    unsigned int y = cursor.row() * fm.height();
+
+    p.setPen(Qt::white);
+    p.setBrush(Qt::white);
+    p.drawRect(x, y-1, fm.maxWidth()-1, 3);
 }
 
 } // namespace q5250

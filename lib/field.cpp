@@ -1,5 +1,7 @@
 #include "field.h"
 
+#include "cursor.h"
+
 namespace q5250 {
 
 static const unsigned short BYPASS_FIELD_MASK        = 0x2000;   // Bit 13
@@ -17,6 +19,18 @@ Field::Field() :
     fieldFormat(0),
     fieldAttribute(0)
 {
+}
+
+void Field::setPosition(unsigned int column, unsigned int row)
+{
+    startPosition.setX(column);
+    startPosition.setY(row);
+}
+
+void Field::gotoField()
+{
+    Cursor cursor;
+    cursor.setPosition(startPosition.x(), startPosition.y());
 }
 
 void Field::setLength(unsigned short length)

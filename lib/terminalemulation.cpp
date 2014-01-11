@@ -82,7 +82,7 @@ void TerminalEmulation::dataReceived(const QByteArray &data)
                     connect(&parser, &WriteToDisplayParser::repeatCharacter,
                             this, &TerminalEmulation::repeatCharacter);
                     connect(&parser, &WriteToDisplayParser::displayField,
-                            this, &TerminalEmulation::displayField);
+                            this, &TerminalEmulation::fieldAdded);
 
                     parser.parse(dataStream);
                 }
@@ -110,6 +110,11 @@ void TerminalEmulation::dataReceived(const QByteArray &data)
             qDebug() << "SERVER: [GDS]" << QString::number(byte, 16);
         }
     }
+}
+
+void TerminalEmulation::fieldAdded(const Field &field)
+{
+    emit displayField(field);
 }
 
 } // namespace q5250

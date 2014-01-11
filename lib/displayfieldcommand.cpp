@@ -77,6 +77,9 @@ void DisplayFieldCommand::execute(QPainter* p)
 
     p->drawText(x, y, QString(field.length(), QLatin1Char(' ')));
 //    p->restore();
+
+    field.setPosition(bufferAddress.column(), bufferAddress.row());
+    field.gotoField();
 }
 
 } // namespace q5250

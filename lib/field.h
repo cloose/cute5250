@@ -4,6 +4,7 @@
 #include "q5250_global.h"
 
 #include <QMetaType>
+#include <QPoint>
 
 namespace q5250 {
 
@@ -23,6 +24,9 @@ public:
 
     Field();
 
+    void setPosition(unsigned int column, unsigned int row);
+    void gotoField();
+
     void setLength(unsigned short length);
     unsigned short length() const;
 
@@ -41,6 +45,7 @@ private:
     unsigned short fieldLength;
     unsigned short fieldFormat;
     unsigned char fieldAttribute;
+    QPoint startPosition;
 };
 
 } // namespace q5250
