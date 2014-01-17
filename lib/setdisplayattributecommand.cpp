@@ -40,6 +40,17 @@ SetDisplayAttributeCommand::SetDisplayAttributeCommand(unsigned char attribute) 
 
 void SetDisplayAttributeCommand::execute(QPainter *p)
 {
+    static const QMap<ScreenAttribute::ScreenAttributes, QPair<int, int>> colorMap {
+        { ScreenAttribute::GREEN, QPair<int, int>(Qt::green, Qt::black) },
+        { ScreenAttribute::GREEN_RI, QPair<int, int>(Qt::black, Qt::green) },
+        { ScreenAttribute::WHITE, QPair<int, int>(Qt::white, Qt::black) },
+        { ScreenAttribute::WHITE_RI, QPair<int, int>(Qt::black, Qt::white) },
+        { ScreenAttribute::RED, QPair<int, int>(Qt::red, Qt::black) },
+        { ScreenAttribute::RED_RI, QPair<int, int>(Qt::black, Qt::red) },
+        { ScreenAttribute::BLUE, QPair<int, int>(Qt::blue, Qt::black) },
+        { ScreenAttribute::BLUE_RI, QPair<int, int>(Qt::black, Qt::blue) }
+    };
+
     qDebug() << "PAINT: SET DISPLAY ATTRIBUTE" << QString::number(displayAttribute, 16);
 
     // en-/disable underline
@@ -48,48 +59,10 @@ void SetDisplayAttributeCommand::execute(QPainter *p)
     font.setUnderline(ScreenAttribute::ShowUnderline(displayAttribute));
     p->setFont(font);
 
-    switch( displayAttribute )
-    {
-        case ScreenAttribute::GREEN:
-            p->setBrush(Qt::black);
-            p->setPen(Qt::green);
-            break;
-        case ScreenAttribute::GREEN_RI:
-            p->setBrush(Qt::green);
-            p->setPen(Qt::black);
-            break;
-        case ScreenAttribute::WHITE:
-            p->setBrush(Qt::black);
-            p->setPen(Qt::white);
-            break;
-        case ScreenAttribute::WHITE_RI:
-            p->setBrush(Qt::white);
-            p->setPen(Qt::black);
-            break;
-        case 0x27:  // non display
-            p->setBrush(Qt::black);
-            p->setPen(Qt::black);
-            break;
-        case ScreenAttribute::RED:
-            p->setBrush(Qt::black);
-            p->setPen(Qt::red);
-            break;
-        case ScreenAttribute::RED_RI:
-            p->setBrush(Qt::red);
-            p->setPen(Qt::black);
-            break;
-        case ScreenAttribute::BLUE:
-            p->setBrush(Qt::black);
-            p->setPen(Qt::blue);
-            break;
-        case ScreenAttribute::BLUE_RI:
-            p->setBrush(Qt::blue);
-            p->setPen(Qt::black);
-            break;
-        default:
-            p->setBrush(Qt::black);
-            p->setPen(Qt::green);
-            break;
+    ScreenAttribute::ScreenAttributes attribute = (ScreenAttribute::ScreenAttributes)displayAttribute;
+    if (colorMap.contains(attribute)) {
+        p->setBrush((Qt::GlobalColor)colorMap.value(attribute).second);
+        p->setPen((Qt::GlobalColor)colorMap.value(attribute).first);
     }
 
     BufferAddress bufferAddress;
