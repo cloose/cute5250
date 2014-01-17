@@ -26,8 +26,8 @@
 #include "terminalwidget.h"
 
 #include <QDebug>
+#include <QList>
 #include <QPainter>
-#include <QQueue>
 #include <QTextCodec>
 
 #include "clearunitcommand.h"
@@ -49,7 +49,7 @@ class TerminalWidget::Private : public QObject
 public:
     explicit Private();
 
-    QQueue<PainterCommand*> paintQueue;
+    QList<PainterCommand*> paintQueue;
     QTextCodec *codec;
 };
 
@@ -73,24 +73,24 @@ TerminalWidget::~TerminalWidget()
 void TerminalWidget::clearUnit()
 {
     qDebug() << "TERMINAL: CLEAR UNIT";
-    d->paintQueue.enqueue(new ClearUnitCommand(rect()));
+    d->paintQueue.append(new ClearUnitCommand(rect()));
 }
 
 void TerminalWidget::positionCursor(uint column, uint row)
 {
     qDebug() << "TERMINAL: SET BUFFER ADDRESS" << row << column;
-    d->paintQueue.enqueue(new SetBufferAddressCommand(column, row));
+    d->paintQueue.append(new SetBufferAddressCommand(column, row));
 }
 
 void TerminalWidget::displayText(const QByteArray &ebcdicText)
 {
     qDebug() << "TERMINAL: DISPLAY TEXT" << d->codec->toUnicode(ebcdicText);
-    d->paintQueue.enqueue(new DisplayTextCommand(d->codec->toUnicode(ebcdicText)));
+    d->paintQueue.append(new DisplayTextCommand(d->codec->toUnicode(ebcdicText)));
 }
 
 void TerminalWidget::setDisplayAttribute(const unsigned char attribute)
 {
-    d->paintQueue.enqueue(new SetDisplayAttributeCommand(attribute));
+    d->paintQueue.append(new SetDisplayAttributeCommand(attribute));
 }
 
 void TerminalWidget::repeatCharacter(uint column, uint row, uchar character)
@@ -104,13 +104,13 @@ void TerminalWidget::repeatCharacter(uint column, uint row, uchar character)
     ebcdicChar += character;
 
     qDebug() << "TERMINAL: REPEAT" << d->codec->toUnicode(ebcdicChar) << "TO" << column << row;
-    d->paintQueue.enqueue(new RepeatCharacterCommand(column, row, d->codec->toUnicode(ebcdicChar)));
+    d->paintQueue.append(new RepeatCharacterCommand(column, row, d->codec->toUnicode(ebcdicChar)));
 }
 
 void TerminalWidget::displayField(const Field &field)
 {
-    d->paintQueue.enqueue(new SetDisplayAttributeCommand(field.attribute()));
-    d->paintQueue.enqueue(new DisplayFieldCommand(field));
+    d->paintQueue.append(new SetDisplayAttributeCommand(field.attribute()));
+    d->paintQueue.append(new DisplayFieldCommand(field));
 }
 
 void TerminalWidget::paintEvent(QPaintEvent *event)
@@ -128,8 +128,7 @@ void TerminalWidget::paintEvent(QPaintEvent *event)
     QPainter p(this);
     p.setFont(font);
 
-    while (!d->paintQueue.isEmpty()) {
-        PainterCommand *command = d->paintQueue.dequeue();
+    for (PainterCommand *command : d->paintQueue) {
         command->execute(&p);
     }
 
