@@ -16,7 +16,7 @@ install:
   - mkdir build && cd build && cmake .. && make
   - cd ../gtest
   - mkdir build && cd build && cmake .. && make
-  - cd ..
+  - cd ../..
   - export GMOCK_HOME=`pwd`
   - cd ..
   
