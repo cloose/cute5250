@@ -26,7 +26,9 @@ message(STATUS "Module path: ${CMAKE_MODULE_PATH}")
 find_package(CXXFeatures)
 
 set(needed_features
-    CXXFeatures_auto)
+    CXXFeatures_auto
+    CXXFeatures_initializer_list
+)
 
 foreach(i ${needed_features})
     if(NOT ${i}_FOUND)
