@@ -7,7 +7,18 @@ before_install:
   - sudo add-apt-repository -y ppa:likemartinma/devel     # for CMake
   - sudo add-apt-repository -y ppa:ubuntu-sdk-team/ppa    # for Qt5
   - sudo apt-get update
+
+install:
   - sudo apt-get install cmake qtbase5-dev
+  - wget https://googlemock.googlecode.com/files/gmock-1.7.0.zip
+  - unzip gmock-1.7.0.zip
+  - cd gmock-1.7.0 
+  - mkdir build && cd build && cmake .. && make
+  - cd ../gtest
+  - mkdir build && cd build && cmake .. && make
+  - cd ..
+  - export GMOCK_HOME=`pwd`
+  - cd ..
   
 before_script:
   - mkdir build
