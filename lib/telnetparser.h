@@ -23,39 +23,28 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#include <gmock/gmock.h>
-using namespace testing;
+#ifndef Q5250_TELNETPARSER_H
+#define Q5250_TELNETPARSER_H
 
-#include <QByteArray>
-#include <QSignalSpy>
+#include "q5250_global.h"
+#include <QObject>
 
-#include "telnetparser.h"
-using q5250::TelnetParser;
+namespace q5250 {
 
-class ATelnetParser : public Test
+class Q5250SHARED_EXPORT TelnetParser : public QObject
 {
+    Q_OBJECT
+
 public:
-    TelnetParser parser;
-    QByteArray ArbitraryRawData{"A"};
-    static const char IAC = '\xff';
+    void parse(const QByteArray &data);
+
+signals:
+    void dataReceived(const QByteArray &data);
+
+private:
+    QByteArray replaceEscapedIACBytes(const QByteArray &data);
 };
 
-TEST_F(ATelnetParser, emitsDataReceivedWhenParsingRawData)
-{
-    QSignalSpy spy(&parser, SIGNAL(dataReceived(QByteArray)));
+} // namespace q5250
 
-    parser.parse(ArbitraryRawData);
-
-    ASSERT_THAT(spy[0][0].toByteArray(), Eq(ArbitraryRawData));
-}
-
-TEST_F(ATelnetParser, replacesEscapedIACBytesInRawData)
-{
-    QSignalSpy spy(&parser, SIGNAL(dataReceived(QByteArray)));
-    const char rawData[]{'A', IAC, IAC, 'B'};
-    const char expectedData[]{'A', IAC, 'B'};
-
-    parser.parse(QByteArray::fromRawData(rawData, 4));
-
-    ASSERT_THAT(spy[0][0].toByteArray(), Eq(QByteArray::fromRawData(expectedData, 3)));
-}
+#endif // Q5250_TELNETPARSER_H

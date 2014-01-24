@@ -51,6 +51,6 @@ find_package(Qt5Widgets REQUIRED)
 
 ### Subdirs ###
 
-#add_subdirectory(lib)
+add_subdirectory(lib)
 #add_subdirectory(src)
 add_subdirectory(test)
