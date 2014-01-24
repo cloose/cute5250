@@ -35,11 +35,18 @@ class TelnetParser : public QObject
 
 public:
     void parse(const QByteArray &data) {
-        emit dataReceived(data);
+        emit dataReceived(replaceEscapedIACBytes(data));
     }
 
 signals:
     void dataReceived(const QByteArray &data);
+
+private:
+    QByteArray replaceEscapedIACBytes(const QByteArray &data) {
+        QByteArray result(data);
+        result.replace("\xff\xff", "\xff");
+        return result;
+    }
 };
 
 class ATelnetParser : public Test
@@ -47,6 +54,7 @@ class ATelnetParser : public Test
 public:
     TelnetParser parser;
     QByteArray ArbitraryRawData{"A"};
+    static const char IAC = '\xff';
 };
 
 TEST_F(ATelnetParser, emitsDataReceivedWhenParsingRawData)
@@ -56,6 +64,17 @@ TEST_F(ATelnetParser, emitsDataReceivedWhenParsingRawData)
     parser.parse(ArbitraryRawData);
 
     ASSERT_THAT(spy[0][0].toByteArray(), Eq(ArbitraryRawData));
+}
+
+TEST_F(ATelnetParser, replacesEscapedIACBytesInRawData)
+{
+    QSignalSpy spy(&parser, SIGNAL(dataReceived(QByteArray)));
+    const char rawData[]{'A', IAC, IAC, 'B'};
+    const char expectedData[]{'A', IAC, 'B'};
+
+    parser.parse(QByteArray::fromRawData(rawData, 4));
+
+    ASSERT_THAT(spy[0][0].toByteArray(), Eq(QByteArray::fromRawData(expectedData, 3)));
 }
 
 #include "telnetparsertest.moc"
