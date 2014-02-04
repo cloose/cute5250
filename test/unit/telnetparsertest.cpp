@@ -29,7 +29,7 @@ using namespace testing;
 #include <QByteArray>
 #include <QSignalSpy>
 
-#include "telnetparser.h"
+#include <telnet/telnetparser.h>
 using q5250::TelnetParser;
 
 class ATelnetParser : public Test
@@ -46,6 +46,7 @@ TEST_F(ATelnetParser, emitsDataReceivedWhenParsingRawData)
 
     parser.parse(ArbitraryRawData);
 
+    ASSERT_THAT(spy.count(), Eq(1));
     ASSERT_THAT(spy[0][0].toByteArray(), Eq(ArbitraryRawData));
 }
 
@@ -57,5 +58,6 @@ TEST_F(ATelnetParser, replacesEscapedIACBytesInRawData)
 
     parser.parse(QByteArray::fromRawData(rawData, 4));
 
+    ASSERT_THAT(spy.count(), Eq(1));
     ASSERT_THAT(spy[0][0].toByteArray(), Eq(QByteArray::fromRawData(expectedData, 3)));
 }

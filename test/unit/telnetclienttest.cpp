@@ -29,9 +29,6 @@ using namespace testing;
 #include <QByteArray>
 #include <QSignalSpy>
 
-#include "telnetparser.h"
-using q5250::TelnetParser;
-
 class TelnetConnection
 {
 public:
