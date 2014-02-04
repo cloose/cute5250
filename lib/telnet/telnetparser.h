@@ -29,6 +29,7 @@
 #include "q5250_global.h"
 #include <QObject>
 
+#include "subnegotiationcommand.h"
 #include "telnetcommand.h"
 #include "telnetoption.h"
 
@@ -43,6 +44,21 @@ struct Q5250SHARED_EXPORT OptionNegotiation
     OptionNegotiation(TelnetCommand c, TelnetOption o) : command(c), option(o) {}
 };
 
+struct Q5250SHARED_EXPORT Subnegotiation
+{
+    TelnetOption option;
+    SubnegotiationCommand command;
+    QByteArray parameters;
+
+    Subnegotiation() {}
+    Subnegotiation(TelnetOption o, SubnegotiationCommand c, const QByteArray &p) :
+        option(o),
+        command(c),
+        parameters(p)
+    {
+    }
+};
+
 class Q5250SHARED_EXPORT TelnetParser : public QObject
 {
     Q_OBJECT
@@ -53,18 +69,24 @@ public:
 signals:
     void dataReceived(const QByteArray &data);
     void optionNegotiationReceived(const q5250::OptionNegotiation &optionNegotiation);
+    void subnegotiationReceived(const q5250::Subnegotiation &subnegotiation);
 
 private:
     int parseCommand(const QByteArray &data);
     QByteArray replaceEscapedIACBytes(const QByteArray &data);
+    QByteArray subnegotiationParameters(const QByteArray &data);
     bool isCommand(const QByteArray &data);
     bool isOptionNegotiation(const QByteArray &data);
+    bool isSubnegotiation(const QByteArray &data);
     bool isInterpretAsCommand(unsigned char byte);
     bool isOptionCommand(unsigned char byte);
+    bool isSubnegotiationBeginCommand(unsigned char byte);
+    bool isSubnegotiationEndCommand(unsigned char byte);
 };
 
 } // namespace q5250
 
 Q_DECLARE_METATYPE(q5250::OptionNegotiation)
+Q_DECLARE_METATYPE(q5250::Subnegotiation)
 
 #endif // Q5250_TELNETPARSER_H

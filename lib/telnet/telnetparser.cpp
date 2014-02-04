@@ -43,6 +43,16 @@ void TelnetParser::parse(const QByteArray &data)
 
 int TelnetParser::parseCommand(const QByteArray &data)
 {
+    if (isSubnegotiation(data)) {
+        Subnegotiation subnegotiation {
+            (TelnetOption)data.at(2),
+            (SubnegotiationCommand)data.at(3),
+            subnegotiationParameters(data.mid(4))
+        };
+        emit subnegotiationReceived(subnegotiation);
+        return 6;
+    }
+
     if (isOptionNegotiation(data)) {
         OptionNegotiation optionNegotiation {
             (TelnetCommand)data.at(1),
@@ -60,6 +70,17 @@ QByteArray TelnetParser::replaceEscapedIACBytes(const QByteArray &data)
     QByteArray result(data);
     result.replace("\xff\xff", "\xff");
     return result;
+}
+
+QByteArray TelnetParser::subnegotiationParameters(const QByteArray &data)
+{
+    for (int i = 0; i < data.size(); ++i) {
+        if (isInterpretAsCommand(data[i]) && isSubnegotiationEndCommand(data[i+1])) {
+            return data.mid(0, i);
+        }
+    }
+
+    return QByteArray();
 }
 
 bool TelnetParser::isCommand(const QByteArray &data)
@@ -82,6 +103,13 @@ bool TelnetParser::isOptionNegotiation(const QByteArray &data)
            isOptionCommand(data.at(1));
 }
 
+bool TelnetParser::isSubnegotiation(const QByteArray &data)
+{
+    return data.size() >= 6 &&
+           isInterpretAsCommand(data.at(0)) &&
+           isSubnegotiationBeginCommand(data.at(1));
+}
+
 bool TelnetParser::isInterpretAsCommand(unsigned char byte)
 {
     return (TelnetCommand)byte == TelnetCommand::IAC;
@@ -94,6 +122,16 @@ bool TelnetParser::isOptionCommand(unsigned char byte)
            command == TelnetCommand::WONT ||
            command == TelnetCommand::DO   ||
            command == TelnetCommand::DONT;
+}
+
+bool TelnetParser::isSubnegotiationBeginCommand(unsigned char byte)
+{
+    return (TelnetCommand)byte == TelnetCommand::SB;
+}
+
+bool TelnetParser::isSubnegotiationEndCommand(unsigned char byte)
+{
+    return (TelnetCommand)byte == TelnetCommand::SE;
 }
 
 } // namespace q5250

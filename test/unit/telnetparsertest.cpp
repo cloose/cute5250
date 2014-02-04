@@ -29,6 +29,7 @@ using namespace testing;
 #include <QByteArray>
 #include <QSignalSpy>
 
+#include <telnet/subnegotiationcommand.h>
 #include <telnet/telnetcommand.h>
 #include <telnet/telnetoption.h>
 #include <telnet/telnetparser.h>
@@ -56,6 +57,20 @@ public:
 
         return optionNegotiation;
     }
+
+    QByteArray subnegotiation(TelnetOption option, SubnegotiationCommand command, const QByteArray &parameters) {
+        QByteArray data;
+
+        data.append((char)TelnetCommand::IAC);
+        data.append((char)TelnetCommand::SB);
+        data.append((char)option);
+        data.append((char)command);
+        data.append(parameters);
+        data.append((char)TelnetCommand::IAC);
+        data.append((char)TelnetCommand::SE);
+
+        return data;
+    }
 };
 
 void ASSERT_OPTION_NEGOTIATION(const QList<QVariant> &signalArgs, TelnetCommand command, TelnetOption option)
@@ -63,6 +78,14 @@ void ASSERT_OPTION_NEGOTIATION(const QList<QVariant> &signalArgs, TelnetCommand 
     OptionNegotiation optionNegotiation = signalArgs[0].value<OptionNegotiation>();
     ASSERT_THAT(optionNegotiation.command, Eq(command));
     ASSERT_THAT(optionNegotiation.option, Eq(option));
+}
+
+void ASSERT_SUBNEGOTIATION(const QList<QVariant> &signalArgs, TelnetOption option, SubnegotiationCommand command, const QByteArray &parameters)
+{
+    Subnegotiation subnegotiation = signalArgs[0].value<Subnegotiation>();
+    ASSERT_THAT(subnegotiation.option, Eq(option));
+    ASSERT_THAT(subnegotiation.command, Eq(command));
+    ASSERT_THAT(subnegotiation.parameters, Eq(parameters));
 }
 
 TEST_F(ATelnetParser, emitsDataReceivedWhenParsingRawData)
@@ -107,4 +130,16 @@ TEST_F(ATelnetParser, emitsOptionNegotiationReceivedForEachOptionCommand)
     ASSERT_THAT(spy.count(), Eq(2));
     ASSERT_OPTION_NEGOTIATION(spy[0], TelnetCommand::DO, TelnetOption::TRANSMIT_BINARY);
     ASSERT_OPTION_NEGOTIATION(spy[1], TelnetCommand::DO, TelnetOption::END_OF_RECORD);
+}
+
+TEST_F(ATelnetParser, emitsSubnegotiationReceivedForASubnegotiation)
+{
+    QSignalSpy spy(&parser, SIGNAL(subnegotiationReceived(q5250::Subnegotiation)));
+    const QByteArray parameters { "ABC" };
+    const QByteArray data = subnegotiation(TelnetOption::NEW_ENVIRON, SubnegotiationCommand::SEND, parameters);
+
+    parser.parse(data);
+
+    ASSERT_THAT(spy.count(), Eq(1));
+    ASSERT_SUBNEGOTIATION(spy[0], TelnetOption::NEW_ENVIRON, SubnegotiationCommand::SEND, parameters);
 }
