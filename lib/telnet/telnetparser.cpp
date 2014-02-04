@@ -43,7 +43,7 @@ void TelnetParser::parse(const QByteArray &data)
 
 int TelnetParser::parseCommand(const QByteArray &data)
 {
-    if (data.size() >= 3) {
+    if (isOptionNegotiation(data)) {
         TelnetCommand command = (TelnetCommand)data.at(1);
         TelnetOption option = (TelnetOption)data.at(2);
         emit optionNegotiationReceived(command, option);
@@ -70,9 +70,28 @@ bool TelnetParser::isCommand(const QByteArray &data)
            !isInterpretAsCommand(data.at(1));
 }
 
+bool TelnetParser::isOptionNegotiation(const QByteArray &data)
+{
+    // The commands dealing with option negotiation are
+    // three byte sequences, the third byte being the code for the option
+    // referenced.
+    return data.size() >= 3 &&
+           isInterpretAsCommand(data.at(0)) &&
+           isOptionCommand(data.at(1));
+}
+
 bool TelnetParser::isInterpretAsCommand(unsigned char byte)
 {
     return (TelnetCommand)byte == TelnetCommand::IAC;
+}
+
+bool TelnetParser::isOptionCommand(unsigned char byte)
+{
+    TelnetCommand command = (TelnetCommand)byte;
+    return command == TelnetCommand::WILL ||
+           command == TelnetCommand::WONT ||
+           command == TelnetCommand::DO   ||
+           command == TelnetCommand::DONT;
 }
 
 } // namespace q5250

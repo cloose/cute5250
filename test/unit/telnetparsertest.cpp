@@ -45,7 +45,7 @@ class ATelnetParser : public Test
 public:
     TelnetParser parser;
     QByteArray ArbitraryRawData{"A"};
-    QByteArray ArbitraryTelnetCommand{"\xff\xf1"};
+    QByteArray ArbitraryTelnetCommands{"\xff\xf1\xff\xf1"};
     static const char IAC = '\xff';
 
     QByteArray doOption(TelnetOption option) {
@@ -85,7 +85,7 @@ TEST_F(ATelnetParser, doesNotEmitDataReceivedForCommands)
 {
     QSignalSpy spy(&parser, SIGNAL(dataReceived(QByteArray)));
 
-    parser.parse(ArbitraryTelnetCommand);
+    parser.parse(ArbitraryTelnetCommands);
 
     ASSERT_THAT(spy.count(), Eq(0));
 }

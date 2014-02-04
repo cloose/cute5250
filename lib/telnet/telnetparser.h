@@ -49,7 +49,9 @@ private:
     int parseCommand(const QByteArray &data);
     QByteArray replaceEscapedIACBytes(const QByteArray &data);
     bool isCommand(const QByteArray &data);
+    bool isOptionNegotiation(const QByteArray &data);
     bool isInterpretAsCommand(unsigned char byte);
+    bool isOptionCommand(unsigned char byte);
 };
 
 } // namespace q5250
