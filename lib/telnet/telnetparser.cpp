@@ -44,13 +44,14 @@ void TelnetParser::parse(const QByteArray &data)
 int TelnetParser::parseCommand(const QByteArray &data)
 {
     if (isSubnegotiation(data)) {
+        QByteArray parameters = subnegotiationParameters(data.mid(4));
         Subnegotiation subnegotiation {
             (TelnetOption)data.at(2),
             (SubnegotiationCommand)data.at(3),
-            subnegotiationParameters(data.mid(4))
+            parameters
         };
         emit subnegotiationReceived(subnegotiation);
-        return 6;
+        return 6 + parameters.size();
     }
 
     if (isOptionNegotiation(data)) {

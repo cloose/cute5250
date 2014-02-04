@@ -41,6 +41,7 @@ public:
     ATelnetParser()
     {
         qRegisterMetaType<q5250::OptionNegotiation>();
+        qRegisterMetaType<q5250::Subnegotiation>();
     }
 
     TelnetParser parser;
@@ -132,14 +133,16 @@ TEST_F(ATelnetParser, emitsOptionNegotiationReceivedForEachOptionCommand)
     ASSERT_OPTION_NEGOTIATION(spy[1], TelnetCommand::DO, TelnetOption::END_OF_RECORD);
 }
 
-TEST_F(ATelnetParser, emitsSubnegotiationReceivedForASubnegotiation)
+TEST_F(ATelnetParser, emitsSubnegotiationReceivedForEachSubnegotiation)
 {
     QSignalSpy spy(&parser, SIGNAL(subnegotiationReceived(q5250::Subnegotiation)));
     const QByteArray parameters { "ABC" };
-    const QByteArray data = subnegotiation(TelnetOption::NEW_ENVIRON, SubnegotiationCommand::SEND, parameters);
+    const QByteArray data = subnegotiation(TelnetOption::NEW_ENVIRON, SubnegotiationCommand::SEND, parameters)
+                          + subnegotiation(TelnetOption::TERMINAL_TYPE, SubnegotiationCommand::SEND, QByteArray());
 
     parser.parse(data);
 
-    ASSERT_THAT(spy.count(), Eq(1));
+    ASSERT_THAT(spy.count(), Eq(2));
     ASSERT_SUBNEGOTIATION(spy[0], TelnetOption::NEW_ENVIRON, SubnegotiationCommand::SEND, parameters);
+    ASSERT_SUBNEGOTIATION(spy[1], TelnetOption::TERMINAL_TYPE, SubnegotiationCommand::SEND, QByteArray());
 }
