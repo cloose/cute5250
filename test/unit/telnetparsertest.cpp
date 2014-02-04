@@ -34,15 +34,15 @@ using namespace testing;
 #include <telnet/telnetparser.h>
 using namespace q5250;
 
-void ASSERT_OPTION_NEGOTIATION(const QList<QVariant> &signalArgs, TelnetCommand command, TelnetOption option)
-{
-    ASSERT_THAT(signalArgs[0].value<TelnetCommand>(), Eq(command));
-    ASSERT_THAT(signalArgs[1].value<TelnetOption>(), Eq(option));
-}
-
 class ATelnetParser : public Test
 {
 public:
+    ATelnetParser()
+    {
+        qRegisterMetaType<q5250::TelnetCommand>();
+        qRegisterMetaType<q5250::TelnetOption>();
+    }
+
     TelnetParser parser;
     QByteArray ArbitraryRawData{"A"};
     QByteArray ArbitraryTelnetCommands{"\xff\xf1\xff\xf1"};
@@ -58,6 +58,12 @@ public:
         return optionNegotiation;
     }
 };
+
+void ASSERT_OPTION_NEGOTIATION(const QList<QVariant> &signalArgs, TelnetCommand command, TelnetOption option)
+{
+    ASSERT_THAT(signalArgs[0].value<TelnetCommand>(), Eq(command));
+    ASSERT_THAT(signalArgs[1].value<TelnetOption>(), Eq(option));
+}
 
 TEST_F(ATelnetParser, emitsDataReceivedWhenParsingRawData)
 {
