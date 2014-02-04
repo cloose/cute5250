@@ -1,6 +1,7 @@
 ### q5250 library ###
 
 set(q5250_SRCS
+    telnet/telnetclient.cpp
     telnet/telnetparser.cpp
 )
 

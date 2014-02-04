@@ -23,34 +23,20 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#include <gmock/gmock.h>
-using namespace testing;
+#include "telnetclient.h"
 
-#include <QByteArray>
-#include <QSignalSpy>
+#include "telnetconnection.h"
 
-#include <telnet/telnetclient.h>
-#include <telnet/telnetconnection.h>
-using namespace q5250;
+namespace q5250 {
 
-class TelnetConnectionMock : public TelnetConnection
+TelnetClient::TelnetClient(TelnetConnection *conn) :
+    connection(conn)
 {
-public:
-    MOCK_METHOD0(readAll, QByteArray());
-};
-
-class ATelnetClient : public Test
-{
-public:
-    QByteArray ArbitraryRawData{"A"};
-    static const char IAC = '\xff';
-};
-
-TEST_F(ATelnetClient, readsDataFromConnectionWhenReceivedReadyRead)
-{
-    TelnetConnectionMock connection;
-    TelnetClient client(&connection);
-    EXPECT_CALL(connection, readAll()).WillOnce(Return(ArbitraryRawData));
-
-    client.readyRead();
 }
+
+void TelnetClient::readyRead()
+{
+    QByteArray buffer = connection->readAll();
+}
+
+} // namespace q5250
