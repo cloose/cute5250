@@ -39,8 +39,7 @@ class ATelnetParser : public Test
 public:
     ATelnetParser()
     {
-        qRegisterMetaType<q5250::TelnetCommand>();
-        qRegisterMetaType<q5250::TelnetOption>();
+        qRegisterMetaType<q5250::OptionNegotiation>();
     }
 
     TelnetParser parser;
@@ -61,8 +60,9 @@ public:
 
 void ASSERT_OPTION_NEGOTIATION(const QList<QVariant> &signalArgs, TelnetCommand command, TelnetOption option)
 {
-    ASSERT_THAT(signalArgs[0].value<TelnetCommand>(), Eq(command));
-    ASSERT_THAT(signalArgs[1].value<TelnetOption>(), Eq(option));
+    OptionNegotiation optionNegotiation = signalArgs[0].value<OptionNegotiation>();
+    ASSERT_THAT(optionNegotiation.command, Eq(command));
+    ASSERT_THAT(optionNegotiation.option, Eq(option));
 }
 
 TEST_F(ATelnetParser, emitsDataReceivedWhenParsingRawData)
@@ -98,7 +98,7 @@ TEST_F(ATelnetParser, doesNotEmitDataReceivedForCommands)
 
 TEST_F(ATelnetParser, emitsOptionNegotiationReceivedForEachOptionCommand)
 {
-    QSignalSpy spy(&parser, SIGNAL(optionNegotiationReceived(q5250::TelnetCommand, q5250::TelnetOption)));
+    QSignalSpy spy(&parser, SIGNAL(optionNegotiationReceived(q5250::OptionNegotiation)));
     const QByteArray data = doOption(TelnetOption::TRANSMIT_BINARY)
                           + doOption(TelnetOption::END_OF_RECORD);
 

@@ -44,9 +44,11 @@ void TelnetParser::parse(const QByteArray &data)
 int TelnetParser::parseCommand(const QByteArray &data)
 {
     if (isOptionNegotiation(data)) {
-        TelnetCommand command = (TelnetCommand)data.at(1);
-        TelnetOption option = (TelnetOption)data.at(2);
-        emit optionNegotiationReceived(command, option);
+        OptionNegotiation optionNegotiation {
+            (TelnetCommand)data.at(1),
+            (TelnetOption)data.at(2)
+        };
+        emit optionNegotiationReceived(optionNegotiation);
         return 3;
     }
 

@@ -34,6 +34,15 @@
 
 namespace q5250 {
 
+struct Q5250SHARED_EXPORT OptionNegotiation
+{
+    TelnetCommand command;
+    TelnetOption option;
+
+    OptionNegotiation() {}
+    OptionNegotiation(TelnetCommand c, TelnetOption o) : command(c), option(o) {}
+};
+
 class Q5250SHARED_EXPORT TelnetParser : public QObject
 {
     Q_OBJECT
@@ -43,7 +52,7 @@ public:
 
 signals:
     void dataReceived(const QByteArray &data);
-    void optionNegotiationReceived(q5250::TelnetCommand command, q5250::TelnetOption option);
+    void optionNegotiationReceived(const q5250::OptionNegotiation &optionNegotiation);
 
 private:
     int parseCommand(const QByteArray &data);
@@ -55,5 +64,7 @@ private:
 };
 
 } // namespace q5250
+
+Q_DECLARE_METATYPE(q5250::OptionNegotiation)
 
 #endif // Q5250_TELNETPARSER_H
