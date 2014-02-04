@@ -54,3 +54,16 @@ TEST_F(ATelnetClient, readsDataFromConnectionWhenReceivedReadyRead)
 
     client.readyRead();
 }
+
+TEST_F(ATelnetClient, emitsDataReceivedForRawData)
+{
+    TelnetConnectionMock connection;
+    TelnetClient client(&connection);
+    QSignalSpy spy(&client, SIGNAL(dataReceived(QByteArray)));
+    EXPECT_CALL(connection, readAll()).WillOnce(Return(ArbitraryRawData));
+
+    client.readyRead();
+
+    ASSERT_THAT(spy.count(), Eq(1));
+    ASSERT_THAT(spy[0][0].toByteArray(), Eq(ArbitraryRawData));
+}

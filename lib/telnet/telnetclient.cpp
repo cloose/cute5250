@@ -37,6 +37,7 @@ TelnetClient::TelnetClient(TelnetConnection *conn) :
 void TelnetClient::readyRead()
 {
     QByteArray buffer = connection->readAll();
+    emit dataReceived(buffer);
 }
 
 } // namespace q5250

@@ -33,12 +33,17 @@ namespace q5250 {
 
 class TelnetConnection;
 
-class Q5250SHARED_EXPORT TelnetClient
+class Q5250SHARED_EXPORT TelnetClient : public QObject
 {
+    Q_OBJECT
+
 public:
     explicit TelnetClient(TelnetConnection *conn);
 
     void readyRead();
+
+signals:
+    void dataReceived(const QByteArray &data);
 
 private:
     TelnetConnection *connection;
