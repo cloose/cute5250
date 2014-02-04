@@ -46,7 +46,7 @@ signals:
     void optionNegotiationReceived(q5250::TelnetCommand command, q5250::TelnetOption option);
 
 private:
-    void parseCommand(const QByteArray &data);
+    int parseCommand(const QByteArray &data);
     QByteArray replaceEscapedIACBytes(const QByteArray &data);
     bool isCommand(const QByteArray &data);
     bool isInterpretAsCommand(unsigned char byte);

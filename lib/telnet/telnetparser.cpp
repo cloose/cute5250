@@ -29,20 +29,28 @@ namespace q5250 {
 
 void TelnetParser::parse(const QByteArray &data)
 {
+    if (data.isEmpty()) {
+        return;
+    }
+
     if (isCommand(data)) {
-        parseCommand(data);
+        int commandLength = parseCommand(data);
+        parse(data.mid(commandLength));
     } else {
         emit dataReceived(replaceEscapedIACBytes(data));
     }
 }
 
-void TelnetParser::parseCommand(const QByteArray &data)
+int TelnetParser::parseCommand(const QByteArray &data)
 {
     if (data.size() >= 3) {
         TelnetCommand command = (TelnetCommand)data.at(1);
         TelnetOption option = (TelnetOption)data.at(2);
         emit optionNegotiationReceived(command, option);
+        return 3;
     }
+
+    return 2;
 }
 
 QByteArray TelnetParser::replaceEscapedIACBytes(const QByteArray &data)

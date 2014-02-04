@@ -34,6 +34,12 @@ using namespace testing;
 #include <telnet/telnetparser.h>
 using namespace q5250;
 
+void ASSERT_OPTION_NEGOTIATION(const QList<QVariant> &signalArgs, TelnetCommand command, TelnetOption option)
+{
+    ASSERT_THAT(signalArgs[0].value<TelnetCommand>(), Eq(command));
+    ASSERT_THAT(signalArgs[1].value<TelnetOption>(), Eq(option));
+}
+
 class ATelnetParser : public Test
 {
 public:
@@ -84,14 +90,15 @@ TEST_F(ATelnetParser, doesNotEmitDataReceivedForCommands)
     ASSERT_THAT(spy.count(), Eq(0));
 }
 
-TEST_F(ATelnetParser, emitsOptionNegotiationReceivedForAnOptionCommand)
+TEST_F(ATelnetParser, emitsOptionNegotiationReceivedForEachOptionCommand)
 {
     QSignalSpy spy(&parser, SIGNAL(optionNegotiationReceived(q5250::TelnetCommand, q5250::TelnetOption)));
-    const QByteArray data = doOption(TelnetOption::TRANSMIT_BINARY);
+    const QByteArray data = doOption(TelnetOption::TRANSMIT_BINARY)
+                          + doOption(TelnetOption::END_OF_RECORD);
 
     parser.parse(data);
 
-    ASSERT_THAT(spy.count(), Eq(1));
-    ASSERT_THAT(spy[0][0].value<TelnetCommand>(), Eq(TelnetCommand::DO));
-    ASSERT_THAT(spy[0][1].value<TelnetOption>(), Eq(TelnetOption::TRANSMIT_BINARY));
+    ASSERT_THAT(spy.count(), Eq(2));
+    ASSERT_OPTION_NEGOTIATION(spy[0], TelnetCommand::DO, TelnetOption::TRANSMIT_BINARY);
+    ASSERT_OPTION_NEGOTIATION(spy[1], TelnetCommand::DO, TelnetOption::END_OF_RECORD);
 }
