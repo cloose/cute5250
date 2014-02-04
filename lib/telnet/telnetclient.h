@@ -29,6 +29,8 @@
 #include "q5250_global.h"
 #include <QObject>
 
+#include "telnetparser.h"
+
 namespace q5250 {
 
 class TelnetConnection;
@@ -47,6 +49,7 @@ signals:
 
 private:
     TelnetConnection *connection;
+    TelnetParser parser;
 };
 
 } // namespace q5250

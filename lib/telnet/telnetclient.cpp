@@ -32,12 +32,14 @@ namespace q5250 {
 TelnetClient::TelnetClient(TelnetConnection *conn) :
     connection(conn)
 {
+    connect(&parser, &TelnetParser::dataReceived,
+            this, &TelnetClient::dataReceived);
 }
 
 void TelnetClient::readyRead()
 {
     QByteArray buffer = connection->readAll();
-    emit dataReceived(buffer);
+    parser.parse(buffer);
 }
 
 } // namespace q5250
