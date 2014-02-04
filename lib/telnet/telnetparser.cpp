@@ -30,13 +30,18 @@ namespace q5250 {
 void TelnetParser::parse(const QByteArray &data)
 {
     if (isCommand(data)) {
-        if (data.size() >= 3) {
-            TelnetCommand command = (TelnetCommand)data.at(1);
-            TelnetOption option = (TelnetOption)data.at(2);
-            emit optionNegotiationReceived(command, option);
-        }
+        parseCommand(data);
     } else {
         emit dataReceived(replaceEscapedIACBytes(data));
+    }
+}
+
+void TelnetParser::parseCommand(const QByteArray &data)
+{
+    if (data.size() >= 3) {
+        TelnetCommand command = (TelnetCommand)data.at(1);
+        TelnetOption option = (TelnetOption)data.at(2);
+        emit optionNegotiationReceived(command, option);
     }
 }
 
