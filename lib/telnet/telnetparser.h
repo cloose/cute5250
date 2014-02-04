@@ -30,6 +30,7 @@
 #include <QObject>
 
 #include "telnetcommand.h"
+#include "telnetoption.h"
 
 namespace q5250 {
 
@@ -42,7 +43,7 @@ public:
 
 signals:
     void dataReceived(const QByteArray &data);
-    void optionCommandReceived(q5250::TelnetCommand command);
+    void optionNegotiationReceived(q5250::TelnetCommand command, q5250::TelnetOption option);
 
 private:
     QByteArray replaceEscapedIACBytes(const QByteArray &data);

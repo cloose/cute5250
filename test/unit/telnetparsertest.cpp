@@ -30,6 +30,7 @@ using namespace testing;
 #include <QSignalSpy>
 
 #include <telnet/telnetcommand.h>
+#include <telnet/telnetoption.h>
 #include <telnet/telnetparser.h>
 using namespace q5250;
 
@@ -40,6 +41,16 @@ public:
     QByteArray ArbitraryRawData{"A"};
     QByteArray ArbitraryTelnetCommand{"\xff\xf1"};
     static const char IAC = '\xff';
+
+    QByteArray doOption(TelnetOption option) {
+        QByteArray optionNegotiation;
+
+        optionNegotiation.append((char)TelnetCommand::IAC);
+        optionNegotiation.append((char)TelnetCommand::DO);
+        optionNegotiation.append((char)option);
+
+        return optionNegotiation;
+    }
 };
 
 TEST_F(ATelnetParser, emitsDataReceivedWhenParsingRawData)
@@ -71,4 +82,16 @@ TEST_F(ATelnetParser, doesNotEmitDataReceivedForCommands)
     parser.parse(ArbitraryTelnetCommand);
 
     ASSERT_THAT(spy.count(), Eq(0));
+}
+
+TEST_F(ATelnetParser, emitsOptionNegotiationReceivedForAnOptionCommand)
+{
+    QSignalSpy spy(&parser, SIGNAL(optionNegotiationReceived(q5250::TelnetCommand, q5250::TelnetOption)));
+    const QByteArray data = doOption(TelnetOption::TRANSMIT_BINARY);
+
+    parser.parse(data);
+
+    ASSERT_THAT(spy.count(), Eq(1));
+    ASSERT_THAT(spy[0][0].value<TelnetCommand>(), Eq(TelnetCommand::DO));
+    ASSERT_THAT(spy[0][1].value<TelnetOption>(), Eq(TelnetOption::TRANSMIT_BINARY));
 }
