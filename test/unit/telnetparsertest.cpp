@@ -29,14 +29,16 @@ using namespace testing;
 #include <QByteArray>
 #include <QSignalSpy>
 
+#include <telnet/telnetcommand.h>
 #include <telnet/telnetparser.h>
-using q5250::TelnetParser;
+using namespace q5250;
 
 class ATelnetParser : public Test
 {
 public:
     TelnetParser parser;
     QByteArray ArbitraryRawData{"A"};
+    QByteArray ArbitraryTelnetCommand{"\xff\xf1"};
     static const char IAC = '\xff';
 };
 
@@ -53,11 +55,20 @@ TEST_F(ATelnetParser, emitsDataReceivedWhenParsingRawData)
 TEST_F(ATelnetParser, replacesEscapedIACBytesInRawData)
 {
     QSignalSpy spy(&parser, SIGNAL(dataReceived(QByteArray)));
-    const char rawData[]{'A', IAC, IAC, 'B'};
-    const char expectedData[]{'A', IAC, 'B'};
+    const char rawData[]{IAC, IAC, 'A', 'B'};
+    const char expectedData[]{IAC, 'A', 'B'};
 
     parser.parse(QByteArray::fromRawData(rawData, 4));
 
     ASSERT_THAT(spy.count(), Eq(1));
     ASSERT_THAT(spy[0][0].toByteArray(), Eq(QByteArray::fromRawData(expectedData, 3)));
+}
+
+TEST_F(ATelnetParser, doesNotEmitDataReceivedForCommands)
+{
+    QSignalSpy spy(&parser, SIGNAL(dataReceived(QByteArray)));
+
+    parser.parse(ArbitraryTelnetCommand);
+
+    ASSERT_THAT(spy.count(), Eq(0));
 }

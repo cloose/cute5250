@@ -29,6 +29,8 @@
 #include "q5250_global.h"
 #include <QObject>
 
+#include "telnetcommand.h"
+
 namespace q5250 {
 
 class Q5250SHARED_EXPORT TelnetParser : public QObject
@@ -40,9 +42,12 @@ public:
 
 signals:
     void dataReceived(const QByteArray &data);
+    void optionCommandReceived(q5250::TelnetCommand command);
 
 private:
     QByteArray replaceEscapedIACBytes(const QByteArray &data);
+    bool isCommand(const QByteArray &data);
+    bool isInterpretAsCommand(unsigned char byte);
 };
 
 } // namespace q5250

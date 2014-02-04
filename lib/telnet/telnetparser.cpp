@@ -29,7 +29,9 @@ namespace q5250 {
 
 void TelnetParser::parse(const QByteArray &data)
 {
-    emit dataReceived(replaceEscapedIACBytes(data));
+    if (!isCommand(data)) {
+        emit dataReceived(replaceEscapedIACBytes(data));
+    }
 }
 
 QByteArray TelnetParser::replaceEscapedIACBytes(const QByteArray &data)
@@ -37,6 +39,21 @@ QByteArray TelnetParser::replaceEscapedIACBytes(const QByteArray &data)
     QByteArray result(data);
     result.replace("\xff\xff", "\xff");
     return result;
+}
+
+bool TelnetParser::isCommand(const QByteArray &data)
+{
+    // All TELNET commands consist of at least a two byte sequence:  the
+    // "Interpret as Command" (IAC) escape character followed by the code
+    // for the command.
+    return data.size() >= 2 &&
+           isInterpretAsCommand(data.at(0)) &&
+           !isInterpretAsCommand(data.at(1));
+}
+
+bool TelnetParser::isInterpretAsCommand(unsigned char byte)
+{
+    return (TelnetCommand)byte == TelnetCommand::IAC;
 }
 
 } // namespace q5250
