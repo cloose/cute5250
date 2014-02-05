@@ -10,8 +10,9 @@ before_install:
   - sudo apt-get update -qq
 
 install:
-  - sudo apt-get install g++-4.8 ggcov cmake qtbase5-dev
+  - sudo apt-get install g++-4.8 cmake qtbase5-dev
   - export CXX=g++-4.8
+  - sudo rm /usr/bin/gcov && sudo ln -s /usr/bin/gcov-4.8 /usr/bin/gcov
   - wget https://googlemock.googlecode.com/files/gmock-1.7.0.zip
   - unzip gmock-1.7.0.zip
   - cd gmock-1.7.0 
@@ -36,4 +37,4 @@ script:
 
 after_success:
   - cd ..
-  - coveralls --build-root "./build" --exclude test --exclude gmock-1.7.0 --exclude-pattern '.*\.h'
+  - coveralls --build-root "./build" --exclude test --exclude gmock-1.7.0 --exclude-pattern '.*\.h' --exclude-pattern 'CMake[^\.]*\.c(?:pp)?' --exclude-pattern 'moc[^\.]*\.cpp'
