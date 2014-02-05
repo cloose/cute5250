@@ -21,6 +21,7 @@ install:
   - cd ../..
   - export GMOCK_HOME=`pwd`
   - cd ..
+  - sudo pip install cpp-coveralls --use-mirrors
   
 before_script:
   - mkdir build
@@ -29,6 +30,9 @@ before_script:
   - export CTEST_OUTPUT_ON_FAILURE=true         
   
 script:
-  - cmake ..
+  - cmake .. -DBUILD_WITH_CODE_COVERAGE=1
   - make all 
   - make test
+
+after_success:
+  - coveralls --exclude test

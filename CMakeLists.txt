@@ -43,6 +43,10 @@ message(STATUS "C++ Flags: ${CMAKE_CXX_FLAGS}")
 
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 
+### Build Options ###
+
+option(BUILD_WITH_CODE_COVERAGE "Enable code coverage with gconv" OFF)
+
 ### Dependencies ###
 
 find_package(Qt5Core REQUIRED)
