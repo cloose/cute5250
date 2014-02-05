@@ -75,13 +75,16 @@ QByteArray TelnetParser::replaceEscapedIACBytes(const QByteArray &data)
 
 QByteArray TelnetParser::subnegotiationParameters(const QByteArray &data)
 {
+    QByteArray parameters;
+
     for (int i = 0; i < data.size(); ++i) {
         if (isInterpretAsCommand(data[i]) && isSubnegotiationEndCommand(data[i+1])) {
-            return data.mid(0, i);
+            parameters = data.mid(0, i);
+            break;
         }
     }
 
-    return QByteArray();
+    return parameters;
 }
 
 bool TelnetParser::isCommand(const QByteArray &data)
