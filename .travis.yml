@@ -35,4 +35,5 @@ script:
   - make test
 
 after_success:
-  - coveralls --exclude test
+  - cd ..
+  - coveralls --build-root "./build" --exclude test
