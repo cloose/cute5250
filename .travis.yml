@@ -37,4 +37,4 @@ script:
 
 after_success:
   - cd ..
-  - coveralls --build-root "./build" --exclude test --exclude gmock-1.7.0 --exclude-pattern '.*\.h' --exclude-pattern 'CMake[^\.]*\.c(?:pp)?' --exclude-pattern 'moc[^\.]*\.cpp'
+  - coveralls --build-root "./build" --exclude test --exclude gmock-1.7.0 --exclude-pattern '.*\.h' --exclude-pattern '.*CMake[^\.]*\.c(?:pp)?' --exclude-pattern '.*/moc[^\.]*\.cpp' --exclude-pattern '.*_automoc\.cpp'
