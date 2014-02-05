@@ -30,13 +30,16 @@ using namespace testing;
 #include <QSignalSpy>
 
 #include <telnet/telnetclient.h>
+#include <telnet/telnetcommand.h>
 #include <telnet/telnetconnection.h>
+#include <telnet/telnetoption.h>
 using namespace q5250;
 
 class TelnetConnectionMock : public TelnetConnection
 {
 public:
     MOCK_METHOD0(readAll, QByteArray());
+    MOCK_METHOD1(write, void(const QByteArray&));
 };
 
 class ATelnetClient : public Test
@@ -44,6 +47,16 @@ class ATelnetClient : public Test
 public:
     QByteArray ArbitraryRawData{"A"};
     static const char IAC = '\xff';
+
+    QByteArray optionCommand(TelnetCommand command, TelnetOption option) {
+        QByteArray optionNegotiation;
+
+        optionNegotiation.append((char)TelnetCommand::IAC);
+        optionNegotiation.append((char)command);
+        optionNegotiation.append((char)option);
+
+        return optionNegotiation;
+    }
 };
 
 TEST_F(ATelnetClient, readsDataFromConnectionWhenReceivedReadyRead)
@@ -66,4 +79,15 @@ TEST_F(ATelnetClient, emitsDataReceivedForRawData)
 
     ASSERT_THAT(spy.count(), Eq(1));
     ASSERT_THAT(spy[0][0].toByteArray(), Eq(ArbitraryRawData));
+}
+
+TEST_F(ATelnetClient, deniesOfferToUseUnsupportedOption)
+{
+    TelnetConnectionMock connection;
+    TelnetClient client(&connection);
+    QByteArray expectedAnswer = optionCommand(TelnetCommand::DONT, TelnetOption::ECHO);
+    EXPECT_CALL(connection, readAll()).WillOnce(Return(optionCommand(TelnetCommand::WILL, TelnetOption::ECHO)));
+    EXPECT_CALL(connection, write(expectedAnswer));
+
+    client.readyRead();
 }

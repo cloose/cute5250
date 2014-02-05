@@ -34,12 +34,24 @@ TelnetClient::TelnetClient(TelnetConnection *conn) :
 {
     connect(&parser, &TelnetParser::dataReceived,
             this, &TelnetClient::dataReceived);
+    connect(&parser, &TelnetParser::optionNegotiationReceived,
+            this, &TelnetClient::optionNegotiationReceived);
 }
 
 void TelnetClient::readyRead()
 {
     QByteArray buffer = connection->readAll();
     parser.parse(buffer);
+}
+
+void TelnetClient::optionNegotiationReceived(const OptionNegotiation &optionNegotiation)
+{
+    QByteArray answer;
+    answer.append((char)TelnetCommand::IAC);
+    answer.append((char)TelnetCommand::DONT);
+    answer.append((char)optionNegotiation.option);
+
+    connection->write(answer);
 }
 
 } // namespace q5250

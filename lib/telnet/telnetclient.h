@@ -47,6 +47,9 @@ public:
 signals:
     void dataReceived(const QByteArray &data);
 
+private slots:
+    void optionNegotiationReceived(const q5250::OptionNegotiation &optionNegotiation);
+
 private:
     TelnetConnection *connection;
     TelnetParser parser;

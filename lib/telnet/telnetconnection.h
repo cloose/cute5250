@@ -36,6 +36,7 @@ class Q5250SHARED_EXPORT TelnetConnection
 {
 public:
     virtual QByteArray readAll() = 0;
+    virtual void write(const QByteArray &data) = 0;
 };
 
 } // namespace q5250
