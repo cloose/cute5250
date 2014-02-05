@@ -36,4 +36,4 @@ script:
 
 after_success:
   - cd ..
-  - coveralls --build-root "./build" --exclude test
+  - coveralls --build-root "./build" --exclude test --exclude gmock-1.7.0 --exclude-pattern '.*\.h'
