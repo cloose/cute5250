@@ -27,21 +27,26 @@
 
 namespace q5250 {
 
-void TelnetParser::parse(const QByteArray &data)
+class TelnetParser::Private
 {
-    if (data.isEmpty()) {
-        return;
-    }
+public:
+    TelnetParser *q;
 
-    if (isCommand(data)) {
-        int commandLength = parseCommand(data);
-        parse(data.mid(commandLength));
-    } else {
-        emit dataReceived(replaceEscapedIACBytes(data));
-    }
-}
+    Private(TelnetParser *parent) : q(parent) {}
 
-int TelnetParser::parseCommand(const QByteArray &data)
+    int parseCommand(const QByteArray &data);
+    QByteArray replaceEscapedIACBytes(const QByteArray &data);
+    QByteArray subnegotiationParameters(const QByteArray &data);
+    bool isCommand(const QByteArray &data);
+    bool isOptionNegotiation(const QByteArray &data);
+    bool isSubnegotiation(const QByteArray &data);
+    bool isInterpretAsCommand(unsigned char byte);
+    bool isOptionCommand(unsigned char byte);
+    bool isSubnegotiationBeginCommand(unsigned char byte);
+    bool isSubnegotiationEndCommand(unsigned char byte);
+};
+
+int TelnetParser::Private::parseCommand(const QByteArray &data)
 {
     if (isSubnegotiation(data)) {
         QByteArray parameters = subnegotiationParameters(data.mid(4));
@@ -50,7 +55,7 @@ int TelnetParser::parseCommand(const QByteArray &data)
             (SubnegotiationCommand)data.at(3),
             parameters
         };
-        emit subnegotiationReceived(subnegotiation);
+        emit q->subnegotiationReceived(subnegotiation);
         return 6 + parameters.size();
     }
 
@@ -59,21 +64,21 @@ int TelnetParser::parseCommand(const QByteArray &data)
             (TelnetCommand)data.at(1),
             (TelnetOption)data.at(2)
         };
-        emit optionNegotiationReceived(optionNegotiation);
+        emit q->optionNegotiationReceived(optionNegotiation);
         return 3;
     }
 
     return 2;
 }
 
-QByteArray TelnetParser::replaceEscapedIACBytes(const QByteArray &data)
+QByteArray TelnetParser::Private::replaceEscapedIACBytes(const QByteArray &data)
 {
     QByteArray result(data);
     result.replace("\xff\xff", "\xff");
     return result;
 }
 
-QByteArray TelnetParser::subnegotiationParameters(const QByteArray &data)
+QByteArray TelnetParser::Private::subnegotiationParameters(const QByteArray &data)
 {
     QByteArray parameters;
 
@@ -87,7 +92,7 @@ QByteArray TelnetParser::subnegotiationParameters(const QByteArray &data)
     return parameters;
 }
 
-bool TelnetParser::isCommand(const QByteArray &data)
+bool TelnetParser::Private::isCommand(const QByteArray &data)
 {
     // All TELNET commands consist of at least a two byte sequence:  the
     // "Interpret as Command" (IAC) escape character followed by the code
@@ -97,7 +102,7 @@ bool TelnetParser::isCommand(const QByteArray &data)
            !isInterpretAsCommand(data.at(1));
 }
 
-bool TelnetParser::isOptionNegotiation(const QByteArray &data)
+bool TelnetParser::Private::isOptionNegotiation(const QByteArray &data)
 {
     // The commands dealing with option negotiation are
     // three byte sequences, the third byte being the code for the option
@@ -107,19 +112,19 @@ bool TelnetParser::isOptionNegotiation(const QByteArray &data)
            isOptionCommand(data.at(1));
 }
 
-bool TelnetParser::isSubnegotiation(const QByteArray &data)
+bool TelnetParser::Private::isSubnegotiation(const QByteArray &data)
 {
     return data.size() >= 6 &&
            isInterpretAsCommand(data.at(0)) &&
            isSubnegotiationBeginCommand(data.at(1));
 }
 
-bool TelnetParser::isInterpretAsCommand(unsigned char byte)
+bool TelnetParser::Private::isInterpretAsCommand(unsigned char byte)
 {
     return (TelnetCommand)byte == TelnetCommand::IAC;
 }
 
-bool TelnetParser::isOptionCommand(unsigned char byte)
+bool TelnetParser::Private::isOptionCommand(unsigned char byte)
 {
     TelnetCommand command = (TelnetCommand)byte;
     return command == TelnetCommand::WILL ||
@@ -128,14 +133,39 @@ bool TelnetParser::isOptionCommand(unsigned char byte)
            command == TelnetCommand::DONT;
 }
 
-bool TelnetParser::isSubnegotiationBeginCommand(unsigned char byte)
+bool TelnetParser::Private::isSubnegotiationBeginCommand(unsigned char byte)
 {
     return (TelnetCommand)byte == TelnetCommand::SB;
 }
 
-bool TelnetParser::isSubnegotiationEndCommand(unsigned char byte)
+bool TelnetParser::Private::isSubnegotiationEndCommand(unsigned char byte)
 {
     return (TelnetCommand)byte == TelnetCommand::SE;
+}
+
+
+TelnetParser::TelnetParser(QObject *parent) :
+    QObject(parent),
+    d(new Private(this))
+{
+}
+
+TelnetParser::~TelnetParser()
+{
+}
+
+void TelnetParser::parse(const QByteArray &data)
+{
+    if (data.isEmpty()) {
+        return;
+    }
+
+    if (d->isCommand(data)) {
+        int commandLength = d->parseCommand(data);
+        parse(data.mid(commandLength));
+    } else {
+        emit dataReceived(d->replaceEscapedIACBytes(data));
+    }
 }
 
 } // namespace q5250

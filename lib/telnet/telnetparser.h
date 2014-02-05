@@ -27,7 +27,10 @@
 #define Q5250_TELNETPARSER_H
 
 #include "q5250_global.h"
+
 #include <QObject>
+
+#include <memory>
 
 #include "subnegotiationcommand.h"
 #include "telnetcommand.h"
@@ -64,6 +67,9 @@ class Q5250SHARED_EXPORT TelnetParser : public QObject
     Q_OBJECT
 
 public:
+    explicit TelnetParser(QObject *parent = 0);
+    ~TelnetParser();
+
     void parse(const QByteArray &data);
 
 signals:
@@ -72,16 +78,8 @@ signals:
     void subnegotiationReceived(const q5250::Subnegotiation &subnegotiation);
 
 private:
-    int parseCommand(const QByteArray &data);
-    QByteArray replaceEscapedIACBytes(const QByteArray &data);
-    QByteArray subnegotiationParameters(const QByteArray &data);
-    bool isCommand(const QByteArray &data);
-    bool isOptionNegotiation(const QByteArray &data);
-    bool isSubnegotiation(const QByteArray &data);
-    bool isInterpretAsCommand(unsigned char byte);
-    bool isOptionCommand(unsigned char byte);
-    bool isSubnegotiationBeginCommand(unsigned char byte);
-    bool isSubnegotiationEndCommand(unsigned char byte);
+    class Private;
+    std::unique_ptr<Private> d;
 };
 
 } // namespace q5250
