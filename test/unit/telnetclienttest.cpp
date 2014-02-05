@@ -91,3 +91,19 @@ TEST_F(ATelnetClient, deniesOfferToUseUnsupportedOption)
 
     client.readyRead();
 }
+
+TEST_F(ATelnetClient, acknowledgesTransmitBinaryOption)
+{
+    TelnetConnectionMock connection;
+    TelnetClient client(&connection);
+    QByteArray transmitBinaryOffer = optionCommand(TelnetCommand::DO, TelnetOption::TRANSMIT_BINARY)
+                                   + optionCommand(TelnetCommand::WILL, TelnetOption::TRANSMIT_BINARY);
+    EXPECT_CALL(connection, readAll()).WillOnce(Return(transmitBinaryOffer));
+    {
+        InSequence replies;
+        EXPECT_CALL(connection, write(optionCommand(TelnetCommand::WILL, TelnetOption::TRANSMIT_BINARY)));
+        EXPECT_CALL(connection, write(optionCommand(TelnetCommand::DO, TelnetOption::TRANSMIT_BINARY)));
+    }
+
+    client.readyRead();
+}

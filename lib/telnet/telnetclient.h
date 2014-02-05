@@ -29,6 +29,8 @@
 #include "q5250_global.h"
 #include <QObject>
 
+#include "telnetcommand.h"
+#include "telnetoption.h"
 #include "telnetparser.h"
 
 namespace q5250 {
@@ -51,6 +53,10 @@ private slots:
     void optionNegotiationReceived(const q5250::OptionNegotiation &optionNegotiation);
 
 private:
+    void sendCommand(TelnetCommand command, TelnetOption option);
+    bool isOptionSupported(TelnetOption option);
+    TelnetCommand replyFor(TelnetCommand command, bool supported);
+
     TelnetConnection *connection;
     TelnetParser parser;
 };

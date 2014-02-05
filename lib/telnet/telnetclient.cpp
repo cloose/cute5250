@@ -46,12 +46,35 @@ void TelnetClient::readyRead()
 
 void TelnetClient::optionNegotiationReceived(const OptionNegotiation &optionNegotiation)
 {
-    QByteArray answer;
-    answer.append((char)TelnetCommand::IAC);
-    answer.append((char)TelnetCommand::DONT);
-    answer.append((char)optionNegotiation.option);
+    bool supported = isOptionSupported(optionNegotiation.option);
+    sendCommand(replyFor(optionNegotiation.command, supported), optionNegotiation.option);
+}
 
-    connection->write(answer);
+void TelnetClient::sendCommand(TelnetCommand command, TelnetOption option)
+{
+    QByteArray reply;
+    reply.append((char)TelnetCommand::IAC);
+    reply.append((char)command);
+    reply.append((char)option);
+
+    connection->write(reply);
+}
+
+bool TelnetClient::isOptionSupported(TelnetOption option)
+{
+    // the following telnet options are supported
+    return option == TelnetOption::TRANSMIT_BINARY;
+}
+
+TelnetCommand TelnetClient::replyFor(TelnetCommand command, bool supported)
+{
+    switch (command) {
+    case TelnetCommand::DO:
+        return TelnetCommand::WILL;
+
+    case TelnetCommand::WILL:
+        return supported ? TelnetCommand::DO : TelnetCommand::DONT;
+    }
 }
 
 } // namespace q5250
