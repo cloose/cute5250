@@ -27,7 +27,9 @@
 #define Q5250_TELNETCLIENT_H
 
 #include "q5250_global.h"
+
 #include <QObject>
+#include <QMap>
 
 #include "telnetcommand.h"
 #include "telnetoption.h"
@@ -56,9 +58,12 @@ private:
     void sendCommand(TelnetCommand command, TelnetOption option);
     bool isOptionSupported(TelnetOption option);
     TelnetCommand replyFor(TelnetCommand command, bool supported);
+    bool replyNeeded(TelnetCommand command, TelnetOption option);
+    void setMode(TelnetCommand command, TelnetOption option);
 
     TelnetConnection *connection;
     TelnetParser parser;
+    QMap<TelnetOption, bool> modes;
 };
 
 } // namespace q5250
