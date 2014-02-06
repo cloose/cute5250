@@ -101,18 +101,28 @@ TEST_F(ATelnetClient, deniesRequestToUseUnsupportedOption)
     client.readyRead();
 }
 
-TEST_F(ATelnetClient, acknowledgesTransmitBinaryOption)
+TEST_F(ATelnetClient, acknowledgesTransmitBinaryOptionNegotiation)
 {
     TelnetConnectionMock connection;
     TelnetClient client(&connection);
-    QByteArray transmitBinaryOffer = optionCommand(TelnetCommand::DO, TelnetOption::TRANSMIT_BINARY)
-                                   + optionCommand(TelnetCommand::WILL, TelnetOption::TRANSMIT_BINARY);
-    EXPECT_CALL(connection, readAll()).WillOnce(Return(transmitBinaryOffer));
+    QByteArray transmitBinaryNegotiation = optionCommand(TelnetCommand::DO, TelnetOption::TRANSMIT_BINARY)
+                                         + optionCommand(TelnetCommand::WILL, TelnetOption::TRANSMIT_BINARY);
+    EXPECT_CALL(connection, readAll()).WillOnce(Return(transmitBinaryNegotiation));
     {
         InSequence replies;
         EXPECT_CALL(connection, write(optionCommand(TelnetCommand::WILL, TelnetOption::TRANSMIT_BINARY)));
         EXPECT_CALL(connection, write(optionCommand(TelnetCommand::DO, TelnetOption::TRANSMIT_BINARY)));
     }
+
+    client.readyRead();
+}
+
+TEST_F(ATelnetClient, acknowledgesNewEnvironOptionRequest)
+{
+    TelnetConnectionMock connection;
+    TelnetClient client(&connection);
+    EXPECT_CALL(connection, readAll()).WillOnce(Return(optionCommand(TelnetCommand::DO, TelnetOption::NEW_ENVIRON)));
+    EXPECT_CALL(connection, write(optionCommand(TelnetCommand::WILL, TelnetOption::NEW_ENVIRON)));
 
     client.readyRead();
 }
