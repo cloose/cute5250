@@ -63,7 +63,8 @@ void TelnetClient::sendCommand(TelnetCommand command, TelnetOption option)
 bool TelnetClient::isOptionSupported(TelnetOption option)
 {
     // the following telnet options are supported
-    return option == TelnetOption::NEW_ENVIRON   ||
+    return option == TelnetOption::END_OF_RECORD ||
+           option == TelnetOption::NEW_ENVIRON   ||
            option == TelnetOption::TERMINAL_TYPE ||
            option == TelnetOption::TRANSMIT_BINARY;
 }

@@ -136,3 +136,13 @@ TEST_F(ATelnetClient, acknowledgesTerminalTypeOptionRequest)
 
     client.readyRead();
 }
+
+TEST_F(ATelnetClient, acknowledgesEndOfRecordOptionRequest)
+{
+    TelnetConnectionMock connection;
+    TelnetClient client(&connection);
+    EXPECT_CALL(connection, readAll()).WillOnce(Return(optionCommand(TelnetCommand::DO, TelnetOption::END_OF_RECORD)));
+    EXPECT_CALL(connection, write(optionCommand(TelnetCommand::WILL, TelnetOption::END_OF_RECORD)));
+
+    client.readyRead();
+}
