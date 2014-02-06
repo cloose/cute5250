@@ -85,9 +85,18 @@ TEST_F(ATelnetClient, deniesOfferToUseUnsupportedOption)
 {
     TelnetConnectionMock connection;
     TelnetClient client(&connection);
-    QByteArray expectedAnswer = optionCommand(TelnetCommand::DONT, TelnetOption::ECHO);
     EXPECT_CALL(connection, readAll()).WillOnce(Return(optionCommand(TelnetCommand::WILL, TelnetOption::ECHO)));
-    EXPECT_CALL(connection, write(expectedAnswer));
+    EXPECT_CALL(connection, write(optionCommand(TelnetCommand::DONT, TelnetOption::ECHO)));
+
+    client.readyRead();
+}
+
+TEST_F(ATelnetClient, deniesRequestToUseUnsupportedOption)
+{
+    TelnetConnectionMock connection;
+    TelnetClient client(&connection);
+    EXPECT_CALL(connection, readAll()).WillOnce(Return(optionCommand(TelnetCommand::DO, TelnetOption::ECHO)));
+    EXPECT_CALL(connection, write(optionCommand(TelnetCommand::WONT, TelnetOption::ECHO)));
 
     client.readyRead();
 }

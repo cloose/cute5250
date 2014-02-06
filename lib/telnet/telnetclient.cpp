@@ -70,7 +70,7 @@ TelnetCommand TelnetClient::replyFor(TelnetCommand command, bool supported)
 {
     switch (command) {
     case TelnetCommand::DO:
-        return TelnetCommand::WILL;
+        return supported ? TelnetCommand::WILL : TelnetCommand::WONT;
 
     case TelnetCommand::WILL:
         return supported ? TelnetCommand::DO : TelnetCommand::DONT;
