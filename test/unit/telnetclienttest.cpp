@@ -126,3 +126,13 @@ TEST_F(ATelnetClient, acknowledgesNewEnvironOptionRequest)
 
     client.readyRead();
 }
+
+TEST_F(ATelnetClient, acknowledgesTerminalTypeOptionRequest)
+{
+    TelnetConnectionMock connection;
+    TelnetClient client(&connection);
+    EXPECT_CALL(connection, readAll()).WillOnce(Return(optionCommand(TelnetCommand::DO, TelnetOption::TERMINAL_TYPE)));
+    EXPECT_CALL(connection, write(optionCommand(TelnetCommand::WILL, TelnetOption::TERMINAL_TYPE)));
+
+    client.readyRead();
+}
