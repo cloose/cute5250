@@ -36,6 +36,8 @@ TelnetClient::TelnetClient(TelnetConnection *conn) :
             this, &TelnetClient::dataReceived);
     connect(&parser, &TelnetParser::optionNegotiationReceived,
             this, &TelnetClient::optionNegotiationReceived);
+    connect(&parser, &TelnetParser::subnegotiationReceived,
+            this, &TelnetClient::subnegotiationReceived);
 }
 
 void TelnetClient::readyRead()
@@ -50,6 +52,23 @@ void TelnetClient::optionNegotiationReceived(const OptionNegotiation &optionNego
     sendCommand(replyFor(optionNegotiation.command, supported), optionNegotiation.option);
 }
 
+void TelnetClient::subnegotiationReceived(const Subnegotiation &subnegotiation)
+{
+    if (subnegotiation.option == TelnetOption::TERMINAL_TYPE && subnegotiation.command == SubnegotiationCommand::SEND) {
+        QByteArray reply;
+
+        reply += (char)TelnetCommand::IAC;
+        reply += (char)TelnetCommand::SB;
+        reply += (char)TelnetOption::TERMINAL_TYPE;
+        reply += (char)SubnegotiationCommand::IS;
+        reply += QByteArrayLiteral("UNKNOWN");
+        reply += (char)TelnetCommand::IAC;
+        reply += (char)TelnetCommand::SE;
+
+        sendCommand(reply);
+    }
+}
+
 void TelnetClient::sendCommand(TelnetCommand command, TelnetOption option)
 {
     QByteArray reply;
@@ -57,7 +76,12 @@ void TelnetClient::sendCommand(TelnetCommand command, TelnetOption option)
     reply.append((char)command);
     reply.append((char)option);
 
-    connection->write(reply);
+    sendCommand(reply);
+}
+
+void TelnetClient::sendCommand(const QByteArray &command)
+{
+    connection->write(command);
 }
 
 bool TelnetClient::isOptionSupported(TelnetOption option)

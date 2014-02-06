@@ -51,9 +51,11 @@ signals:
 
 private slots:
     void optionNegotiationReceived(const q5250::OptionNegotiation &optionNegotiation);
+    void subnegotiationReceived(const q5250::Subnegotiation &subnegotiation);
 
 private:
     void sendCommand(TelnetCommand command, TelnetOption option);
+    void sendCommand(const QByteArray &command);
     bool isOptionSupported(TelnetOption option);
     TelnetCommand replyFor(TelnetCommand command, bool supported);
 

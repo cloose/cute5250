@@ -57,6 +57,20 @@ public:
 
         return optionNegotiation;
     }
+
+    QByteArray subnegotiation(TelnetOption option, SubnegotiationCommand command, const QByteArray &parameters) {
+        QByteArray data;
+
+        data.append((char)TelnetCommand::IAC);
+        data.append((char)TelnetCommand::SB);
+        data.append((char)option);
+        data.append((char)command);
+        data.append(parameters);
+        data.append((char)TelnetCommand::IAC);
+        data.append((char)TelnetCommand::SE);
+
+        return data;
+    }
 };
 
 TEST_F(ATelnetClient, readsDataFromConnectionWhenReceivedReadyRead)
@@ -143,6 +157,16 @@ TEST_F(ATelnetClient, acknowledgesEndOfRecordOptionRequest)
     TelnetClient client(&connection);
     EXPECT_CALL(connection, readAll()).WillOnce(Return(optionCommand(TelnetCommand::DO, TelnetOption::END_OF_RECORD)));
     EXPECT_CALL(connection, write(optionCommand(TelnetCommand::WILL, TelnetOption::END_OF_RECORD)));
+
+    client.readyRead();
+}
+
+TEST_F(ATelnetClient, statesTerminalTypeOnRequest)
+{
+    TelnetConnectionMock connection;
+    TelnetClient client(&connection);
+    EXPECT_CALL(connection, readAll()).WillOnce(Return(subnegotiation(TelnetOption::TERMINAL_TYPE, SubnegotiationCommand::SEND, QByteArray())));
+    EXPECT_CALL(connection, write(subnegotiation(TelnetOption::TERMINAL_TYPE, SubnegotiationCommand::IS, QByteArray{"UNKNOWN"})));
 
     client.readyRead();
 }
