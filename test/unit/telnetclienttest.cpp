@@ -107,25 +107,3 @@ TEST_F(ATelnetClient, acknowledgesTransmitBinaryOption)
 
     client.readyRead();
 }
-
-TEST_F(ATelnetClient, doesNotAcknowledgeRequestForAlreadyEnteredMode)
-{
-    TelnetConnectionMock connection;
-    TelnetClient client(&connection);
-
-    {
-        InSequence seq;
-        EXPECT_CALL(connection, readAll()).WillOnce(Return(optionCommand(TelnetCommand::DO, TelnetOption::TERMINAL_TYPE)));
-        EXPECT_CALL(connection, write(optionCommand(TelnetCommand::WILL, TelnetOption::TERMINAL_TYPE)));
-
-        EXPECT_CALL(connection, readAll())
-                .WillOnce(
-                    Return(
-                        optionCommand(TelnetCommand::DO, TelnetOption::TERMINAL_TYPE) +
-                        optionCommand(TelnetCommand::DO, TelnetOption::NEW_ENVIRON)));
-        EXPECT_CALL(connection, write(optionCommand(TelnetCommand::WILL, TelnetOption::NEW_ENVIRON)));
-    }
-
-    client.readyRead();
-    client.readyRead();
-}

@@ -46,14 +46,8 @@ void TelnetClient::readyRead()
 
 void TelnetClient::optionNegotiationReceived(const OptionNegotiation &optionNegotiation)
 {
-    TelnetCommand command = optionNegotiation.command;
-    TelnetOption option = optionNegotiation.option;
-
-    if (replyNeeded(command, option)) {
-        bool supported = isOptionSupported(option);
-        sendCommand(replyFor(command, supported), option);
-        setMode(command, option);
-    }
+    bool supported = isOptionSupported(optionNegotiation.option);
+    sendCommand(replyFor(optionNegotiation.command, supported), optionNegotiation.option);
 }
 
 void TelnetClient::sendCommand(TelnetCommand command, TelnetOption option)
@@ -80,27 +74,6 @@ TelnetCommand TelnetClient::replyFor(TelnetCommand command, bool supported)
 
     case TelnetCommand::WILL:
         return supported ? TelnetCommand::DO : TelnetCommand::DONT;
-    }
-}
-
-bool TelnetClient::replyNeeded(TelnetCommand command, TelnetOption option)
-{
-    if (command == TelnetCommand::DO || command == TelnetCommand::DONT) {
-
-        if (command == TelnetCommand::DO && modes[option])
-            return false;
-
-        if (command == TelnetCommand::DONT && !modes[option])
-            return false;
-    }
-
-    return true;
-}
-
-void TelnetClient::setMode(TelnetCommand command, TelnetOption option)
-{
-    if (command == TelnetCommand::DO || command == TelnetCommand::DONT) {
-        modes[option] = (command == TelnetCommand::DO);
     }
 }
 
