@@ -31,7 +31,11 @@ GeneralDataStream::GeneralDataStream(const QByteArray &data) :
     stream(new QDataStream(data))
 {
     *stream >> header.recordLength
-            >> header.recordType;
+            >> header.recordType
+            >> header.reservedBytes
+            >> header.varHdrLen
+            >> header.flags
+            >> header.opcode;
 }
 
 bool GeneralDataStream::isValid() const
@@ -43,6 +47,13 @@ bool GeneralDataStream::isValid() const
 bool GeneralDataStream::atEnd() const
 {
     return true;
+}
+
+unsigned char GeneralDataStream::readByte()
+{
+    unsigned char byte;
+    *stream >> byte;
+    return byte;
 }
 
 } // namespace q5250

@@ -41,6 +41,8 @@ public:
     bool isValid() const;
     bool atEnd() const;
 
+    unsigned char readByte();
+
 private:
     struct Header
     {
