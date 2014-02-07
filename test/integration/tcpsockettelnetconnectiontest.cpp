@@ -46,17 +46,26 @@ public:
                QByteArray data = clientSocket->readAll();
                emit receivedData(data);
            });
+           emit clientConnected();
         });
+    }
+    ~FakeTelnetServer()
+    {
+        clientSocket->close();
+        tcpServer->close();
     }
 
     void listen() { tcpServer->listen(QHostAddress::Any, 8023); }
     void sendDataToClient(const QByteArray &data)
     {
+        if (!clientSocket) return;
+
         clientSocket->write(data);
         clientSocket->waitForBytesWritten();
     }
 
 signals:
+    void clientConnected();
     void receivedData(const QByteArray &data);
 
 private:
@@ -71,7 +80,7 @@ public:
 
     bool openConnection(TcpSocketTelnetConnection &connection)
     {
-        QSignalSpy spy(&connection, SIGNAL(connected()));
+        QSignalSpy spy(&server, SIGNAL(clientConnected()));
         connection.connectToHost("localhost", 8023);
         return spy.wait();
     }
@@ -94,7 +103,7 @@ TEST_F(ATcpSocketTelnetConnection, emitsReadyReadWhenReceivingDataFromServer)
 {
     TcpSocketTelnetConnection connection;
     QSignalSpy spy(&connection, SIGNAL(readyRead()));
-    EXPECT_TRUE(openConnection(connection));
+    openConnection(connection);
 
     server.sendDataToClient(ArbitraryRawData);
 
@@ -104,10 +113,10 @@ TEST_F(ATcpSocketTelnetConnection, emitsReadyReadWhenReceivingDataFromServer)
 TEST_F(ATcpSocketTelnetConnection, readsAllDataReceivedFromServer)
 {
     TcpSocketTelnetConnection connection;
-    EXPECT_TRUE(openConnection(connection));
+    openConnection(connection);
     QSignalSpy spy(&connection, SIGNAL(readyRead()));
     server.sendDataToClient(ArbitraryRawData);
-    EXPECT_TRUE(spy.wait());
+    spy.wait();
 
     QByteArray receivedData = connection.readAll();
 
@@ -117,7 +126,7 @@ TEST_F(ATcpSocketTelnetConnection, readsAllDataReceivedFromServer)
 TEST_F(ATcpSocketTelnetConnection, sendsDataToServer)
 {
     TcpSocketTelnetConnection connection;
-    EXPECT_TRUE(openConnection(connection));
+    openConnection(connection);
     QSignalSpy spy(&server, SIGNAL(receivedData(QByteArray)));
 
     connection.write(ArbitraryRawData);
