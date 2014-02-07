@@ -27,13 +27,39 @@
 using namespace testing;
 
 #include <QByteArray>
+#include <QDataStream>
 
 class GeneralDataStream
 {
 public:
-    explicit GeneralDataStream(const QByteArray &data) {}
+    struct Header
+    {
+        quint16 recordLength;
+        quint16 recordType;
+        quint16 reservedBytes;
+        quint8 varHdrLen;
+        quint16 flags;
+        quint8 opcode;
+    };
 
+    explicit GeneralDataStream(const QByteArray &data) :
+        stream(new QDataStream(data))
+    {
+        *stream >> header.recordLength
+                >> header.recordType;
+    }
+
+    bool isValid() const
+    {
+        return header.recordLength == stream->device()->size() &&
+               header.recordType == GdsRecordType;
+    }
     bool atEnd() const { return true; }
+
+private:
+    QScopedPointer<QDataStream> stream;
+    Header header;
+    static const quint16 GdsRecordType{0x12a0};
 };
 
 TEST(AGeneralDataStream, reportsAtEndIfEmpty)
@@ -41,4 +67,11 @@ TEST(AGeneralDataStream, reportsAtEndIfEmpty)
     QByteArray data;
     GeneralDataStream stream(data);
     ASSERT_TRUE(stream.atEnd());
+}
+
+TEST(AGeneralDataStream, isValidIfGdsHeaderRecordTypeAndLengthIsCorrect)
+{
+    const char gdsHeader[] { 0x00, 0x0a, 0x12, (char)0xa0, 0x00, 0x00, 0x04, 0x00, 0x00, 0x03 };
+    GeneralDataStream stream(QByteArray::fromRawData(gdsHeader, 10));
+    ASSERT_TRUE(stream.isValid());
 }
