@@ -38,8 +38,14 @@ using namespace q5250;
 class TelnetConnectionMock : public TelnetConnection
 {
 public:
+    MOCK_METHOD2(connectToHost, void(const QString&, quint16));
+
     MOCK_METHOD0(readAll, QByteArray());
     MOCK_METHOD1(write, void(const QByteArray&));
+
+protected:
+    MOCK_METHOD0(connected, void());
+    MOCK_METHOD0(readyRead, void());
 };
 
 class ATelnetClient : public Test

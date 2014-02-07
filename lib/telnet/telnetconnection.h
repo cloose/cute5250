@@ -35,8 +35,14 @@ namespace q5250 {
 class Q5250SHARED_EXPORT TelnetConnection
 {
 public:
+    virtual void connectToHost(const QString &hostName, quint16 port) = 0;
+
     virtual QByteArray readAll() = 0;
     virtual void write(const QByteArray &data) = 0;
+
+signals:
+    virtual void connected() = 0;
+    virtual void readyRead() = 0;
 };
 
 } // namespace q5250
