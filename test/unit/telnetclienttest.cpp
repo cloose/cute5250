@@ -176,3 +176,14 @@ TEST_F(ATelnetClient, statesTerminalTypeOnRequest)
 
     client.readyRead();
 }
+
+TEST_F(ATelnetClient, statesSetTerminalTypeOnRequest)
+{
+    TelnetConnectionMock connection;
+    TelnetClient client(&connection);
+    EXPECT_CALL(connection, readAll()).WillOnce(Return(subnegotiation(TelnetOption::TERMINAL_TYPE, SubnegotiationCommand::SEND, QByteArray())));
+    EXPECT_CALL(connection, write(subnegotiation(TelnetOption::TERMINAL_TYPE, SubnegotiationCommand::IS, QByteArray{"IBM-3477-FC"})));
+
+    client.setTerminalType("IBM-3477-FC");
+    client.readyRead();
+}

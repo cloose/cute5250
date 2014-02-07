@@ -30,7 +30,8 @@
 namespace q5250 {
 
 TelnetClient::TelnetClient(TelnetConnection *conn) :
-    connection(conn)
+    connection(conn),
+    terminalType("UNKNOWN")
 {
     connect(&parser, &TelnetParser::dataReceived,
             this, &TelnetClient::dataReceived);
@@ -38,6 +39,11 @@ TelnetClient::TelnetClient(TelnetConnection *conn) :
             this, &TelnetClient::optionNegotiationReceived);
     connect(&parser, &TelnetParser::subnegotiationReceived,
             this, &TelnetClient::subnegotiationReceived);
+}
+
+void TelnetClient::setTerminalType(const QString &type)
+{
+    terminalType = type;
 }
 
 void TelnetClient::readyRead()
@@ -61,7 +67,7 @@ void TelnetClient::subnegotiationReceived(const Subnegotiation &subnegotiation)
         reply += (char)TelnetCommand::SB;
         reply += (char)TelnetOption::TERMINAL_TYPE;
         reply += (char)SubnegotiationCommand::IS;
-        reply += QByteArrayLiteral("UNKNOWN");
+        reply += terminalType;
         reply += (char)TelnetCommand::IAC;
         reply += (char)TelnetCommand::SE;
 

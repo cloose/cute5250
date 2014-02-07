@@ -56,6 +56,7 @@ Main::Main(QObject *parent) :
     connect(client, &TelnetClient::dataReceived,
             this, &Main::dataReceived);
 
+    client->setTerminalType("IBM-3477-FC");
     connection->connectToHost(QStringLiteral("ASKNIDEV"), 23);
 }
 

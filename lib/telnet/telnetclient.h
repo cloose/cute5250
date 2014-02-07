@@ -44,6 +44,8 @@ class Q5250SHARED_EXPORT TelnetClient : public QObject
 public:
     explicit TelnetClient(TelnetConnection *conn);
 
+    void setTerminalType(const QString &type);
+
     void readyRead();
 
 signals:
@@ -61,6 +63,7 @@ private:
 
     TelnetConnection *connection;
     TelnetParser parser;
+    QString terminalType;
 };
 
 } // namespace q5250
