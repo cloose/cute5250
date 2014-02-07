@@ -65,3 +65,17 @@ TEST(AGeneralDataStream, startsToReadAfterHeader)
     ASSERT_THAT(stream.readByte(), Eq(0x04));
     ASSERT_THAT(stream.readByte(), Eq(0x40));
 }
+
+TEST(AGeneralDataStream, canSeekToPreviousByte)
+{
+    const char gdsHeader[] { 0x00, 0x0c, 0x12, (char)0xa0, 0x00, 0x00, 0x04, 0x00, 0x00, 0x03 };
+    QByteArray data = QByteArray::fromRawData(gdsHeader, 10);
+    data += 0x04;       // ESC
+    data += 0x40;       // CU
+    GeneralDataStream stream(data);
+
+    stream.readByte();
+    stream.seekToPreviousByte();
+
+    ASSERT_THAT(stream.readByte(), Eq(0x04));
+}

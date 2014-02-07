@@ -50,6 +50,9 @@ public:
     explicit Private(const QByteArray &data);
     void readHeader();
     bool isValid() const;
+
+    qint64 currentPosition() const;
+    void seekToPosition(qint64 pos);
 };
 
 GeneralDataStream::Private::Private(const QByteArray &data) :
@@ -72,6 +75,16 @@ bool GeneralDataStream::Private::isValid() const
 {
     return header.recordLength == stream->device()->size() &&
            header.recordType == GdsRecordType;
+}
+
+qint64 GeneralDataStream::Private::currentPosition() const
+{
+    return stream->device()->pos();
+}
+
+void GeneralDataStream::Private::seekToPosition(qint64 pos)
+{
+    stream->device()->seek(pos);
 }
 
 
@@ -99,6 +112,11 @@ unsigned char GeneralDataStream::readByte()
     unsigned char byte;
     *d->stream >> byte;
     return byte;
+}
+
+void GeneralDataStream::seekToPreviousByte()
+{
+    d->seekToPosition(d->currentPosition()-1);
 }
 
 } // namespace q5250
