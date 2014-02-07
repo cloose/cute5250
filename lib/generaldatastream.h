@@ -28,8 +28,7 @@
 
 #include "q5250_global.h"
 
-#include <QDataStream>
-#include <QScopedPointer>
+#include <memory>
 
 namespace q5250 {
 
@@ -37,6 +36,7 @@ class Q5250SHARED_EXPORT GeneralDataStream
 {
 public:
     explicit GeneralDataStream(const QByteArray &data);
+    ~GeneralDataStream();
 
     bool isValid() const;
     bool atEnd() const;
@@ -44,19 +44,8 @@ public:
     unsigned char readByte();
 
 private:
-    struct Header
-    {
-        quint16 recordLength;
-        quint16 recordType;
-        quint16 reservedBytes;
-        quint8 varHdrLen;
-        quint16 flags;
-        quint8 opcode;
-    };
-
-    QScopedPointer<QDataStream> stream;
-    Header header;
-    static const quint16 GdsRecordType{0x12a0};
+    class Private;
+    std::unique_ptr<Private> d;
 };
 
 } // namespace q5250

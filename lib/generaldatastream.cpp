@@ -25,10 +25,40 @@
  */
 #include "generaldatastream.h"
 
+#include <QDataStream>
+#include <QScopedPointer>
+
 namespace q5250 {
 
-GeneralDataStream::GeneralDataStream(const QByteArray &data) :
+class GeneralDataStream::Private
+{
+public:
+    struct Header
+    {
+        quint16 recordLength;
+        quint16 recordType;
+        quint16 reservedBytes;
+        quint8 varHdrLen;
+        quint16 flags;
+        quint8 opcode;
+    };
+
+    QScopedPointer<QDataStream> stream;
+    Header header;
+    static const quint16 GdsRecordType{0x12a0};
+
+    explicit Private(const QByteArray &data);
+    void readHeader();
+    bool isValid() const;
+};
+
+GeneralDataStream::Private::Private(const QByteArray &data) :
     stream(new QDataStream(data))
+{
+    readHeader();
+}
+
+void GeneralDataStream::Private::readHeader()
 {
     *stream >> header.recordLength
             >> header.recordType
@@ -38,10 +68,25 @@ GeneralDataStream::GeneralDataStream(const QByteArray &data) :
             >> header.opcode;
 }
 
-bool GeneralDataStream::isValid() const
+bool GeneralDataStream::Private::isValid() const
 {
     return header.recordLength == stream->device()->size() &&
            header.recordType == GdsRecordType;
+}
+
+
+GeneralDataStream::GeneralDataStream(const QByteArray &data) :
+    d(new Private(data))
+{
+}
+
+GeneralDataStream::~GeneralDataStream()
+{
+}
+
+bool GeneralDataStream::isValid() const
+{
+    return d->isValid();
 }
 
 bool GeneralDataStream::atEnd() const
@@ -52,7 +97,7 @@ bool GeneralDataStream::atEnd() const
 unsigned char GeneralDataStream::readByte()
 {
     unsigned char byte;
-    *stream >> byte;
+    *d->stream >> byte;
     return byte;
 }
 
