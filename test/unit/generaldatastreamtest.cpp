@@ -38,6 +38,15 @@ TEST(AGeneralDataStream, reportsAtEndIfEmpty)
     ASSERT_TRUE(stream.atEnd());
 }
 
+TEST(AGeneralDataStream, isNotAtEndIfDataAvailable)
+{
+    const char gdsHeader[] { 0x00, 0x0b, 0x12, (char)0xa0, 0x00, 0x00, 0x04, 0x00, 0x00, 0x03, 0x04 };
+    QByteArray data = QByteArray::fromRawData(gdsHeader, 11);
+    GeneralDataStream stream(data);
+
+    ASSERT_FALSE(stream.atEnd());
+}
+
 TEST(AGeneralDataStream, isValidIfGdsHeaderRecordTypeAndLengthIsCorrect)
 {
     const char gdsHeader[] { 0x00, 0x0a, 0x12, (char)0xa0, 0x00, 0x00, 0x04, 0x00, 0x00, 0x03 };

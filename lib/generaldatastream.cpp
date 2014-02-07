@@ -91,7 +91,7 @@ bool GeneralDataStream::isValid() const
 
 bool GeneralDataStream::atEnd() const
 {
-    return true;
+    return d->stream->atEnd();
 }
 
 unsigned char GeneralDataStream::readByte()
