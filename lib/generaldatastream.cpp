@@ -46,10 +46,13 @@ public:
     QScopedPointer<QDataStream> stream;
     Header header;
     static const quint16 GdsRecordType{0x12a0};
+    static const qint64 GdsHeaderLength{10};
 
     explicit Private(const QByteArray &data);
     void readHeader();
+
     bool isValid() const;
+    bool atStart() const;
 
     qint64 currentPosition() const;
     void seekToPosition(qint64 pos);
@@ -75,6 +78,11 @@ bool GeneralDataStream::Private::isValid() const
 {
     return header.recordLength == stream->device()->size() &&
            header.recordType == GdsRecordType;
+}
+
+bool GeneralDataStream::Private::atStart() const
+{
+    return stream->device()->pos() == GdsHeaderLength;
 }
 
 qint64 GeneralDataStream::Private::currentPosition() const
@@ -116,6 +124,9 @@ unsigned char GeneralDataStream::readByte()
 
 void GeneralDataStream::seekToPreviousByte()
 {
+    if (d->atStart())
+        return;
+
     d->seekToPosition(d->currentPosition()-1);
 }
 
