@@ -1,6 +1,7 @@
 ### q5250 library ###
 
 set(q5250_SRCS
+    telnet/tcpsockettelnetconnection.cpp
     telnet/telnetclient.cpp
     telnet/telnetparser.cpp
 )
@@ -8,7 +9,7 @@ set(q5250_SRCS
 add_definitions(-DQ5250_LIBRARY)
 
 add_library(q5250 SHARED ${q5250_SRCS})
-qt5_use_modules(q5250 Core)
+qt5_use_modules(q5250 Core Network)
 
 if (BUILD_WITH_CODE_COVERAGE)
   add_definitions (--coverage)

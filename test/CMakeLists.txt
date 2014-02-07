@@ -7,5 +7,6 @@ find_package(Qt5Test REQUIRED)
 
 ### Subdirs ###
 
+add_subdirectory(integration)
 add_subdirectory(unit)
 
