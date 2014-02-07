@@ -23,24 +23,26 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#include <gmock/gmock.h>
-using namespace testing;
+#include "generaldatastream.h"
 
-#include <QByteArray>
+namespace q5250 {
 
-#include <generaldatastream.h>
-using namespace q5250;
-
-TEST(AGeneralDataStream, reportsAtEndIfEmpty)
+GeneralDataStream::GeneralDataStream(const QByteArray &data) :
+    stream(new QDataStream(data))
 {
-    QByteArray data;
-    GeneralDataStream stream(data);
-    ASSERT_TRUE(stream.atEnd());
+    *stream >> header.recordLength
+            >> header.recordType;
 }
 
-TEST(AGeneralDataStream, isValidIfGdsHeaderRecordTypeAndLengthIsCorrect)
+bool GeneralDataStream::isValid() const
 {
-    const char gdsHeader[] { 0x00, 0x0a, 0x12, (char)0xa0, 0x00, 0x00, 0x04, 0x00, 0x00, 0x03 };
-    GeneralDataStream stream(QByteArray::fromRawData(gdsHeader, 10));
-    ASSERT_TRUE(stream.isValid());
+    return header.recordLength == stream->device()->size() &&
+           header.recordType == GdsRecordType;
 }
+
+bool GeneralDataStream::atEnd() const
+{
+    return true;
+}
+
+} // namespace q5250

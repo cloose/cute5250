@@ -23,24 +23,40 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#include <gmock/gmock.h>
-using namespace testing;
+#ifndef Q5250_GENERALDATASTREAM_H
+#define Q5250_GENERALDATASTREAM_H
 
-#include <QByteArray>
+#include "q5250_global.h"
 
-#include <generaldatastream.h>
-using namespace q5250;
+#include <QDataStream>
+#include <QScopedPointer>
 
-TEST(AGeneralDataStream, reportsAtEndIfEmpty)
+namespace q5250 {
+
+class Q5250SHARED_EXPORT GeneralDataStream
 {
-    QByteArray data;
-    GeneralDataStream stream(data);
-    ASSERT_TRUE(stream.atEnd());
-}
+public:
+    explicit GeneralDataStream(const QByteArray &data);
 
-TEST(AGeneralDataStream, isValidIfGdsHeaderRecordTypeAndLengthIsCorrect)
-{
-    const char gdsHeader[] { 0x00, 0x0a, 0x12, (char)0xa0, 0x00, 0x00, 0x04, 0x00, 0x00, 0x03 };
-    GeneralDataStream stream(QByteArray::fromRawData(gdsHeader, 10));
-    ASSERT_TRUE(stream.isValid());
-}
+    bool isValid() const;
+    bool atEnd() const;
+
+private:
+    struct Header
+    {
+        quint16 recordLength;
+        quint16 recordType;
+        quint16 reservedBytes;
+        quint8 varHdrLen;
+        quint16 flags;
+        quint8 opcode;
+    };
+
+    QScopedPointer<QDataStream> stream;
+    Header header;
+    static const quint16 GdsRecordType{0x12a0};
+};
+
+} // namespace q5250
+
+#endif // Q5250_GENERALDATASTREAM_H
