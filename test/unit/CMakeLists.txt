@@ -5,6 +5,7 @@ set(unittest_SRCS
     generaldatastreamtest.cpp
     telnetclienttest.cpp
     telnetparsertest.cpp
+    terminalemulatortest.cpp
 )
 
 add_executable(unittest ${unittest_SRCS})
