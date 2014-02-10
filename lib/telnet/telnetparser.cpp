@@ -27,6 +27,8 @@
 
 namespace q5250 {
 
+static const QByteArray EndOfRecord = "\xff\xef";
+
 class TelnetParser::Private
 {
 public:
@@ -36,6 +38,7 @@ public:
 
     int parseCommand(const QByteArray &data);
     QByteArray replaceEscapedIACBytes(const QByteArray &data);
+    QByteArray removeEndOfRecordCommand(const QByteArray &data);
     QByteArray subnegotiationParameters(const QByteArray &data);
     bool isCommand(const QByteArray &data);
     bool isOptionNegotiation(const QByteArray &data);
@@ -75,6 +78,15 @@ QByteArray TelnetParser::Private::replaceEscapedIACBytes(const QByteArray &data)
 {
     QByteArray result(data);
     result.replace("\xff\xff", "\xff");
+    return result;
+}
+
+QByteArray TelnetParser::Private::removeEndOfRecordCommand(const QByteArray &data)
+{
+    QByteArray result(data);
+    if (result.endsWith(EndOfRecord)) {
+        result.chop(EndOfRecord.length());
+    }
     return result;
 }
 
@@ -164,7 +176,7 @@ void TelnetParser::parse(const QByteArray &data)
         int commandLength = d->parseCommand(data);
         parse(data.mid(commandLength));
     } else {
-        emit dataReceived(d->replaceEscapedIACBytes(data));
+        emit dataReceived(d->removeEndOfRecordCommand(d->replaceEscapedIACBytes(data)));
     }
 }
 

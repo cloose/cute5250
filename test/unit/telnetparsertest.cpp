@@ -46,6 +46,7 @@ public:
 
     TelnetParser parser;
     QByteArray ArbitraryRawData{"A"};
+    QByteArray EndOfRecordCommand{"\xff\xef"};
     QByteArray ArbitraryTelnetCommands{"\xff\xf1\xff\xf1"};
     static const char IAC = '\xff';
 
@@ -145,4 +146,14 @@ TEST_F(ATelnetParser, emitsSubnegotiationReceivedForEachSubnegotiation)
     ASSERT_THAT(spy.count(), Eq(2));
     ASSERT_SUBNEGOTIATION(spy[0], TelnetOption::NEW_ENVIRON, SubnegotiationCommand::SEND, parameters);
     ASSERT_SUBNEGOTIATION(spy[1], TelnetOption::TERMINAL_TYPE, SubnegotiationCommand::SEND, QByteArray());
+}
+
+TEST_F(ATelnetParser, removesEndOfRecordCommandFromRawData)
+{
+    QSignalSpy spy(&parser, SIGNAL(dataReceived(QByteArray)));
+
+    parser.parse(ArbitraryRawData + EndOfRecordCommand);
+
+    ASSERT_THAT(spy.count(), Eq(1));
+    ASSERT_THAT(spy[0][0].toByteArray(), Eq(ArbitraryRawData));
 }
