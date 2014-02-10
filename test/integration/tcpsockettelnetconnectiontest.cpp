@@ -51,7 +51,9 @@ public:
     }
     ~FakeTelnetServer()
     {
-        clientSocket->close();
+        if (clientSocket) {
+            clientSocket->close();
+        }
         tcpServer->close();
     }
 
