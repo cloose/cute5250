@@ -47,6 +47,11 @@ public:
     {
         qDebug() << Q_FUNC_INFO << column << row;
     }
+
+    void setCharacter(unsigned char ch)
+    {
+        qDebug() << Q_FUNC_INFO << ch;
+    }
 };
 
 class Main : public QObject

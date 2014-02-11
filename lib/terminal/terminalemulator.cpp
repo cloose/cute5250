@@ -50,22 +50,34 @@ void TerminalEmulator::dataReceived(const QByteArray &data)
                 {
                     stream.readByte();
                     stream.readByte();
-                    stream.readByte();
-                    stream.readByte();
-                    stream.readByte();
-                    stream.readByte();
-                    stream.readByte();
-                    stream.readByte();
-                    stream.readByte();
-                    unsigned char row = stream.readByte();
-                    unsigned char column = stream.readByte();
-                    displayBuffer->setBufferAddress(column, row);
+
+                    while (!stream.atEnd()) {
+                        byte = stream.readByte();
+
+                        switch (byte) {
+                        case 0x01 /*START OF HEADER*/:
+                            stream.readByte();
+                            stream.readByte();
+                            stream.readByte();
+                            stream.readByte();
+                            stream.readByte();
+                            break;
+                        case 0x11 /*SET BUFFER ADDRESS*/:
+                            {
+                                unsigned char row = stream.readByte();
+                                unsigned char column = stream.readByte();
+                                displayBuffer->setBufferAddress(column, row);
+                            }
+                            break;
+                        default:
+                            displayBuffer->setCharacter(byte);
+                            break;
+                        }
+                    }
                 }
                 break;
             case 0x40 /*CLEAR UNIT*/:
                 displayBuffer->setSize(80, 25);
-                break;
-            default:
                 break;
             }
         }

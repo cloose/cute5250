@@ -35,6 +35,7 @@ class DisplayBuffer
 public:
     virtual void setSize(unsigned char columns, unsigned char rows) = 0;
     virtual void setBufferAddress(unsigned char column, unsigned char row) = 0;
+    virtual void setCharacter(unsigned char ch) = 0;
 };
 
 } // namespace q5250
