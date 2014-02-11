@@ -29,9 +29,8 @@ using namespace testing;
 #include <QByteArray>
 
 #include <terminal/displaybuffer.h>
-#include <generaldatastream.h>
+#include <terminal/terminalemulator.h>
 using namespace q5250;
-
 
 class DisplayBufferMock : public DisplayBuffer
 {
@@ -40,51 +39,6 @@ public:
     MOCK_METHOD2(setBufferAddress, void(unsigned char, unsigned char));
 };
 
-class TerminalEmulator
-{
-public:
-    void setDisplayBuffer(DisplayBuffer *buffer) { displayBuffer = buffer; }
-
-    void dataReceived(const QByteArray &data)
-    {
-        GeneralDataStream stream(data);
-
-        while (!stream.atEnd()) {
-            unsigned char byte = stream.readByte();
-
-            if (byte == 0x04 /*ESC*/) {
-                byte = stream.readByte();
-
-                switch (byte) {
-                case 0x11 /*WRITE TO DISPLAY*/:
-                    {
-                        stream.readByte();
-                        stream.readByte();
-                        stream.readByte();
-                        stream.readByte();
-                        stream.readByte();
-                        stream.readByte();
-                        stream.readByte();
-                        stream.readByte();
-                        stream.readByte();
-                        unsigned char row = stream.readByte();
-                        unsigned char column = stream.readByte();
-                        displayBuffer->setBufferAddress(column, row);
-                    }
-                    break;
-                case 0x40 /*CLEAR UNIT*/:
-                    displayBuffer->setSize(80, 25);
-                    break;
-                default:
-                    break;
-                }
-            }
-        }
-    }
-
-private:
-    DisplayBuffer *displayBuffer;
-};
 
 class ATerminalEmulator : public Test
 {

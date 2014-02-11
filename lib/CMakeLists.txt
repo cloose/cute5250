@@ -5,6 +5,7 @@ set(q5250_SRCS
     telnet/tcpsockettelnetconnection.cpp
     telnet/telnetclient.cpp
     telnet/telnetparser.cpp
+    terminal/terminalemulator.cpp
 )
 
 add_definitions(-DQ5250_LIBRARY)
