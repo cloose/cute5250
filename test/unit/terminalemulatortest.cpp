@@ -38,6 +38,8 @@ class DisplayBufferMock : public DisplayBuffer
 public:
     MOCK_METHOD2(setSize, void(unsigned char, unsigned char));
     MOCK_METHOD2(setBufferAddress, void(unsigned char, unsigned char));
+    MOCK_CONST_METHOD0(column, unsigned char());
+    MOCK_CONST_METHOD0(row, unsigned char());
     MOCK_METHOD1(setCharacter, void(unsigned char));
 };
 
@@ -52,6 +54,7 @@ public:
     static const char ClearUnitCommand = 0x40;
     static const char WriteToDisplayCommand = 0x11;
     static const char StartOfHeaderOrder = 0x01;
+    static const char RepeatToAddressOrder = 0x02;
     static const char SetBufferAddressOrder = 0x11;
     static const char GreenAttribute = 0x20;
     static const char NonDisplay4Attribute = 0x3f;
@@ -113,4 +116,23 @@ TEST_F(ATerminalEmulator, writesAttributesToDisplayBuffer)
     QByteArray data = createGdsHeaderWithLength(6) + QByteArray::fromRawData(streamData, 6);
 
     terminal.dataReceived(data);
-    }
+}
+
+TEST_F(ATerminalEmulator, repeatsCharactersToReceivedAddress)
+{
+    QByteArray ebcdicText = textAsEbcdic("-");
+    const char startRow = 5;
+    const char startColumn = 2;
+    const char endRow = 5;
+    const char endColumn = 4;
+    const char streamData[]{ESC, WriteToDisplayCommand, 0x00, 0x18, StartOfHeaderOrder, 0x04, 0x00, 0x00, 0x00, 0x00, SetBufferAddressOrder, startRow, startColumn, RepeatToAddressOrder, endRow, endColumn};
+    QByteArray data = createGdsHeaderWithLength(17) + QByteArray::fromRawData(streamData, 16) + ebcdicText;
+    EXPECT_CALL(displayBuffer, setBufferAddress(startColumn, startRow));
+    EXPECT_CALL(displayBuffer, row()).WillOnce(Return(startRow));
+    EXPECT_CALL(displayBuffer, column()).WillOnce(Return(startColumn));
+    EXPECT_CALL(displayBuffer, setCharacter(ebcdicText.at(0)));
+    EXPECT_CALL(displayBuffer, setCharacter(ebcdicText.at(0)));
+    EXPECT_CALL(displayBuffer, setCharacter(ebcdicText.at(0)));
+
+    terminal.dataReceived(data);
+}

@@ -48,6 +48,16 @@ public:
         qDebug() << Q_FUNC_INFO << column << row;
     }
 
+    unsigned char column() const
+    {
+        return 0;
+    }
+
+    unsigned char row() const
+    {
+        return 0;
+    }
+
     void setCharacter(unsigned char ch)
     {
         qDebug() << Q_FUNC_INFO << ch;
