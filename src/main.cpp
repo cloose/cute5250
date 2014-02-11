@@ -23,13 +23,31 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#include <QCoreApplication>
+#include <QApplication>
 
 #include <QDebug>
 
+#include <generaldatastream.h>
 #include <telnet/tcpsockettelnetconnection.h>
 #include <telnet/telnetclient.h>
+#include <terminal/displaybuffer.h>
+#include <terminal/terminalemulator.h>
 using namespace q5250;
+
+class TerminalDisplayBuffer : public DisplayBuffer
+{
+// DisplayBuffer interface
+public:
+    void setSize(unsigned char columns, unsigned char rows)
+    {
+        qDebug() << Q_FUNC_INFO << columns << rows;
+    }
+
+    void setBufferAddress(unsigned char column, unsigned char row)
+    {
+        qDebug() << Q_FUNC_INFO << column << row;
+    }
+};
 
 class Main : public QObject
 {
@@ -44,35 +62,41 @@ private slots:
 private:
     TcpSocketTelnetConnection *connection;
     TelnetClient *client;
+    TerminalEmulator *terminal;
 };
 
 Main::Main(QObject *parent) :
     QObject(parent),
     connection(new TcpSocketTelnetConnection(this)),
-    client(new TelnetClient(connection))
+    client(new TelnetClient(connection)),
+    terminal(new TerminalEmulator())
 {
     connect(connection, &TcpSocketTelnetConnection::readyRead,
             client, &TelnetClient::readyRead);
     connect(client, &TelnetClient::dataReceived,
-            this, &Main::dataReceived);
+            terminal, &TerminalEmulator::dataReceived);
 
     client->setTerminalType("IBM-3477-FC");
+    terminal->setDisplayBuffer(new TerminalDisplayBuffer());
     connection->connectToHost(QStringLiteral("ASKNIDEV"), 23);
 }
 
 void Main::dataReceived(const QByteArray &data)
 {
-    qDebug() << "--- SERVER ---";
-    for (int i = 0; i < data.size(); ++i) {
-        qDebug() << QString::number(uchar(data[i]), 16)
-                 << QString::number(uchar(data[i]))
-                 << data[i];
-    }
+//    qDebug() << "--- SERVER ---";
+//    for (int i = 0; i < data.size(); ++i) {
+//        qDebug() << QString::number(uchar(data[i]), 16)
+//                 << QString::number(uchar(data[i]))
+//                 << data[i];
+//    }
+
+//    GeneralDataStream stream(data);
+//    qDebug() << "Valid?" << stream.isValid();
 }
 
 int main(int argc, char *argv[])
 {
-    QCoreApplication app(argc, argv);
+    QApplication app(argc, argv);
 
     Main main;
 
