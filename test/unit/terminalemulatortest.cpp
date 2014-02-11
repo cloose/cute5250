@@ -53,6 +53,8 @@ public:
     static const char WriteToDisplayCommand = 0x11;
     static const char StartOfHeaderOrder = 0x01;
     static const char SetBufferAddressOrder = 0x11;
+    static const char GreenAttribute = 0x20;
+    static const char NonDisplay4Attribute = 0x3f;
 
     ATerminalEmulator()
     {
@@ -102,3 +104,13 @@ TEST_F(ATerminalEmulator, writesDataToDisplayBuffer)
 
     terminal.dataReceived(data);
 }
+
+TEST_F(ATerminalEmulator, writesAttributesToDisplayBuffer)
+{
+    EXPECT_CALL(displayBuffer, setCharacter(GreenAttribute));
+    EXPECT_CALL(displayBuffer, setCharacter(NonDisplay4Attribute));
+    const char streamData[]{ESC, WriteToDisplayCommand, 0x00, 0x18, GreenAttribute, NonDisplay4Attribute};
+    QByteArray data = createGdsHeaderWithLength(6) + QByteArray::fromRawData(streamData, 6);
+
+    terminal.dataReceived(data);
+    }
