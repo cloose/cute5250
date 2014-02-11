@@ -32,6 +32,7 @@
 namespace q5250 {
 
 class DisplayBuffer;
+class GeneralDataStream;
 
 class Q5250SHARED_EXPORT TerminalEmulator : public QObject
 {
@@ -44,6 +45,8 @@ public slots:
     void dataReceived(const QByteArray &data);
 
 private:
+    void handleWriteToDisplayCommand(GeneralDataStream &stream);
+
     DisplayBuffer *displayBuffer;
 };
 

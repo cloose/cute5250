@@ -93,7 +93,7 @@ TEST_F(ATerminalEmulator, setDisplayBufferToReceivedAddress)
     terminal.dataReceived(data);
 }
 
-TEST_F(ATerminalEmulator, writesDataToDisplayBuffer)
+TEST_F(ATerminalEmulator, writesCharactersToDisplayBuffer)
 {
     QByteArray ebcdicText = textAsEbcdic("ABC");
     EXPECT_CALL(displayBuffer, setCharacter(ebcdicText.at(0)));

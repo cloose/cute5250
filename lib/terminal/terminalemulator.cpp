@@ -47,39 +47,42 @@ void TerminalEmulator::dataReceived(const QByteArray &data)
 
             switch (byte) {
             case 0x11 /*WRITE TO DISPLAY*/:
-                {
-                    stream.readByte();
-                    stream.readByte();
-
-                    while (!stream.atEnd()) {
-                        byte = stream.readByte();
-
-                        switch (byte) {
-                        case 0x01 /*START OF HEADER*/:
-                            stream.readByte();
-                            stream.readByte();
-                            stream.readByte();
-                            stream.readByte();
-                            stream.readByte();
-                            break;
-                        case 0x11 /*SET BUFFER ADDRESS*/:
-                            {
-                                unsigned char row = stream.readByte();
-                                unsigned char column = stream.readByte();
-                                displayBuffer->setBufferAddress(column, row);
-                            }
-                            break;
-                        default:
-                            displayBuffer->setCharacter(byte);
-                            break;
-                        }
-                    }
-                }
+                handleWriteToDisplayCommand(stream);
                 break;
             case 0x40 /*CLEAR UNIT*/:
                 displayBuffer->setSize(80, 25);
                 break;
             }
+        }
+    }
+}
+
+void TerminalEmulator::handleWriteToDisplayCommand(GeneralDataStream &stream)
+{
+    stream.readByte();
+    stream.readByte();
+
+    while (!stream.atEnd()) {
+        unsigned char byte = stream.readByte();
+
+        switch (byte) {
+        case 0x01 /*START OF HEADER*/:
+            stream.readByte();
+            stream.readByte();
+            stream.readByte();
+            stream.readByte();
+            stream.readByte();
+            break;
+        case 0x11 /*SET BUFFER ADDRESS*/:
+            {
+                unsigned char row = stream.readByte();
+                unsigned char column = stream.readByte();
+                displayBuffer->setBufferAddress(column, row);
+            }
+            break;
+        default:
+            displayBuffer->setCharacter(byte);
+            break;
         }
     }
 }
