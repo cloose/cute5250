@@ -28,23 +28,16 @@ using namespace testing;
 
 #include <QByteArray>
 
+#include <terminal/displaybuffer.h>
 #include <generaldatastream.h>
 using namespace q5250;
-
-class DisplayBuffer
-{
-public:
-    virtual ~DisplayBuffer() {}
-    virtual void setSize(int columns, int rows) = 0;
-    virtual void setBufferAddress(int column, int row) = 0;
-};
 
 
 class DisplayBufferMock : public DisplayBuffer
 {
 public:
-    MOCK_METHOD2(setSize, void(int, int));
-    MOCK_METHOD2(setBufferAddress, void(int, int));
+    MOCK_METHOD2(setSize, void(unsigned char, unsigned char));
+    MOCK_METHOD2(setBufferAddress, void(unsigned char, unsigned char));
 };
 
 class TerminalEmulator
