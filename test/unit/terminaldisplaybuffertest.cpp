@@ -52,3 +52,19 @@ TEST_F(ATerminalDisplayBuffer, hasSetCharacter)
 
     ASSERT_THAT(displayBuffer.characterAt(1, 1), Eq(character));
 }
+
+TEST_F(ATerminalDisplayBuffer, repeatsCharacterFromSetAddressToPassedAddress)
+{
+    unsigned char character = 'A';
+    unsigned char startRow = 2;
+    unsigned char startColumn = 5;
+    unsigned char endRow = 2;
+    unsigned char endColumn = 7;
+    displayBuffer.setBufferAddress(startColumn, startRow);
+
+    displayBuffer.repeatCharacterToAddress(endColumn, endRow, character);
+
+    ASSERT_THAT(displayBuffer.characterAt(startColumn, startRow), Eq(character));
+    ASSERT_THAT(displayBuffer.characterAt(startColumn+1, startRow), Eq(character));
+    ASSERT_THAT(displayBuffer.characterAt(endColumn, endRow), Eq(character));
+}

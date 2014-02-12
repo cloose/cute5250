@@ -27,6 +27,13 @@
 
 namespace q5250 {
 
+TerminalDisplayBuffer::TerminalDisplayBuffer() :
+    addressColumn(1),
+    addressRow(1)
+{
+    setSize(80, 25);
+}
+
 QSize TerminalDisplayBuffer::size() const
 {
     return bufferSize;
@@ -36,24 +43,56 @@ void TerminalDisplayBuffer::setSize(unsigned char columns, unsigned char rows)
 {
     bufferSize.setWidth(columns);
     bufferSize.setHeight(rows);
+    buffer.resize(columns*rows);
 }
 
 void TerminalDisplayBuffer::setBufferAddress(unsigned char column, unsigned char row)
 {
+    addressColumn = column;
+    addressRow = row;
 }
 
 unsigned char TerminalDisplayBuffer::characterAt(unsigned char column, unsigned char row) const
 {
-    return buffer;
+    unsigned int address = convertToAddress(column, row);
+    return buffer.at(address);
 }
 
 void TerminalDisplayBuffer::setCharacter(unsigned char character)
 {
-    buffer = character;
+    unsigned int address = convertToAddress(addressColumn, addressRow);
+    buffer[address] = character;
 }
 
 void TerminalDisplayBuffer::repeatCharacterToAddress(unsigned char column, unsigned char row, unsigned char character)
 {
+    unsigned int fromAddress = convertToAddress(addressColumn, addressRow);
+    unsigned int toAddress = convertToAddress(column, row);
+    unsigned int numberOfCharacters = toAddress - fromAddress + 1;
+
+    for (int i = 0; i < numberOfCharacters; ++i) {
+        setCharacter(character);
+        increaseBufferAddress();
+    }
+}
+
+unsigned int TerminalDisplayBuffer::convertToAddress(unsigned char column, unsigned char row) const
+{
+    return (row-1) * bufferSize.width() + (column-1);
+}
+
+void TerminalDisplayBuffer::increaseBufferAddress()
+{
+    addressColumn += 1;
+
+    if (addressColumn > bufferSize.width()) {
+        addressColumn = 1;
+        addressRow += 1;
+    }
+
+    if (addressRow > bufferSize.height()) {
+        addressRow = 1;
+    }
 }
 
 } // namespace q5250
