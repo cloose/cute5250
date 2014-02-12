@@ -53,6 +53,16 @@ TEST_F(ATerminalDisplayBuffer, hasSetCharacter)
     ASSERT_THAT(displayBuffer.characterAt(1, 1), Eq(character));
 }
 
+TEST_F(ATerminalDisplayBuffer, incrementsAddressForEachSetCharacter)
+{
+    unsigned char character = 'A';
+
+    displayBuffer.setCharacter(character);
+    displayBuffer.setCharacter(character);
+
+    ASSERT_THAT(displayBuffer.characterAt(2, 1), Eq(character));
+}
+
 TEST_F(ATerminalDisplayBuffer, repeatsCharacterFromSetAddressToPassedAddress)
 {
     unsigned char character = 'A';
