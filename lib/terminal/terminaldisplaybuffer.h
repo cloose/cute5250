@@ -38,11 +38,15 @@ public:
     void setSize(unsigned char columns, unsigned char rows);
 
     void setBufferAddress(unsigned char column, unsigned char row);
-    void setCharacter(unsigned char ch);
+
+    unsigned char characterAt(unsigned char column, unsigned char row) const;
+    void setCharacter(unsigned char character);
+
     void repeatCharacterToAddress(unsigned char column, unsigned char row, unsigned char character);
 
 private:
     QSize bufferSize;
+    unsigned char buffer;
 };
 
 } // namespace q5250

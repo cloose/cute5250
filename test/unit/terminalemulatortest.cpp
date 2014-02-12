@@ -39,6 +39,7 @@ public:
     MOCK_CONST_METHOD0(size, QSize());
     MOCK_METHOD2(setSize, void(unsigned char, unsigned char));
     MOCK_METHOD2(setBufferAddress, void(unsigned char, unsigned char));
+    MOCK_CONST_METHOD2(characterAt, unsigned char(unsigned char, unsigned char));
     MOCK_METHOD1(setCharacter, void(unsigned char));
     MOCK_METHOD3(repeatCharacterToAddress, void(unsigned char, unsigned char, unsigned char));
 };

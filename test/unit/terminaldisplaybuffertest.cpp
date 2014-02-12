@@ -29,12 +29,26 @@ using namespace testing;
 #include <terminal/terminaldisplaybuffer.h>
 using namespace q5250;
 
-TEST(ATerminalDisplayBuffer, hasSetSize)
+class ATerminalDisplayBuffer : public Test
 {
+public:
     TerminalDisplayBuffer displayBuffer;
+};
+
+TEST_F(ATerminalDisplayBuffer, hasSetSize)
+{
     QSize newBufferSize(80, 25);
 
     displayBuffer.setSize(newBufferSize.width(), newBufferSize.height());
 
     ASSERT_THAT(displayBuffer.size(), Eq(newBufferSize));
+}
+
+TEST_F(ATerminalDisplayBuffer, hasSetCharacter)
+{
+    unsigned char character = 'A';
+
+    displayBuffer.setCharacter(character);
+
+    ASSERT_THAT(displayBuffer.characterAt(1, 1), Eq(character));
 }

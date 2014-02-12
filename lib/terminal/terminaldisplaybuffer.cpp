@@ -42,8 +42,14 @@ void TerminalDisplayBuffer::setBufferAddress(unsigned char column, unsigned char
 {
 }
 
-void TerminalDisplayBuffer::setCharacter(unsigned char ch)
+unsigned char TerminalDisplayBuffer::characterAt(unsigned char column, unsigned char row) const
 {
+    return buffer;
+}
+
+void TerminalDisplayBuffer::setCharacter(unsigned char character)
+{
+    buffer = character;
 }
 
 void TerminalDisplayBuffer::repeatCharacterToAddress(unsigned char column, unsigned char row, unsigned char character)
