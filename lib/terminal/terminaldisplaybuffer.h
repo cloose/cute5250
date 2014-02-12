@@ -29,7 +29,7 @@
 #include "q5250_global.h"
 #include "displaybuffer.h"
 
-#include <QByteArray>
+class QByteArray;
 
 namespace q5250 {
 
@@ -37,6 +37,7 @@ class Q5250SHARED_EXPORT TerminalDisplayBuffer : public DisplayBuffer
 {
 public:
     TerminalDisplayBuffer();
+    ~TerminalDisplayBuffer();
 
     QSize size() const;
     void setSize(unsigned char columns, unsigned char rows);
@@ -55,7 +56,7 @@ private:
     unsigned char addressColumn;
     unsigned char addressRow;
     QSize bufferSize;
-    QByteArray buffer;
+    QByteArray *buffer;
 };
 
 } // namespace q5250

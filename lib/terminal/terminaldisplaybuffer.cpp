@@ -25,13 +25,21 @@
  */
 #include "terminaldisplaybuffer.h"
 
+#include <QByteArray>
+
 namespace q5250 {
 
 TerminalDisplayBuffer::TerminalDisplayBuffer() :
     addressColumn(1),
-    addressRow(1)
+    addressRow(1),
+    buffer(0)
 {
     setSize(80, 25);
+}
+
+TerminalDisplayBuffer::~TerminalDisplayBuffer()
+{
+    delete buffer;
 }
 
 QSize TerminalDisplayBuffer::size() const
@@ -41,9 +49,12 @@ QSize TerminalDisplayBuffer::size() const
 
 void TerminalDisplayBuffer::setSize(unsigned char columns, unsigned char rows)
 {
+    delete buffer;
+
     bufferSize.setWidth(columns);
     bufferSize.setHeight(rows);
-    buffer.resize(columns*rows);
+
+    buffer = new QByteArray(columns*rows, '\0');
 }
 
 void TerminalDisplayBuffer::setBufferAddress(unsigned char column, unsigned char row)
@@ -55,13 +66,13 @@ void TerminalDisplayBuffer::setBufferAddress(unsigned char column, unsigned char
 unsigned char TerminalDisplayBuffer::characterAt(unsigned char column, unsigned char row) const
 {
     unsigned int address = convertToAddress(column, row);
-    return buffer.at(address);
+    return buffer->at(address);
 }
 
 void TerminalDisplayBuffer::setCharacter(unsigned char character)
 {
     unsigned int address = convertToAddress(addressColumn, addressRow);
-    buffer[address] = character;
+    (*buffer)[address] = character;
     increaseBufferAddress();
 }
 
