@@ -75,17 +75,10 @@ void TerminalEmulator::handleWriteToDisplayCommand(GeneralDataStream &stream)
             break;
         case 0x02 /*REPEAT TO ADDRESS*/:
             {
-                unsigned char endRow = stream.readByte();
-                unsigned char endColumn = stream.readByte();
+                unsigned char row = stream.readByte();
+                unsigned char column = stream.readByte();
                 unsigned char character = stream.readByte();
-
-                unsigned short from = displayBuffer->row() * 80 + displayBuffer->column();
-                unsigned short to = endRow * 80 + endColumn;
-                unsigned short numberOfCharacters = to - from + 1;
-
-                for (int i = 0; i < numberOfCharacters; ++i) {
-                    displayBuffer->setCharacter(character);
-                }
+                displayBuffer->repeatCharacterToAddress(column, row, character);
             }
             break;
         case 0x11 /*SET BUFFER ADDRESS*/:

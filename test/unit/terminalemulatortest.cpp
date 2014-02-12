@@ -38,9 +38,8 @@ class DisplayBufferMock : public DisplayBuffer
 public:
     MOCK_METHOD2(setSize, void(unsigned char, unsigned char));
     MOCK_METHOD2(setBufferAddress, void(unsigned char, unsigned char));
-    MOCK_CONST_METHOD0(column, unsigned char());
-    MOCK_CONST_METHOD0(row, unsigned char());
     MOCK_METHOD1(setCharacter, void(unsigned char));
+    MOCK_METHOD3(repeatCharacterToAddress, void(unsigned char, unsigned char, unsigned char));
 };
 
 
@@ -128,11 +127,7 @@ TEST_F(ATerminalEmulator, repeatsCharactersToReceivedAddress)
     const char streamData[]{ESC, WriteToDisplayCommand, 0x00, 0x18, StartOfHeaderOrder, 0x04, 0x00, 0x00, 0x00, 0x00, SetBufferAddressOrder, startRow, startColumn, RepeatToAddressOrder, endRow, endColumn};
     QByteArray data = createGdsHeaderWithLength(17) + QByteArray::fromRawData(streamData, 16) + ebcdicText;
     EXPECT_CALL(displayBuffer, setBufferAddress(startColumn, startRow));
-    EXPECT_CALL(displayBuffer, row()).WillOnce(Return(startRow));
-    EXPECT_CALL(displayBuffer, column()).WillOnce(Return(startColumn));
-    EXPECT_CALL(displayBuffer, setCharacter(ebcdicText.at(0)));
-    EXPECT_CALL(displayBuffer, setCharacter(ebcdicText.at(0)));
-    EXPECT_CALL(displayBuffer, setCharacter(ebcdicText.at(0)));
+    EXPECT_CALL(displayBuffer, repeatCharacterToAddress(endColumn, endRow, ebcdicText.at(0)));
 
     terminal.dataReceived(data);
 }

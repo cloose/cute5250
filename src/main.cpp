@@ -48,19 +48,14 @@ public:
         qDebug() << Q_FUNC_INFO << column << row;
     }
 
-    unsigned char column() const
+    void setCharacter(unsigned char character)
     {
-        return 0;
+        qDebug() << Q_FUNC_INFO << character;
     }
 
-    unsigned char row() const
+    void repeatCharacterToAddress(unsigned char column, unsigned char row, unsigned char character)
     {
-        return 0;
-    }
-
-    void setCharacter(unsigned char ch)
-    {
-        qDebug() << Q_FUNC_INFO << ch;
+        qDebug() << Q_FUNC_INFO << column << row << character;
     }
 };
 
