@@ -30,34 +30,9 @@
 #include <generaldatastream.h>
 #include <telnet/tcpsockettelnetconnection.h>
 #include <telnet/telnetclient.h>
-#include <terminal/displaybuffer.h>
+#include <terminal/terminaldisplaybuffer.h>
 #include <terminal/terminalemulator.h>
 using namespace q5250;
-
-class TerminalDisplayBuffer : public DisplayBuffer
-{
-// DisplayBuffer interface
-public:
-    void setSize(unsigned char columns, unsigned char rows)
-    {
-        qDebug() << Q_FUNC_INFO << columns << rows;
-    }
-
-    void setBufferAddress(unsigned char column, unsigned char row)
-    {
-        qDebug() << Q_FUNC_INFO << column << row;
-    }
-
-    void setCharacter(unsigned char character)
-    {
-        qDebug() << Q_FUNC_INFO << character;
-    }
-
-    void repeatCharacterToAddress(unsigned char column, unsigned char row, unsigned char character)
-    {
-        qDebug() << Q_FUNC_INFO << column << row << character;
-    }
-};
 
 class Main : public QObject
 {

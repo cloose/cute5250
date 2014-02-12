@@ -23,25 +23,28 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#ifndef Q5250_DISPLAYBUFFER_H
-#define Q5250_DISPLAYBUFFER_H
+#ifndef Q5250_TERMINALDISPLAYBUFFER_H
+#define Q5250_TERMINALDISPLAYBUFFER_H
 
 #include "q5250_global.h"
-#include <QSize>
+#include "displaybuffer.h"
 
 namespace q5250 {
 
-class DisplayBuffer
+class Q5250SHARED_EXPORT TerminalDisplayBuffer : public DisplayBuffer
 {
 public:
-    virtual QSize size() const = 0;
-    virtual void setSize(unsigned char columns, unsigned char rows) = 0;
+    QSize size() const;
+    void setSize(unsigned char columns, unsigned char rows);
 
-    virtual void setBufferAddress(unsigned char column, unsigned char row) = 0;
-    virtual void setCharacter(unsigned char ch) = 0;
-    virtual void repeatCharacterToAddress(unsigned char column, unsigned char row, unsigned char character) = 0;
+    void setBufferAddress(unsigned char column, unsigned char row);
+    void setCharacter(unsigned char ch);
+    void repeatCharacterToAddress(unsigned char column, unsigned char row, unsigned char character);
+
+private:
+    QSize bufferSize;
 };
 
 } // namespace q5250
 
-#endif // Q5250_DISPLAYBUFFER_H
+#endif // Q5250_TERMINALDISPLAYBUFFER_H

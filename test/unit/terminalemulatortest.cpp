@@ -36,6 +36,7 @@ using namespace q5250;
 class DisplayBufferMock : public DisplayBuffer
 {
 public:
+    MOCK_CONST_METHOD0(size, QSize());
     MOCK_METHOD2(setSize, void(unsigned char, unsigned char));
     MOCK_METHOD2(setBufferAddress, void(unsigned char, unsigned char));
     MOCK_METHOD1(setCharacter, void(unsigned char));

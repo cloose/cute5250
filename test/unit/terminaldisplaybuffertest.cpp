@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, Christian Loose
+ * Copyright (c) 2013-2014, Christian Loose
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -23,25 +23,18 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#ifndef Q5250_DISPLAYBUFFER_H
-#define Q5250_DISPLAYBUFFER_H
+#include <gmock/gmock.h>
+using namespace testing;
 
-#include "q5250_global.h"
-#include <QSize>
+#include <terminal/terminaldisplaybuffer.h>
+using namespace q5250;
 
-namespace q5250 {
-
-class DisplayBuffer
+TEST(ATerminalDisplayBuffer, hasSetSize)
 {
-public:
-    virtual QSize size() const = 0;
-    virtual void setSize(unsigned char columns, unsigned char rows) = 0;
+    TerminalDisplayBuffer displayBuffer;
+    QSize newBufferSize(80, 25);
 
-    virtual void setBufferAddress(unsigned char column, unsigned char row) = 0;
-    virtual void setCharacter(unsigned char ch) = 0;
-    virtual void repeatCharacterToAddress(unsigned char column, unsigned char row, unsigned char character) = 0;
-};
+    displayBuffer.setSize(newBufferSize.width(), newBufferSize.height());
 
-} // namespace q5250
-
-#endif // Q5250_DISPLAYBUFFER_H
+    ASSERT_THAT(displayBuffer.size(), Eq(newBufferSize));
+}
