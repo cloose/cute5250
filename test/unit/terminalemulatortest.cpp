@@ -49,6 +49,7 @@ class TerminalDisplayMock : public TerminalDisplay
 {
 public:
     MOCK_METHOD3(displayText, void(unsigned char, unsigned char, const QString&));
+    MOCK_METHOD1(displayAttribute, void(unsigned char));
 };
 
 class ATerminalEmulator : public Test
@@ -153,8 +154,6 @@ TEST_F(ATerminalEmulator, drawsTextInBufferOnDisplay)
     QByteArray ebcdicText = textAsEbcdic(text);
     const char streamData[]{ESC, WriteToDisplayCommand, 0x00, 0x18};
     QByteArray data = createGdsHeaderWithLength(7) + QByteArray::fromRawData(streamData, 4) + ebcdicText;
-    QByteArray buffer(80*25, '\0');
-    buffer.replace(0, 3, ebcdicText);
     EXPECT_CALL(displayBuffer, characterAt(_, _)).WillRepeatedly(Return(0x00));
     EXPECT_CALL(displayBuffer, characterAt(1, 1)).WillOnce(Return(ebcdicText.at(0)));
     EXPECT_CALL(displayBuffer, characterAt(2, 1)).WillOnce(Return(ebcdicText.at(1)));
@@ -190,6 +189,20 @@ TEST_F(ATerminalEmulator, drawsMultipleTextInBufferOnDisplay)
     EXPECT_CALL(displayBuffer, characterAt(4, 5)).WillOnce(Return(ebcdicText2.at(2)));
     EXPECT_CALL(terminalDisplay, displayText(1, 1, text));
     EXPECT_CALL(terminalDisplay, displayText(startColumn, startRow, text2));
+
+    terminal.dataReceived(data);
+}
+
+TEST_F(ATerminalEmulator, drawsAttributeInBufferOnDisplay)
+{
+    const char streamData[]{ESC, WriteToDisplayCommand, 0x00, 0x18, GreenAttribute, NonDisplay4Attribute};
+    QByteArray data = createGdsHeaderWithLength(6) + QByteArray::fromRawData(streamData, 6);
+    EXPECT_CALL(displayBuffer, characterAt(_, _)).WillRepeatedly(Return(0x00));
+    EXPECT_CALL(displayBuffer, characterAt(1, 1)).WillOnce(Return(GreenAttribute));
+    EXPECT_CALL(displayBuffer, characterAt(2, 1)).WillOnce(Return(NonDisplay4Attribute));
+    EXPECT_CALL(displayBuffer, size()).WillRepeatedly(Return(QSize(80, 25)));
+    EXPECT_CALL(terminalDisplay, displayAttribute(GreenAttribute));
+    EXPECT_CALL(terminalDisplay, displayAttribute(NonDisplay4Attribute));
 
     terminal.dataReceived(data);
 }

@@ -88,6 +88,12 @@ void TerminalEmulator::update()
                     terminalDisplay->displayText(startColumn, startRow, codec->toUnicode(text));
                     text.clear();
                 }
+            } else if (character >= 0x20 && character <= 0x3f) {
+                if (text.length() > 0) {
+                    terminalDisplay->displayText(startColumn, startRow, codec->toUnicode(text));
+                    text.clear();
+                }
+                terminalDisplay->displayAttribute(character);
             } else {
                 if (text.isEmpty()) {
                     startColumn = column+1;

@@ -43,6 +43,7 @@ public:
     TerminalDisplayWidget();
 
     void displayText(unsigned char column, unsigned char row, const QString &text);
+    void displayAttribute(unsigned char attribute);
 
 protected:
     void paintEvent(QPaintEvent *event);
@@ -56,16 +57,53 @@ TerminalDisplayWidget::TerminalDisplayWidget() :
     screen(new QPixmap(size())),
     painter(new QPainter(screen))
 {
+    setAttribute(Qt::WA_OpaquePaintEvent, true);
+
+    QFont font("Monospace", 12);
+    font.setStyleHint(QFont::TypeWriter);
+    painter->setFont(font);
+
     painter->setPen(Qt::green);
 }
 
 void TerminalDisplayWidget::displayText(unsigned char column, unsigned char row, const QString &text)
 {
     qDebug() << Q_FUNC_INFO << text;
+
     QFontMetrics fm = painter->fontMetrics();
     unsigned int x = column * fm.width('X');
     unsigned int y = row * fm.height();
+
+    // draw background
+    painter->setBackground(painter->brush());
+    painter->setBackgroundMode(Qt::OpaqueMode);
+
+
     painter->drawText(x, y, text);
+}
+
+void TerminalDisplayWidget::displayAttribute(unsigned char attribute)
+{
+    static const QMap<unsigned char, QPair<int, int>> colorMap {
+        { 0x20, QPair<int, int>(Qt::green, Qt::black) },
+        { 0x21, QPair<int, int>(Qt::black, Qt::green) },
+        { 0x22, QPair<int, int>(Qt::white, Qt::black) },
+        { 0x23, QPair<int, int>(Qt::black, Qt::white) },
+        { 0x28, QPair<int, int>(Qt::red, Qt::black) },
+        { 0x29, QPair<int, int>(Qt::black, Qt::red) },
+        { 0x3a, QPair<int, int>(Qt::blue, Qt::black) },
+        { 0x3b, QPair<int, int>(Qt::black, Qt::blue) }
+    };
+
+//    // en-/disable underline
+//    QFont font = p->font();
+//    font.setUnderline(ScreenAttribute::ShowUnderline(displayAttribute));
+//    p->setFont(font);
+
+    if (colorMap.contains(attribute)) {
+        painter->setBrush((Qt::GlobalColor)colorMap.value(attribute).second);
+        painter->setPen((Qt::GlobalColor)colorMap.value(attribute).first);
+    }
 }
 
 void TerminalDisplayWidget::paintEvent(QPaintEvent *event)
