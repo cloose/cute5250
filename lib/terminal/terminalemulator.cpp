@@ -25,11 +25,19 @@
  */
 #include "terminalemulator.h"
 
+#include <QTextCodec>
+
 #include "displaybuffer.h"
 #include "generaldatastream.h"
 #include "terminaldisplay.h"
 
 namespace q5250 {
+
+TerminalEmulator::TerminalEmulator(QObject *parent) :
+    QObject(parent)
+{
+    codec = QTextCodec::codecForName("IBM500");
+}
 
 void TerminalEmulator::setDisplayBuffer(DisplayBuffer *buffer)
 {
@@ -61,11 +69,38 @@ void TerminalEmulator::dataReceived(const QByteArray &data)
             }
         }
     }
+
+    update();
 }
 
 void TerminalEmulator::update()
 {
-    terminalDisplay->displayText(1, 1, QStringLiteral("ABC"));
+    QByteArray text;
+
+    unsigned char startColumn = 0;
+    unsigned char startRow = 0;
+
+    for (int row = 0; row < displayBuffer->size().height(); ++row) {
+        for (int column = 0; column < displayBuffer->size().width(); ++column) {
+            unsigned char character = displayBuffer->characterAt(column+1, row+1);
+            if (character == '\0') {
+                if (text.length() > 0) {
+                    terminalDisplay->displayText(startColumn, startRow, codec->toUnicode(text));
+                    text.clear();
+                }
+            } else {
+                if (text.isEmpty()) {
+                    startColumn = column+1;
+                    startRow = row+1;
+                }
+                text += character;
+            }
+        }
+    }
+
+    if (text.length() > 0) {
+        terminalDisplay->displayText(startColumn, startRow, codec->toUnicode(text));
+    }
 }
 
 void TerminalEmulator::handleWriteToDisplayCommand(GeneralDataStream &stream)

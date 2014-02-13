@@ -26,13 +26,54 @@
 #include <QApplication>
 
 #include <QDebug>
+#include <QPainter>
+#include <QWidget>
 
 #include <generaldatastream.h>
 #include <telnet/tcpsockettelnetconnection.h>
 #include <telnet/telnetclient.h>
 #include <terminal/terminaldisplaybuffer.h>
+#include <terminal/terminaldisplay.h>
 #include <terminal/terminalemulator.h>
 using namespace q5250;
+
+class TerminalDisplayWidget : public QWidget, public TerminalDisplay
+{
+public:
+    TerminalDisplayWidget();
+
+    void displayText(unsigned char column, unsigned char row, const QString &text);
+
+protected:
+    void paintEvent(QPaintEvent *event);
+
+private:
+    QPixmap *screen;
+    QPainter *painter;
+};
+
+TerminalDisplayWidget::TerminalDisplayWidget() :
+    screen(new QPixmap(size())),
+    painter(new QPainter(screen))
+{
+    painter->setPen(Qt::green);
+}
+
+void TerminalDisplayWidget::displayText(unsigned char column, unsigned char row, const QString &text)
+{
+    qDebug() << Q_FUNC_INFO << text;
+    QFontMetrics fm = painter->fontMetrics();
+    unsigned int x = column * fm.width('X');
+    unsigned int y = row * fm.height();
+    painter->drawText(x, y, text);
+}
+
+void TerminalDisplayWidget::paintEvent(QPaintEvent *event)
+{
+    qDebug() << Q_FUNC_INFO;
+    QPainter p(this);
+    p.drawPixmap(0, 0, *screen);
+}
 
 class Main : public QObject
 {
@@ -48,13 +89,15 @@ private:
     TcpSocketTelnetConnection *connection;
     TelnetClient *client;
     TerminalEmulator *terminal;
+    TerminalDisplayWidget *display;
 };
 
 Main::Main(QObject *parent) :
     QObject(parent),
     connection(new TcpSocketTelnetConnection(this)),
     client(new TelnetClient(connection)),
-    terminal(new TerminalEmulator())
+    terminal(new TerminalEmulator()),
+    display(new TerminalDisplayWidget())
 {
     connect(connection, &TcpSocketTelnetConnection::readyRead,
             client, &TelnetClient::readyRead);
@@ -63,7 +106,11 @@ Main::Main(QObject *parent) :
 
     client->setTerminalType("IBM-3477-FC");
     terminal->setDisplayBuffer(new TerminalDisplayBuffer());
+    terminal->setTerminalDisplay(display);
     connection->connectToHost(QStringLiteral("ASKNIDEV"), 23);
+
+    display->show();
+    terminal->update();
 }
 
 void Main::dataReceived(const QByteArray &data)

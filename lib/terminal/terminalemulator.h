@@ -29,6 +29,8 @@
 #include "q5250_global.h"
 #include <QObject>
 
+class QTextCodec;
+
 namespace q5250 {
 
 class DisplayBuffer;
@@ -40,6 +42,8 @@ class Q5250SHARED_EXPORT TerminalEmulator : public QObject
     Q_OBJECT
 
 public:
+    explicit TerminalEmulator(QObject *parent = 0);
+
     void setDisplayBuffer(DisplayBuffer *buffer);
     void setTerminalDisplay(TerminalDisplay *display);
 
@@ -52,6 +56,7 @@ private:
 
     DisplayBuffer *displayBuffer;
     TerminalDisplay *terminalDisplay;
+    QTextCodec *codec;
 };
 
 } // namespace q5250

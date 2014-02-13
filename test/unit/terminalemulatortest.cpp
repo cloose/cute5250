@@ -148,10 +148,44 @@ TEST_F(ATerminalEmulator, drawsTextInBufferOnDisplay)
     QByteArray ebcdicText = textAsEbcdic(text);
     const char streamData[]{ESC, WriteToDisplayCommand, 0x00, 0x18};
     QByteArray data = createGdsHeaderWithLength(7) + QByteArray::fromRawData(streamData, 4) + ebcdicText;
-    EXPECT_CALL(displayBuffer, setCharacter(ebcdicText.at(0)));
-    EXPECT_CALL(displayBuffer, setCharacter(ebcdicText.at(1)));
-    EXPECT_CALL(displayBuffer, setCharacter(ebcdicText.at(2)));
+    QByteArray buffer(80*25, '\0');
+    buffer.replace(0, 3, ebcdicText);
+    EXPECT_CALL(displayBuffer, characterAt(_, _)).WillRepeatedly(Return(0x00));
+    EXPECT_CALL(displayBuffer, characterAt(1, 1)).WillOnce(Return(ebcdicText.at(0)));
+    EXPECT_CALL(displayBuffer, characterAt(2, 1)).WillOnce(Return(ebcdicText.at(1)));
+    EXPECT_CALL(displayBuffer, characterAt(3, 1)).WillOnce(Return(ebcdicText.at(2)));
+    EXPECT_CALL(displayBuffer, size()).WillRepeatedly(Return(QSize(80, 25)));
     EXPECT_CALL(terminalDisplay, displayText(1, 1, text));
+    terminal.dataReceived(data);
+
+    terminal.update();
+}
+
+TEST_F(ATerminalEmulator, drawsMultipleTextInBufferOnDisplay)
+{
+    const QString text("ABC");
+    const QString text2("DEF");
+    const char startRow = 5;
+    const char startColumn = 2;
+    const char streamData[]{ESC, WriteToDisplayCommand, 0x00, 0x18};
+    const char sbaStreamData[] { SetBufferAddressOrder, startRow, startColumn };
+    QByteArray data = createGdsHeaderWithLength(13)
+                    + QByteArray::fromRawData(streamData, 4)
+                    + textAsEbcdic(text)
+                    + QByteArray::fromRawData(sbaStreamData, 3)
+                    + textAsEbcdic(text2);
+    QByteArray ebcdicText = textAsEbcdic(text);
+    QByteArray ebcdicText2 = textAsEbcdic(text2);
+    EXPECT_CALL(displayBuffer, characterAt(_, _)).WillRepeatedly(Return(0x00));
+    EXPECT_CALL(displayBuffer, size()).WillRepeatedly(Return(QSize(80, 25)));
+    EXPECT_CALL(displayBuffer, characterAt(1, 1)).WillOnce(Return(ebcdicText.at(0)));
+    EXPECT_CALL(displayBuffer, characterAt(2, 1)).WillOnce(Return(ebcdicText.at(1)));
+    EXPECT_CALL(displayBuffer, characterAt(3, 1)).WillOnce(Return(ebcdicText.at(2)));
+    EXPECT_CALL(displayBuffer, characterAt(2, 5)).WillOnce(Return(ebcdicText2.at(0)));
+    EXPECT_CALL(displayBuffer, characterAt(3, 5)).WillOnce(Return(ebcdicText2.at(1)));
+    EXPECT_CALL(displayBuffer, characterAt(4, 5)).WillOnce(Return(ebcdicText2.at(2)));
+    EXPECT_CALL(terminalDisplay, displayText(1, 1, text));
+    EXPECT_CALL(terminalDisplay, displayText(startColumn, startRow, text2));
     terminal.dataReceived(data);
 
     terminal.update();
