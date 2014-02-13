@@ -11,7 +11,7 @@ before_install:
 
 install:
   - sudo apt-get install g++-4.8 cmake qtbase5-dev
-  - export CXX=g++-4.8
+  - if [ "$CXX" = "g++" ]; then export CXX="g++-4.8" CC="gcc-4.8"; fi
   - sudo rm /usr/bin/gcov && sudo ln -s /usr/bin/gcov-4.8 /usr/bin/gcov
   - wget https://googlemock.googlecode.com/files/gmock-1.7.0.zip
   - unzip gmock-1.7.0.zip
