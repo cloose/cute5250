@@ -85,14 +85,14 @@ void TerminalDisplayWidget::displayText(unsigned char column, unsigned char row,
 void TerminalDisplayWidget::displayAttribute(unsigned char attribute)
 {
     static const QMap<unsigned char, QPair<int, int>> colorMap {
-        { 0x20, QPair<int, int>(Qt::green, Qt::black) },
-        { 0x21, QPair<int, int>(Qt::black, Qt::green) },
-        { 0x22, QPair<int, int>(Qt::white, Qt::black) },
-        { 0x23, QPair<int, int>(Qt::black, Qt::white) },
-        { 0x28, QPair<int, int>(Qt::red, Qt::black) },
-        { 0x29, QPair<int, int>(Qt::black, Qt::red) },
-        { 0x3a, QPair<int, int>(Qt::blue, Qt::black) },
-        { 0x3b, QPair<int, int>(Qt::black, Qt::blue) }
+        std::make_pair(0x20, QPair<int, int>(Qt::green, Qt::black)),
+        std::make_pair(0x21, QPair<int, int>(Qt::black, Qt::green)),
+        std::make_pair(0x22, QPair<int, int>(Qt::white, Qt::black)),
+        std::make_pair(0x23, QPair<int, int>(Qt::black, Qt::white)),
+        std::make_pair(0x28, QPair<int, int>(Qt::red, Qt::black)),
+        std::make_pair(0x29, QPair<int, int>(Qt::black, Qt::red)),
+        std::make_pair(0x3a, QPair<int, int>(Qt::blue, Qt::black)),
+        std::make_pair(0x3b, QPair<int, int>(Qt::black, Qt::blue))
     };
 
 //    // en-/disable underline
