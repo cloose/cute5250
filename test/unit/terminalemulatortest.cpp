@@ -30,6 +30,7 @@ using namespace testing;
 #include <QTextCodec>
 
 #include <terminal/displaybuffer.h>
+#include <terminal/terminaldisplay.h>
 #include <terminal/terminalemulator.h>
 using namespace q5250;
 
@@ -44,11 +45,17 @@ public:
     MOCK_METHOD3(repeatCharacterToAddress, void(unsigned char, unsigned char, unsigned char));
 };
 
+class TerminalDisplayMock : public TerminalDisplay
+{
+public:
+    MOCK_METHOD3(displayText, void(unsigned char, unsigned char, const QString&));
+};
 
 class ATerminalEmulator : public Test
 {
 public:
     DisplayBufferMock displayBuffer;
+    TerminalDisplayMock terminalDisplay;
     TerminalEmulator terminal;
 
     static const char ESC = 0x04;
@@ -63,6 +70,7 @@ public:
     ATerminalEmulator()
     {
         terminal.setDisplayBuffer(&displayBuffer);
+        terminal.setTerminalDisplay(&terminalDisplay);
     }
 
     QByteArray createGdsHeaderWithLength(char length)
@@ -132,4 +140,19 @@ TEST_F(ATerminalEmulator, repeatsCharactersToReceivedAddress)
     EXPECT_CALL(displayBuffer, repeatCharacterToAddress(endColumn, endRow, ebcdicText.at(0)));
 
     terminal.dataReceived(data);
+}
+
+TEST_F(ATerminalEmulator, drawsTextInBufferOnDisplay)
+{
+    const QString text("ABC");
+    QByteArray ebcdicText = textAsEbcdic(text);
+    const char streamData[]{ESC, WriteToDisplayCommand, 0x00, 0x18};
+    QByteArray data = createGdsHeaderWithLength(7) + QByteArray::fromRawData(streamData, 4) + ebcdicText;
+    EXPECT_CALL(displayBuffer, setCharacter(ebcdicText.at(0)));
+    EXPECT_CALL(displayBuffer, setCharacter(ebcdicText.at(1)));
+    EXPECT_CALL(displayBuffer, setCharacter(ebcdicText.at(2)));
+    EXPECT_CALL(terminalDisplay, displayText(1, 1, text));
+    terminal.dataReceived(data);
+
+    terminal.update();
 }

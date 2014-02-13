@@ -27,12 +27,18 @@
 
 #include "displaybuffer.h"
 #include "generaldatastream.h"
+#include "terminaldisplay.h"
 
 namespace q5250 {
 
 void TerminalEmulator::setDisplayBuffer(DisplayBuffer *buffer)
 {
     displayBuffer = buffer;
+}
+
+void TerminalEmulator::setTerminalDisplay(TerminalDisplay *display)
+{
+    terminalDisplay = display;
 }
 
 void TerminalEmulator::dataReceived(const QByteArray &data)
@@ -55,6 +61,11 @@ void TerminalEmulator::dataReceived(const QByteArray &data)
             }
         }
     }
+}
+
+void TerminalEmulator::update()
+{
+    terminalDisplay->displayText(1, 1, QStringLiteral("ABC"));
 }
 
 void TerminalEmulator::handleWriteToDisplayCommand(GeneralDataStream &stream)
