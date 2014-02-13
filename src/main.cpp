@@ -26,6 +26,7 @@
 #include <QApplication>
 
 #include <QDebug>
+#include <QMap>
 #include <QPainter>
 #include <QWidget>
 
@@ -81,7 +82,7 @@ void TerminalDisplayWidget::displayText(unsigned char column, unsigned char row,
 
     painter->drawText(x, y, text);
 }
-
+#include <qcompilerdetection.h>
 void TerminalDisplayWidget::displayAttribute(unsigned char attribute)
 {
     static const QMap<unsigned char, QPair<int, int>> colorMap {
