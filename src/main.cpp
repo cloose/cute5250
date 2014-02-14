@@ -38,6 +38,24 @@
 #include <terminal/terminalemulator.h>
 using namespace q5250;
 
+static QMap<unsigned char, QPair<int, int>> InitColorMap()
+{
+    QMap<unsigned char, QPair<int, int>> colorMap;
+
+    colorMap.insert(0x20, QPair<int, int>(Qt::green, Qt::black));
+    colorMap.insert(0x21, QPair<int, int>(Qt::black, Qt::green));
+    colorMap.insert(0x22, QPair<int, int>(Qt::white, Qt::black));
+    colorMap.insert(0x23, QPair<int, int>(Qt::black, Qt::white));
+    colorMap.insert(0x28, QPair<int, int>(Qt::red, Qt::black));
+    colorMap.insert(0x29, QPair<int, int>(Qt::black, Qt::red));
+    colorMap.insert(0x3a, QPair<int, int>(Qt::blue, Qt::black));
+    colorMap.insert(0x3b, QPair<int, int>(Qt::black, Qt::blue));
+
+    return colorMap;
+}
+
+static const QMap<unsigned char, QPair<int, int>> ColorMap = InitColorMap();
+
 class TerminalDisplayWidget : public QWidget, public TerminalDisplay
 {
 public:
@@ -82,28 +100,17 @@ void TerminalDisplayWidget::displayText(unsigned char column, unsigned char row,
 
     painter->drawText(x, y, text);
 }
-#include <qcompilerdetection.h>
+
 void TerminalDisplayWidget::displayAttribute(unsigned char attribute)
 {
-    static const QMap<unsigned char, QPair<int, int>> colorMap {
-        std::make_pair(0x20, QPair<int, int>(Qt::green, Qt::black)),
-        std::make_pair(0x21, QPair<int, int>(Qt::black, Qt::green)),
-        std::make_pair(0x22, QPair<int, int>(Qt::white, Qt::black)),
-        std::make_pair(0x23, QPair<int, int>(Qt::black, Qt::white)),
-        std::make_pair(0x28, QPair<int, int>(Qt::red, Qt::black)),
-        std::make_pair(0x29, QPair<int, int>(Qt::black, Qt::red)),
-        std::make_pair(0x3a, QPair<int, int>(Qt::blue, Qt::black)),
-        std::make_pair(0x3b, QPair<int, int>(Qt::black, Qt::blue))
-    };
-
 //    // en-/disable underline
 //    QFont font = p->font();
 //    font.setUnderline(ScreenAttribute::ShowUnderline(displayAttribute));
 //    p->setFont(font);
 
-    if (colorMap.contains(attribute)) {
-        painter->setBrush((Qt::GlobalColor)colorMap.value(attribute).second);
-        painter->setPen((Qt::GlobalColor)colorMap.value(attribute).first);
+    if (ColorMap.contains(attribute)) {
+        painter->setBrush((Qt::GlobalColor)ColorMap.value(attribute).second);
+        painter->setPen((Qt::GlobalColor)ColorMap.value(attribute).first);
     }
 }
 
