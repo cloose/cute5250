@@ -6,7 +6,7 @@ compiler:
 before_install:
   - sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test # for g++ 4.8
   - sudo add-apt-repository -y ppa:likemartinma/devel      # for CMake
-  - sudo add-apt-repository -y ppa:ubuntu-sdk-team/ppa     # for Qt5
+  - sudo add-apt-repository -y ppa:canonical-qt5-edgers/qt5-proper # for Qt5.2
   - sudo apt-get update -qq
 
 install:
