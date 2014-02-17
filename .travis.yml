@@ -2,7 +2,17 @@ language: cpp
 compiler:
   - gcc
   - clang
-  
+
+env:
+  - CODE_COVERAGE=0
+  - CODE_COVERAGE=1
+
+# gcov code coverage only works with gcc, so don't run it with clang.
+matrix:
+  exclude:
+    - compiler: clang
+      env: CODE_COVERAGE=1
+        
 before_install:
   - sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test # for g++ 4.8
   - sudo add-apt-repository -y ppa:likemartinma/devel      # for CMake
@@ -31,10 +41,11 @@ before_script:
   - export CTEST_OUTPUT_ON_FAILURE=true         
   
 script:
-  - cmake .. -DBUILD_WITH_CODE_COVERAGE=1
+  - cmake .. -DBUILD_WITH_CODE_COVERAGE=$CODE_COVERAGE
   - make all 
   - make test
 
 after_success:
   - cd ..
-  - coveralls --build-root "./build" --exclude test --exclude gmock-1.7.0 --exclude-pattern '.*\.h' --exclude-pattern '.*CMake[^\.]*\.c(?:pp)?' --exclude-pattern '.*/moc[^\.]*\.cpp' --exclude-pattern '.*_automoc\.cpp'
+  - if [ "$CODE_COVERAGE" == "1" ]; then coveralls --build-root "./build" --exclude test --exclude gmock-1.7.0 --exclude-pattern '.*\.h' --exclude-pattern '.*CMake[^\.]*\.c(?:pp)?' --exclude-pattern '.*/moc[^\.]*\.cpp' --exclude-pattern '.*_automoc\.cpp'; fi
+  
