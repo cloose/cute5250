@@ -160,21 +160,6 @@ TEST_F(ATerminalEmulator, repeatsCharactersToReceivedAddress)
     terminal.dataReceived(data);
 }
 
-TEST_F(ATerminalEmulator, drawsTextInBufferOnDisplay)
-{
-    const QByteArray ebcdicText = textAsEbcdic(ArbitraryText);
-    const QByteArray data = createWriteToDisplayCommandWithOrderLength(3) + ebcdicText;
-
-    ON_CALL(displayBuffer, size()).WillByDefault(Return(QSize(10, 10)));
-    EXPECT_CALL(displayBuffer, characterAt(_, _)).WillRepeatedly(Return(0x00));
-    EXPECT_CALL(displayBuffer, characterAt(1, 1)).WillOnce(Return(ebcdicText.at(0)));
-    EXPECT_CALL(displayBuffer, characterAt(2, 1)).WillOnce(Return(ebcdicText.at(1)));
-    EXPECT_CALL(displayBuffer, characterAt(3, 1)).WillOnce(Return(ebcdicText.at(2)));
-    EXPECT_CALL(terminalDisplay, displayText(1, 1, ArbitraryText));
-
-    terminal.dataReceived(data);
-}
-
 TEST_F(ATerminalEmulator, drawsMultipleTextInBufferOnDisplay)
 {
     const QString text2("DEF");
@@ -202,16 +187,23 @@ TEST_F(ATerminalEmulator, drawsMultipleTextInBufferOnDisplay)
     terminal.dataReceived(data);
 }
 
-TEST_F(ATerminalEmulator, drawsAttributeInBufferOnDisplay)
+TEST_F(ATerminalEmulator, drawsTextWithSurroundingAttributesInBufferOnDisplay)
 {
-    const char attributeData[]{GreenAttribute, NonDisplay4Attribute};
-    const QByteArray data = createWriteToDisplayCommandWithOrderLength(2) + QByteArray::fromRawData(attributeData, 2);
+    const QByteArray ebcdicText = textAsEbcdic(ArbitraryText);
+    const QByteArray data = createWriteToDisplayCommandWithOrderLength(5)
+                          + QByteArrayLiteral(GreenAttribute)
+                          + ebcdicText
+                          + QByteArrayLiteral(NonDisplay4Attribute);
 
     ON_CALL(displayBuffer, size()).WillByDefault(Return(QSize(10, 10)));
     EXPECT_CALL(displayBuffer, characterAt(_, _)).WillRepeatedly(Return(0x00));
     EXPECT_CALL(displayBuffer, characterAt(1, 1)).WillOnce(Return(GreenAttribute));
-    EXPECT_CALL(displayBuffer, characterAt(2, 1)).WillOnce(Return(NonDisplay4Attribute));
+    EXPECT_CALL(displayBuffer, characterAt(2, 1)).WillOnce(Return(ebcdicText.at(0)));
+    EXPECT_CALL(displayBuffer, characterAt(3, 1)).WillOnce(Return(ebcdicText.at(1)));
+    EXPECT_CALL(displayBuffer, characterAt(4, 1)).WillOnce(Return(ebcdicText.at(2)));
+    EXPECT_CALL(displayBuffer, characterAt(5, 1)).WillOnce(Return(NonDisplay4Attribute));
     EXPECT_CALL(terminalDisplay, displayAttribute(GreenAttribute));
+    EXPECT_CALL(terminalDisplay, displayText(2, 1, ArbitraryText));
     EXPECT_CALL(terminalDisplay, displayAttribute(NonDisplay4Attribute));
 
     terminal.dataReceived(data);
