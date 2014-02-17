@@ -80,8 +80,11 @@ void TerminalEmulator::update()
     unsigned char startColumn = 0;
     unsigned char startRow = 0;
 
-    for (int row = 0; row < displayBuffer->size().height(); ++row) {
-        for (int column = 0; column < displayBuffer->size().width(); ++column) {
+    int bufferWidth = displayBuffer->size().width();
+    int bufferHeight = displayBuffer->size().height();
+
+    for (int row = 0; row < bufferHeight; ++row) {
+        for (int column = 0; column < bufferWidth; ++column) {
             unsigned char character = displayBuffer->characterAt(column+1, row+1);
             if (character == '\0') {
                 if (text.length() > 0) {
