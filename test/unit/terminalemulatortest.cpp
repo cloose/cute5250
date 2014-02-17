@@ -43,6 +43,7 @@ public:
     MOCK_CONST_METHOD2(characterAt, unsigned char(unsigned char, unsigned char));
     MOCK_METHOD1(setCharacter, void(unsigned char));
     MOCK_METHOD3(repeatCharacterToAddress, void(unsigned char, unsigned char, unsigned char));
+    MOCK_METHOD0(clearFormatTable, void());
 };
 
 class TerminalDisplayMock : public TerminalDisplay
@@ -205,6 +206,17 @@ TEST_F(ATerminalEmulator, drawsTextWithSurroundingAttributesInBufferOnDisplay)
     EXPECT_CALL(terminalDisplay, displayAttribute(GreenAttribute));
     EXPECT_CALL(terminalDisplay, displayText(2, 1, ArbitraryText));
     EXPECT_CALL(terminalDisplay, displayAttribute(NonDisplay4Attribute));
+
+    terminal.dataReceived(data);
+}
+
+TEST_F(ATerminalEmulator, clearsFormatTableOnReceivingStartOfHeader)
+{
+    const char length = 0;
+    const char streamData[]{StartOfHeaderOrder, length};
+    QByteArray data = createWriteToDisplayCommandWithOrderLength(2) + QByteArray::fromRawData(streamData, 2);
+
+    EXPECT_CALL(displayBuffer, clearFormatTable());
 
     terminal.dataReceived(data);
 }

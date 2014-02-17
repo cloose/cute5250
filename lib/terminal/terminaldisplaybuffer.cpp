@@ -87,6 +87,10 @@ void TerminalDisplayBuffer::repeatCharacterToAddress(unsigned char column, unsig
     }
 }
 
+void TerminalDisplayBuffer::clearFormatTable()
+{
+}
+
 unsigned int TerminalDisplayBuffer::convertToAddress(unsigned char column, unsigned char row) const
 {
     return (row-1) * bufferSize.width() + (column-1);

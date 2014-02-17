@@ -121,6 +121,12 @@ void TerminalEmulator::handleWriteToDisplayCommand(GeneralDataStream &stream)
         unsigned char byte = stream.readByte();
 
         switch (byte) {
+        case 0x01 /*START OF HEADER*/:
+            {
+                unsigned dataLength = stream.readByte();
+                displayBuffer->clearFormatTable();
+            }
+            break;
         case 0x02 /*REPEAT TO ADDRESS*/:
             {
                 unsigned char row = stream.readByte();

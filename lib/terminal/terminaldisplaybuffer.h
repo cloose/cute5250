@@ -49,6 +49,8 @@ public:
 
     void repeatCharacterToAddress(unsigned char column, unsigned char row, unsigned char character);
 
+    void clearFormatTable();
+
 private:
     unsigned int convertToAddress(unsigned char column, unsigned char row) const;
     void increaseBufferAddress();

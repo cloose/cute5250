@@ -43,6 +43,8 @@ public:
     virtual void setCharacter(unsigned char character) = 0;
 
     virtual void repeatCharacterToAddress(unsigned char column, unsigned char row, unsigned char character) = 0;
+
+    virtual void clearFormatTable() = 0;
 };
 
 } // namespace q5250
