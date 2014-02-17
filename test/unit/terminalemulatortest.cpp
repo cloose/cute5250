@@ -165,15 +165,15 @@ TEST_F(ATerminalEmulator, drawsMultipleTextInBufferOnDisplay)
     const QString text2("DEF");
     const QByteArray ebcdicText = textAsEbcdic(ArbitraryText);
     const QByteArray ebcdicText2 = textAsEbcdic(text2);
-    const char startRow = 5;
-    const char startColumn = 2;
+    const char startRow = 25;
+    const char startColumn = 78;
     const char sbaStreamData[] { SetBufferAddressOrder, startRow, startColumn };
     const QByteArray data = createWriteToDisplayCommandWithOrderLength(9)
                           + ebcdicText
                           + QByteArray::fromRawData(sbaStreamData, 3)
                           + ebcdicText2;
 
-    ON_CALL(displayBuffer, size()).WillByDefault(Return(QSize(10, 10)));
+    ON_CALL(displayBuffer, size()).WillByDefault(Return(QSize(80, 25)));
     EXPECT_CALL(displayBuffer, characterAt(_, _)).WillRepeatedly(Return(0x00));
     EXPECT_CALL(displayBuffer, characterAt(1, 1)).WillOnce(Return(ebcdicText.at(0)));
     EXPECT_CALL(displayBuffer, characterAt(2, 1)).WillOnce(Return(ebcdicText.at(1)));
