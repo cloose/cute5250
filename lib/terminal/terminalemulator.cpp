@@ -146,6 +146,14 @@ void TerminalEmulator::handleWriteToDisplayCommand(GeneralDataStream &stream)
                 displayBuffer->setBufferAddress(column, row);
             }
             break;
+        case 0x1d /*START OF FIELD*/:
+            {
+                unsigned char attribute = stream.readByte();
+                unsigned char fieldLength1 = stream.readByte();
+                unsigned char fieldLength2 = stream.readByte();
+                displayBuffer->setCharacter(attribute);
+            }
+            break;
         default:
             displayBuffer->setCharacter(byte);
             break;

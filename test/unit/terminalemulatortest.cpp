@@ -63,9 +63,12 @@ public:
     static const char ESC = 0x04;
     static const char ClearUnitCommand = 0x40;
     static const char WriteToDisplayCommand = 0x11;
+
     static const char StartOfHeaderOrder = 0x01;
     static const char RepeatToAddressOrder = 0x02;
     static const char SetBufferAddressOrder = 0x11;
+    static const char StartOfFieldOrder = 0x1d;
+
     static const char GreenAttribute = 0x20;
     static const char NonDisplay4Attribute = 0x3f;
 
@@ -241,6 +244,16 @@ TEST_F(ATerminalEmulator, clearsFormatTableOnReceivingStartOfHeader)
     QByteArray data = createWriteToDisplayCommandWithOrderLength(2) + QByteArray::fromRawData(streamData, 2);
 
     EXPECT_CALL(displayBuffer, clearFormatTable());
+
+    terminal.dataReceived(data);
+}
+
+TEST_F(ATerminalEmulator, writesAttributeOfOutputFieldToDisplayBuffer)
+{
+    const char streamData[]{StartOfFieldOrder, GreenAttribute, 0x00, 0x01};
+    const QByteArray data = createWriteToDisplayCommandWithOrderLength(4) + QByteArray::fromRawData(streamData, 4);
+
+    EXPECT_CALL(displayBuffer, setCharacter(GreenAttribute));
 
     terminal.dataReceived(data);
 }
