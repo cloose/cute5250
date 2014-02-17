@@ -81,6 +81,13 @@ public:
         return QByteArray(gdsHeader, 10);
     }
 
+    QByteArray createWriteToDisplayCommandWithOrderLength(char length)
+    {
+        static const char streamData[]{ESC, WriteToDisplayCommand, 0x00, 0x18};
+        char fullLength = length + 4;
+        return createGdsHeaderWithLength(fullLength) + QByteArray::fromRawData(streamData, 4);
+    }
+
     QByteArray textAsEbcdic(const QString &text)
     {
         static QTextCodec *codec = QTextCodec::codecForName("IBM500");
@@ -88,10 +95,13 @@ public:
     }
 };
 
+static const QString ArbitraryText{"ABC"};
+
 TEST_F(ATerminalEmulator, setDisplayBufferToDefaultSizeOnReceivingClearUnit)
 {
     const char streamData[]{ESC, ClearUnitCommand};
     QByteArray data = createGdsHeaderWithLength(2) + QByteArray::fromRawData(streamData, 2);
+
     ON_CALL(displayBuffer, size()).WillByDefault(Return(QSize(0, 0)));
     EXPECT_CALL(displayBuffer, setSize(80, 25));
 
@@ -102,6 +112,7 @@ TEST_F(ATerminalEmulator, setDisplayBufferToReceivedAddress)
 {
     const char streamData[]{ESC, WriteToDisplayCommand, 0x00, 0x18, StartOfHeaderOrder, 0x04, 0x00, 0x00, 0x00, 0x00, SetBufferAddressOrder, 0x02, 0x05};
     QByteArray data = createGdsHeaderWithLength(13) + QByteArray::fromRawData(streamData, 13);
+
     ON_CALL(displayBuffer, size()).WillByDefault(Return(QSize(0, 0)));
     EXPECT_CALL(displayBuffer, setBufferAddress(5, 2));
 
@@ -110,9 +121,9 @@ TEST_F(ATerminalEmulator, setDisplayBufferToReceivedAddress)
 
 TEST_F(ATerminalEmulator, writesCharactersToDisplayBuffer)
 {
-    QByteArray ebcdicText = textAsEbcdic("ABC");
-    const char streamData[]{ESC, WriteToDisplayCommand, 0x00, 0x18};
-    QByteArray data = createGdsHeaderWithLength(7) + QByteArray::fromRawData(streamData, 4) + ebcdicText;
+    const QByteArray ebcdicText = textAsEbcdic(ArbitraryText);
+    const QByteArray data = createWriteToDisplayCommandWithOrderLength(ebcdicText.length()) + ebcdicText;
+
     ON_CALL(displayBuffer, size()).WillByDefault(Return(QSize(0, 0)));
     EXPECT_CALL(displayBuffer, setCharacter(ebcdicText.at(0)));
     EXPECT_CALL(displayBuffer, setCharacter(ebcdicText.at(1)));
@@ -123,8 +134,9 @@ TEST_F(ATerminalEmulator, writesCharactersToDisplayBuffer)
 
 TEST_F(ATerminalEmulator, writesAttributesToDisplayBuffer)
 {
-    const char streamData[]{ESC, WriteToDisplayCommand, 0x00, 0x18, GreenAttribute, NonDisplay4Attribute};
-    QByteArray data = createGdsHeaderWithLength(6) + QByteArray::fromRawData(streamData, 6);
+    const char attributeData[]{GreenAttribute, NonDisplay4Attribute};
+    const QByteArray data = createWriteToDisplayCommandWithOrderLength(2) + QByteArray::fromRawData(attributeData, 2);
+
     ON_CALL(displayBuffer, size()).WillByDefault(Return(QSize(0, 0)));
     EXPECT_CALL(displayBuffer, setCharacter(GreenAttribute));
     EXPECT_CALL(displayBuffer, setCharacter(NonDisplay4Attribute));
@@ -134,13 +146,14 @@ TEST_F(ATerminalEmulator, writesAttributesToDisplayBuffer)
 
 TEST_F(ATerminalEmulator, repeatsCharactersToReceivedAddress)
 {
-    QByteArray ebcdicText = textAsEbcdic("-");
+    const QByteArray ebcdicText = textAsEbcdic("-");
     const char startRow = 5;
     const char startColumn = 2;
     const char endRow = 5;
     const char endColumn = 4;
-    const char streamData[]{ESC, WriteToDisplayCommand, 0x00, 0x18, StartOfHeaderOrder, 0x04, 0x00, 0x00, 0x00, 0x00, SetBufferAddressOrder, startRow, startColumn, RepeatToAddressOrder, endRow, endColumn};
-    QByteArray data = createGdsHeaderWithLength(17) + QByteArray::fromRawData(streamData, 16) + ebcdicText;
+    const char streamData[]{StartOfHeaderOrder, 0x04, 0x00, 0x00, 0x00, 0x00, SetBufferAddressOrder, startRow, startColumn, RepeatToAddressOrder, endRow, endColumn};
+    const QByteArray data = createWriteToDisplayCommandWithOrderLength(13) + QByteArray::fromRawData(streamData, 12) + ebcdicText;
+
     ON_CALL(displayBuffer, size()).WillByDefault(Return(QSize(0, 0)));
     EXPECT_CALL(displayBuffer, setBufferAddress(startColumn, startRow));
     EXPECT_CALL(displayBuffer, repeatCharacterToAddress(endColumn, endRow, ebcdicText.at(0)));
@@ -150,44 +163,41 @@ TEST_F(ATerminalEmulator, repeatsCharactersToReceivedAddress)
 
 TEST_F(ATerminalEmulator, drawsTextInBufferOnDisplay)
 {
-    const QString text("ABC");
-    QByteArray ebcdicText = textAsEbcdic(text);
-    const char streamData[]{ESC, WriteToDisplayCommand, 0x00, 0x18};
-    QByteArray data = createGdsHeaderWithLength(7) + QByteArray::fromRawData(streamData, 4) + ebcdicText;
+    const QByteArray ebcdicText = textAsEbcdic(ArbitraryText);
+    const QByteArray data = createWriteToDisplayCommandWithOrderLength(3) + ebcdicText;
+
+    ON_CALL(displayBuffer, size()).WillByDefault(Return(QSize(10, 10)));
     EXPECT_CALL(displayBuffer, characterAt(_, _)).WillRepeatedly(Return(0x00));
     EXPECT_CALL(displayBuffer, characterAt(1, 1)).WillOnce(Return(ebcdicText.at(0)));
     EXPECT_CALL(displayBuffer, characterAt(2, 1)).WillOnce(Return(ebcdicText.at(1)));
     EXPECT_CALL(displayBuffer, characterAt(3, 1)).WillOnce(Return(ebcdicText.at(2)));
-    EXPECT_CALL(displayBuffer, size()).WillRepeatedly(Return(QSize(80, 25)));
-    EXPECT_CALL(terminalDisplay, displayText(1, 1, text));
+    EXPECT_CALL(terminalDisplay, displayText(1, 1, ArbitraryText));
 
     terminal.dataReceived(data);
 }
 
 TEST_F(ATerminalEmulator, drawsMultipleTextInBufferOnDisplay)
 {
-    const QString text("ABC");
     const QString text2("DEF");
+    const QByteArray ebcdicText = textAsEbcdic(ArbitraryText);
+    const QByteArray ebcdicText2 = textAsEbcdic(text2);
     const char startRow = 5;
     const char startColumn = 2;
-    const char streamData[]{ESC, WriteToDisplayCommand, 0x00, 0x18};
     const char sbaStreamData[] { SetBufferAddressOrder, startRow, startColumn };
-    QByteArray data = createGdsHeaderWithLength(13)
-                    + QByteArray::fromRawData(streamData, 4)
-                    + textAsEbcdic(text)
-                    + QByteArray::fromRawData(sbaStreamData, 3)
-                    + textAsEbcdic(text2);
-    QByteArray ebcdicText = textAsEbcdic(text);
-    QByteArray ebcdicText2 = textAsEbcdic(text2);
+    const QByteArray data = createWriteToDisplayCommandWithOrderLength(9)
+                          + ebcdicText
+                          + QByteArray::fromRawData(sbaStreamData, 3)
+                          + ebcdicText2;
+
+    ON_CALL(displayBuffer, size()).WillByDefault(Return(QSize(10, 10)));
     EXPECT_CALL(displayBuffer, characterAt(_, _)).WillRepeatedly(Return(0x00));
-    EXPECT_CALL(displayBuffer, size()).WillRepeatedly(Return(QSize(80, 25)));
     EXPECT_CALL(displayBuffer, characterAt(1, 1)).WillOnce(Return(ebcdicText.at(0)));
     EXPECT_CALL(displayBuffer, characterAt(2, 1)).WillOnce(Return(ebcdicText.at(1)));
     EXPECT_CALL(displayBuffer, characterAt(3, 1)).WillOnce(Return(ebcdicText.at(2)));
-    EXPECT_CALL(displayBuffer, characterAt(2, 5)).WillOnce(Return(ebcdicText2.at(0)));
-    EXPECT_CALL(displayBuffer, characterAt(3, 5)).WillOnce(Return(ebcdicText2.at(1)));
-    EXPECT_CALL(displayBuffer, characterAt(4, 5)).WillOnce(Return(ebcdicText2.at(2)));
-    EXPECT_CALL(terminalDisplay, displayText(1, 1, text));
+    EXPECT_CALL(displayBuffer, characterAt(startColumn, startRow)).WillOnce(Return(ebcdicText2.at(0)));
+    EXPECT_CALL(displayBuffer, characterAt(startColumn+1, startRow)).WillOnce(Return(ebcdicText2.at(1)));
+    EXPECT_CALL(displayBuffer, characterAt(startColumn+2, startRow)).WillOnce(Return(ebcdicText2.at(2)));
+    EXPECT_CALL(terminalDisplay, displayText(1, 1, ArbitraryText));
     EXPECT_CALL(terminalDisplay, displayText(startColumn, startRow, text2));
 
     terminal.dataReceived(data);
@@ -195,12 +205,13 @@ TEST_F(ATerminalEmulator, drawsMultipleTextInBufferOnDisplay)
 
 TEST_F(ATerminalEmulator, drawsAttributeInBufferOnDisplay)
 {
-    const char streamData[]{ESC, WriteToDisplayCommand, 0x00, 0x18, GreenAttribute, NonDisplay4Attribute};
-    QByteArray data = createGdsHeaderWithLength(6) + QByteArray::fromRawData(streamData, 6);
+    const char attributeData[]{GreenAttribute, NonDisplay4Attribute};
+    const QByteArray data = createWriteToDisplayCommandWithOrderLength(2) + QByteArray::fromRawData(attributeData, 2);
+
+    ON_CALL(displayBuffer, size()).WillByDefault(Return(QSize(10, 10)));
     EXPECT_CALL(displayBuffer, characterAt(_, _)).WillRepeatedly(Return(0x00));
     EXPECT_CALL(displayBuffer, characterAt(1, 1)).WillOnce(Return(GreenAttribute));
     EXPECT_CALL(displayBuffer, characterAt(2, 1)).WillOnce(Return(NonDisplay4Attribute));
-    EXPECT_CALL(displayBuffer, size()).WillRepeatedly(Return(QSize(80, 25)));
     EXPECT_CALL(terminalDisplay, displayAttribute(GreenAttribute));
     EXPECT_CALL(terminalDisplay, displayAttribute(NonDisplay4Attribute));
 
