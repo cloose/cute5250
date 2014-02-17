@@ -124,6 +124,16 @@ TEST_F(ATerminalEmulator, setDisplayBufferToDefaultSizeOnReceivingClearUnit)
     terminal.dataReceived(data);
 }
 
+TEST_F(ATerminalEmulator, clearsFormatTableOnReceivingClearUnit)
+{
+    const char streamData[]{ESC, ClearUnitCommand};
+    QByteArray data = createGdsHeaderWithLength(2) + QByteArray::fromRawData(streamData, 2);
+
+    EXPECT_CALL(displayBuffer, clearFormatTable());
+
+    terminal.dataReceived(data);
+}
+
 TEST_F(ATerminalEmulator, setDisplayBufferToReceivedAddress)
 {
     const char column = 5;

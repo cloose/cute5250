@@ -65,6 +65,7 @@ void TerminalEmulator::dataReceived(const QByteArray &data)
                 break;
             case 0x40 /*CLEAR UNIT*/:
                 displayBuffer->setSize(80, 25);
+                displayBuffer->clearFormatTable();
                 break;
             }
         }
