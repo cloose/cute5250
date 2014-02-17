@@ -46,8 +46,18 @@ static QMap<unsigned char, QPair<int, int>> InitColorMap()
     colorMap.insert(0x21, QPair<int, int>(Qt::black, Qt::green));
     colorMap.insert(0x22, QPair<int, int>(Qt::white, Qt::black));
     colorMap.insert(0x23, QPair<int, int>(Qt::black, Qt::white));
+    colorMap.insert(0x24, QPair<int, int>(Qt::green, Qt::black));
+    colorMap.insert(0x25, QPair<int, int>(Qt::black, Qt::green));
+    colorMap.insert(0x26, QPair<int, int>(Qt::white, Qt::black));
     colorMap.insert(0x28, QPair<int, int>(Qt::red, Qt::black));
     colorMap.insert(0x29, QPair<int, int>(Qt::black, Qt::red));
+    colorMap.insert(0x2a, QPair<int, int>(Qt::red, Qt::black));
+    colorMap.insert(0x2b, QPair<int, int>(Qt::black, Qt::red));
+    colorMap.insert(0x2c, QPair<int, int>(Qt::red, Qt::black));
+    colorMap.insert(0x2d, QPair<int, int>(Qt::black, Qt::red));
+    colorMap.insert(0x2e, QPair<int, int>(Qt::red, Qt::black));
+    colorMap.insert(0x30, QPair<int, int>(Qt::cyan, Qt::black));
+    colorMap.insert(0x31, QPair<int, int>(Qt::black, Qt::cyan));
     colorMap.insert(0x3a, QPair<int, int>(Qt::blue, Qt::black));
     colorMap.insert(0x3b, QPair<int, int>(Qt::black, Qt::blue));
 
@@ -68,13 +78,18 @@ protected:
     void paintEvent(QPaintEvent *event);
 
 private:
+    bool showUnderline(unsigned char attribute);
+    bool isNonDisplay(unsigned char attribute);
+
     QPixmap *screen;
     QPainter *painter;
+    unsigned char lastAttribute;
 };
 
 TerminalDisplayWidget::TerminalDisplayWidget() :
     screen(new QPixmap(size())),
-    painter(new QPainter(screen))
+    painter(new QPainter(screen)),
+    lastAttribute(0x20)
 {
     setAttribute(Qt::WA_OpaquePaintEvent, true);
 
@@ -89,6 +104,8 @@ void TerminalDisplayWidget::displayText(unsigned char column, unsigned char row,
 {
     qDebug() << Q_FUNC_INFO << text;
 
+    if (isNonDisplay(lastAttribute)) return;
+
     QFontMetrics fm = painter->fontMetrics();
     unsigned int x = column * fm.width('X');
     unsigned int y = row * fm.height();
@@ -97,21 +114,22 @@ void TerminalDisplayWidget::displayText(unsigned char column, unsigned char row,
     painter->setBackground(painter->brush());
     painter->setBackgroundMode(Qt::OpaqueMode);
 
-
     painter->drawText(x, y, text);
 }
 
 void TerminalDisplayWidget::displayAttribute(unsigned char attribute)
 {
-//    // en-/disable underline
-//    QFont font = p->font();
-//    font.setUnderline(ScreenAttribute::ShowUnderline(displayAttribute));
-//    p->setFont(font);
+    // en-/disable underline
+    QFont font = painter->font();
+    font.setUnderline(showUnderline(attribute));
+    painter->setFont(font);
 
     if (ColorMap.contains(attribute)) {
         painter->setBrush((Qt::GlobalColor)ColorMap.value(attribute).second);
         painter->setPen((Qt::GlobalColor)ColorMap.value(attribute).first);
     }
+
+    lastAttribute = attribute;
 }
 
 void TerminalDisplayWidget::paintEvent(QPaintEvent *event)
@@ -119,6 +137,18 @@ void TerminalDisplayWidget::paintEvent(QPaintEvent *event)
     qDebug() << Q_FUNC_INFO;
     QPainter p(this);
     p.drawPixmap(0, 0, *screen);
+}
+
+bool TerminalDisplayWidget::showUnderline(unsigned char attribute)
+{
+    static const unsigned short UNDERLINE_MASK = 0x04;
+    return attribute & UNDERLINE_MASK;
+}
+
+bool TerminalDisplayWidget::isNonDisplay(unsigned char attribute)
+{
+    static const unsigned short NON_DISPLAY_MASK = 0x07;
+    return (attribute & NON_DISPLAY_MASK) == NON_DISPLAY_MASK;
 }
 
 class Main : public QObject
