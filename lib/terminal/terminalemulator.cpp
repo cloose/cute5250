@@ -135,6 +135,9 @@ void TerminalEmulator::handleWriteToDisplayCommand(GeneralDataStream &stream)
                 displayBuffer->repeatCharacterToAddress(column, row, character);
             }
             break;
+        case 0x04 /*ESC*/:
+            stream.seekToPreviousByte();
+            return;
         case 0x11 /*SET BUFFER ADDRESS*/:
             {
                 unsigned char row = stream.readByte();

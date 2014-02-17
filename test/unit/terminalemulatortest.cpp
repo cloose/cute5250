@@ -100,6 +100,20 @@ public:
 
 static const QString ArbitraryText{"ABC"};
 
+TEST_F(ATerminalEmulator, handlesMultipleCommandsInReceivedData)
+{
+    const char writeToDisplayCommand[]{ESC, WriteToDisplayCommand, 0x00, 0x18, 'A'};
+    const char clearUnitCommand[]{ESC, ClearUnitCommand};
+    const QByteArray data = createGdsHeaderWithLength(7)
+                          + QByteArray::fromRawData(writeToDisplayCommand, 5)
+                          + QByteArray::fromRawData(clearUnitCommand, 2);
+
+    EXPECT_CALL(displayBuffer, setCharacter('A'));
+    EXPECT_CALL(displayBuffer, setSize(80, 25));
+
+    terminal.dataReceived(data);
+}
+
 TEST_F(ATerminalEmulator, setDisplayBufferToDefaultSizeOnReceivingClearUnit)
 {
     const char streamData[]{ESC, ClearUnitCommand};
