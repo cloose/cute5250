@@ -91,14 +91,23 @@ void TerminalDisplayBuffer::clearFormatTable()
 {
 }
 
+void TerminalDisplayBuffer::addOutputField(unsigned char attribute, unsigned short length)
+{
+    setCharacter(attribute);
+    increaseBufferAddress(length);
+
+    // FIXME: replace with enum
+    setCharacter(0x20);
+}
+
 unsigned int TerminalDisplayBuffer::convertToAddress(unsigned char column, unsigned char row) const
 {
     return (row-1) * bufferSize.width() + (column-1);
 }
 
-void TerminalDisplayBuffer::increaseBufferAddress()
+void TerminalDisplayBuffer::increaseBufferAddress(unsigned char increment)
 {
-    addressColumn += 1;
+    addressColumn += increment;
 
     if (addressColumn > bufferSize.width()) {
         addressColumn = 1;

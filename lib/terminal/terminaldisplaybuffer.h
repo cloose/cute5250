@@ -46,14 +46,14 @@ public:
 
     unsigned char characterAt(unsigned char column, unsigned char row) const;
     void setCharacter(unsigned char character);
-
     void repeatCharacterToAddress(unsigned char column, unsigned char row, unsigned char character);
 
     void clearFormatTable();
+    void addOutputField(unsigned char attribute, unsigned short length);
 
 private:
     unsigned int convertToAddress(unsigned char column, unsigned char row) const;
-    void increaseBufferAddress();
+    void increaseBufferAddress(unsigned char increment = 1);
 
     unsigned char addressColumn;
     unsigned char addressRow;

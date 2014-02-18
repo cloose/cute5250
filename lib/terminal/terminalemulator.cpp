@@ -151,7 +151,8 @@ void TerminalEmulator::handleWriteToDisplayCommand(GeneralDataStream &stream)
                 unsigned char attribute = stream.readByte();
                 unsigned char fieldLength1 = stream.readByte();
                 unsigned char fieldLength2 = stream.readByte();
-                displayBuffer->setCharacter(attribute);
+                unsigned short fieldLength = (fieldLength1 << 8) | fieldLength2;
+                displayBuffer->addOutputField(attribute, fieldLength);
             }
             break;
         default:

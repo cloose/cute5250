@@ -44,6 +44,7 @@ public:
     MOCK_METHOD1(setCharacter, void(unsigned char));
     MOCK_METHOD3(repeatCharacterToAddress, void(unsigned char, unsigned char, unsigned char));
     MOCK_METHOD0(clearFormatTable, void());
+    MOCK_METHOD2(addOutputField, void(unsigned char, unsigned short));
 };
 
 class TerminalDisplayMock : public TerminalDisplay
@@ -70,6 +71,7 @@ public:
     static const char StartOfFieldOrder = 0x1d;
 
     static const char GreenAttribute = 0x20;
+    static const char GreenUnderlineAttribute = 0x24;
     static const char NonDisplay4Attribute = 0x3f;
 
     ATerminalEmulator()
@@ -248,12 +250,13 @@ TEST_F(ATerminalEmulator, clearsFormatTableOnReceivingStartOfHeader)
     terminal.dataReceived(data);
 }
 
-TEST_F(ATerminalEmulator, writesAttributeOfOutputFieldToDisplayBuffer)
+TEST_F(ATerminalEmulator, addsOutputFieldToDisplayBuffer)
 {
-    const char streamData[]{StartOfFieldOrder, GreenAttribute, 0x00, 0x01};
+    const char fieldLength = 5;
+    const char streamData[]{StartOfFieldOrder, GreenUnderlineAttribute, 0x00, fieldLength};
     const QByteArray data = createWriteToDisplayCommandWithOrderLength(4) + QByteArray::fromRawData(streamData, 4);
 
-    EXPECT_CALL(displayBuffer, setCharacter(GreenAttribute));
+    EXPECT_CALL(displayBuffer, addOutputField(GreenUnderlineAttribute, fieldLength));
 
     terminal.dataReceived(data);
 }

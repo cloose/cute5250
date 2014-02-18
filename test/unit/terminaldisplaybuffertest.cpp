@@ -37,6 +37,8 @@ public:
 
     TerminalDisplayBuffer *displayBuffer;
     static const unsigned char ArbitraryCharacter{'A'};
+    static const char NormalAttribute = 0x20;
+    static const char UnderlineAttribute = 0x24;
 };
 
 TEST_F(ATerminalDisplayBuffer, hasSetSize)
@@ -86,4 +88,18 @@ TEST_F(ATerminalDisplayBuffer, repeatsCharacterFromSetAddressToPassedAddress)
     ASSERT_THAT(displayBuffer->characterAt(startColumn, startRow), Eq(ArbitraryCharacter));
     ASSERT_THAT(displayBuffer->characterAt(startColumn+1, startRow), Eq(ArbitraryCharacter));
     ASSERT_THAT(displayBuffer->characterAt(endColumn, endRow), Eq(ArbitraryCharacter));
+}
+
+TEST_F(ATerminalDisplayBuffer, writesAttributesOfOutputField)
+{
+    const unsigned short fieldLength = 5;
+    const unsigned char startRow = 2;
+    const unsigned char startColumn = 5;
+    const unsigned char endFieldColumn = startColumn + fieldLength;
+    displayBuffer->setBufferAddress(startColumn, startRow);
+
+    displayBuffer->addOutputField(UnderlineAttribute, fieldLength);
+
+    ASSERT_THAT(displayBuffer->characterAt(startColumn, startRow), Eq(UnderlineAttribute));
+    ASSERT_THAT(displayBuffer->characterAt(endFieldColumn+1, startRow), Eq(NormalAttribute));
 }
