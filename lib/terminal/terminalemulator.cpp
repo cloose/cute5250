@@ -88,12 +88,7 @@ void TerminalEmulator::update()
     for (int row = 0; row < bufferHeight; ++row) {
         for (int column = 0; column < bufferWidth; ++column) {
             unsigned char character = displayBuffer->characterAt(column+1, row+1);
-            if (character == '\0') {
-                if (text.length() > 0) {
-                    terminalDisplay->displayText(startColumn, startRow, codec->toUnicode(text));
-                    text.clear();
-                }
-            } else if (character >= 0x20 && character <= 0x3f) {
+            if (character >= 0x20 && character <= 0x3f) {
                 if (text.length() > 0) {
                     terminalDisplay->displayText(startColumn, startRow, codec->toUnicode(text));
                     text.clear();
@@ -104,13 +99,14 @@ void TerminalEmulator::update()
                     startColumn = column+1;
                     startRow = row+1;
                 }
-                text += character;
+                text += (character == '\0' ? '\x40': character);
             }
         }
-    }
 
-    if (text.length() > 0) {
-        terminalDisplay->displayText(startColumn, startRow, codec->toUnicode(text));
+        if (text.length() > 0) {
+            terminalDisplay->displayText(startColumn, startRow, codec->toUnicode(text));
+            text.clear();
+        }
     }
 }
 
