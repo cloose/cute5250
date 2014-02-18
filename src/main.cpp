@@ -68,14 +68,20 @@ static const QMap<unsigned char, QPair<int, int>> ColorMap = InitColorMap();
 
 class TerminalDisplayWidget : public QWidget, public TerminalDisplay
 {
+    Q_OBJECT
+
 public:
     TerminalDisplayWidget();
 
     void displayText(unsigned char column, unsigned char row, const QString &text);
     void displayAttribute(unsigned char attribute);
 
+signals:
+    void sizeChanged();
+
 protected:
     void paintEvent(QPaintEvent *event);
+    void resizeEvent(QResizeEvent *event);
 
 private:
     bool showUnderline(unsigned char attribute);
@@ -102,7 +108,7 @@ TerminalDisplayWidget::TerminalDisplayWidget() :
 
 void TerminalDisplayWidget::displayText(unsigned char column, unsigned char row, const QString &text)
 {
-    qDebug() << Q_FUNC_INFO << text;
+//    qDebug() << Q_FUNC_INFO << column << row << text;
 
     if (isNonDisplay(lastAttribute)) return;
 
@@ -119,6 +125,8 @@ void TerminalDisplayWidget::displayText(unsigned char column, unsigned char row,
 
 void TerminalDisplayWidget::displayAttribute(unsigned char attribute)
 {
+//    qDebug() << Q_FUNC_INFO << QString::number(attribute, 16);
+
     // en-/disable underline
     QFont font = painter->font();
     font.setUnderline(showUnderline(attribute));
@@ -137,6 +145,24 @@ void TerminalDisplayWidget::paintEvent(QPaintEvent *event)
     qDebug() << Q_FUNC_INFO;
     QPainter p(this);
     p.drawPixmap(0, 0, *screen);
+}
+
+void TerminalDisplayWidget::resizeEvent(QResizeEvent *event)
+{
+    qDebug() << Q_FUNC_INFO << size();
+    delete painter;
+    delete screen;
+
+    screen = new QPixmap(size());
+    painter = new QPainter(screen);
+
+    QFont font("Monospace", 12);
+    font.setStyleHint(QFont::TypeWriter);
+    painter->setFont(font);
+
+    painter->setPen(Qt::green);
+
+    emit sizeChanged();
 }
 
 bool TerminalDisplayWidget::showUnderline(unsigned char attribute)
@@ -179,6 +205,8 @@ Main::Main(QObject *parent) :
             client, &TelnetClient::readyRead);
     connect(client, &TelnetClient::dataReceived,
             terminal, &TerminalEmulator::dataReceived);
+    connect(display, &TerminalDisplayWidget::sizeChanged,
+            terminal, &TerminalEmulator::update);
 
     client->setTerminalType("IBM-3477-FC");
     terminal->setDisplayBuffer(new TerminalDisplayBuffer());
