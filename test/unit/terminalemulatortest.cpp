@@ -269,9 +269,21 @@ TEST_F(ATerminalEmulator, addsOutputFieldToDisplayBuffer)
     const char fieldLength = 5;
     const char streamData[]{StartOfFieldOrder, GreenUnderlineAttribute, 0x00, fieldLength};
     const QByteArray data = createWriteToDisplayCommandWithOrderLength(4) + QByteArray::fromRawData(streamData, 4);
-    const q5250::Field outputField = { .attribute = GreenUnderlineAttribute, .length = fieldLength };
+    const q5250::Field outputField = { .format = 0, .attribute = GreenUnderlineAttribute, .length = fieldLength };
 
     EXPECT_CALL(displayBuffer, addField(outputField));
+
+    terminal.dataReceived(data);
+}
+
+TEST_F(ATerminalEmulator, addsInputFieldWithoutControlWordsToDisplayBuffer)
+{
+    const char fieldLength = 5;
+    const char streamData[]{StartOfFieldOrder, 0x40, 0x00, GreenUnderlineAttribute, 0x00, fieldLength};
+    const QByteArray data = createWriteToDisplayCommandWithOrderLength(6) + QByteArray::fromRawData(streamData, 6);
+    const q5250::Field inputField = { .format = 0x4000, .attribute = GreenUnderlineAttribute, .length = fieldLength };
+
+    EXPECT_CALL(displayBuffer, addField(inputField));
 
     terminal.dataReceived(data);
 }

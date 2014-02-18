@@ -30,6 +30,7 @@ namespace q5250 {
 
 struct Field
 {
+    unsigned short format;
     unsigned char attribute;
     unsigned short length;
 };

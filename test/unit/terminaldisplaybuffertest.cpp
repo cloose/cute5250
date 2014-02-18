@@ -98,7 +98,7 @@ TEST_F(ATerminalDisplayBuffer, writesAttributesOfOutputField)
     const unsigned char startColumn = 5;
     const unsigned char endFieldColumn = startColumn + fieldLength;
     displayBuffer->setBufferAddress(startColumn, startRow);
-    const q5250::Field outputField = { .attribute = UnderlineAttribute, .length = fieldLength };
+    const q5250::Field outputField = { .format = 0, .attribute = UnderlineAttribute, .length = fieldLength };
 
     displayBuffer->addField(outputField);
 
