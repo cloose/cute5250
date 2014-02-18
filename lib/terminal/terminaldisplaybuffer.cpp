@@ -27,6 +27,8 @@
 
 #include <QByteArray>
 
+#include "field.h"
+
 namespace q5250 {
 
 TerminalDisplayBuffer::TerminalDisplayBuffer() :
@@ -91,10 +93,10 @@ void TerminalDisplayBuffer::clearFormatTable()
 {
 }
 
-void TerminalDisplayBuffer::addOutputField(unsigned char attribute, unsigned short length)
+void TerminalDisplayBuffer::addField(const Field &field)
 {
-    setCharacter(attribute);
-    increaseBufferAddress(length);
+    setCharacter(field.attribute);
+    increaseBufferAddress(field.length);
 
     // FIXME: replace with enum
     setCharacter(0x20);

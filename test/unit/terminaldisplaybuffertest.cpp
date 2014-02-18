@@ -26,6 +26,7 @@
 #include <gmock/gmock.h>
 using namespace testing;
 
+#include <terminal/field.h>
 #include <terminal/terminaldisplaybuffer.h>
 using namespace q5250;
 
@@ -97,8 +98,9 @@ TEST_F(ATerminalDisplayBuffer, writesAttributesOfOutputField)
     const unsigned char startColumn = 5;
     const unsigned char endFieldColumn = startColumn + fieldLength;
     displayBuffer->setBufferAddress(startColumn, startRow);
+    const q5250::Field outputField = { .attribute = UnderlineAttribute, .length = fieldLength };
 
-    displayBuffer->addOutputField(UnderlineAttribute, fieldLength);
+    displayBuffer->addField(outputField);
 
     ASSERT_THAT(displayBuffer->characterAt(startColumn, startRow), Eq(UnderlineAttribute));
     ASSERT_THAT(displayBuffer->characterAt(endFieldColumn+1, startRow), Eq(NormalAttribute));

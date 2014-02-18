@@ -30,6 +30,7 @@ using namespace testing;
 #include <QTextCodec>
 
 #include <terminal/displaybuffer.h>
+#include <terminal/field.h>
 #include <terminal/terminaldisplay.h>
 #include <terminal/terminalemulator.h>
 using namespace q5250;
@@ -44,7 +45,7 @@ public:
     MOCK_METHOD1(setCharacter, void(unsigned char));
     MOCK_METHOD3(repeatCharacterToAddress, void(unsigned char, unsigned char, unsigned char));
     MOCK_METHOD0(clearFormatTable, void());
-    MOCK_METHOD2(addOutputField, void(unsigned char, unsigned short));
+    MOCK_METHOD1(addField, void(const q5250::Field&));
 };
 
 class TerminalDisplayMock : public TerminalDisplay
@@ -104,6 +105,16 @@ public:
 };
 
 static const QString ArbitraryText{"ABC"};
+
+namespace q5250 {
+
+inline bool operator==(const Field &lhs, const Field &rhs)
+{
+    return lhs.attribute == rhs.attribute &&
+           lhs.length == rhs.length;
+}
+
+}
 
 TEST_F(ATerminalEmulator, handlesMultipleCommandsInReceivedData)
 {
@@ -255,8 +266,9 @@ TEST_F(ATerminalEmulator, addsOutputFieldToDisplayBuffer)
     const char fieldLength = 5;
     const char streamData[]{StartOfFieldOrder, GreenUnderlineAttribute, 0x00, fieldLength};
     const QByteArray data = createWriteToDisplayCommandWithOrderLength(4) + QByteArray::fromRawData(streamData, 4);
+    const q5250::Field outputField = { .attribute = GreenUnderlineAttribute, .length = fieldLength };
 
-    EXPECT_CALL(displayBuffer, addOutputField(GreenUnderlineAttribute, fieldLength));
+    EXPECT_CALL(displayBuffer, addField(outputField));
 
     terminal.dataReceived(data);
 }

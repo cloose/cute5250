@@ -33,6 +33,8 @@ class QByteArray;
 
 namespace q5250 {
 
+struct Field;
+
 class Q5250SHARED_EXPORT TerminalDisplayBuffer : public DisplayBuffer
 {
 public:
@@ -49,7 +51,7 @@ public:
     void repeatCharacterToAddress(unsigned char column, unsigned char row, unsigned char character);
 
     void clearFormatTable();
-    void addOutputField(unsigned char attribute, unsigned short length);
+    void addField(const Field &field);
 
 private:
     unsigned int convertToAddress(unsigned char column, unsigned char row) const;

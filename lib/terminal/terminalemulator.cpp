@@ -28,6 +28,7 @@
 #include <QTextCodec>
 
 #include "displaybuffer.h"
+#include "field.h"
 #include "generaldatastream.h"
 #include "terminaldisplay.h"
 
@@ -148,11 +149,13 @@ void TerminalEmulator::handleWriteToDisplayCommand(GeneralDataStream &stream)
             break;
         case 0x1d /*START OF FIELD*/:
             {
-                unsigned char attribute = stream.readByte();
+                Field field;
+                field.attribute = stream.readByte();
                 unsigned char fieldLength1 = stream.readByte();
                 unsigned char fieldLength2 = stream.readByte();
-                unsigned short fieldLength = (fieldLength1 << 8) | fieldLength2;
-                displayBuffer->addOutputField(attribute, fieldLength);
+                field.length = (fieldLength1 << 8) | fieldLength2;
+
+                displayBuffer->addField(field);
             }
             break;
         default:

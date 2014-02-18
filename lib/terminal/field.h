@@ -23,32 +23,17 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#ifndef Q5250_DISPLAYBUFFER_H
-#define Q5250_DISPLAYBUFFER_H
-
-#include "q5250_global.h"
-#include <QSize>
+#ifndef Q5250_FIELD_H
+#define Q5250_FIELD_H
 
 namespace q5250 {
 
-struct Field;
-
-class DisplayBuffer
+struct Field
 {
-public:
-    virtual QSize size() const = 0;
-    virtual void setSize(unsigned char columns, unsigned char rows) = 0;
-
-    virtual void setBufferAddress(unsigned char column, unsigned char row) = 0;
-
-    virtual unsigned char characterAt(unsigned char column, unsigned char row) const = 0;
-    virtual void setCharacter(unsigned char character) = 0;
-    virtual void repeatCharacterToAddress(unsigned char column, unsigned char row, unsigned char character) = 0;
-
-    virtual void clearFormatTable() = 0;
-    virtual void addField(const Field &field) = 0;
+    unsigned char attribute;
+    unsigned short length;
 };
 
 } // namespace q5250
 
-#endif // Q5250_DISPLAYBUFFER_H
+#endif // Q5250_FIELD_H
