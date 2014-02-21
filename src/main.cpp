@@ -26,6 +26,9 @@
 #include <QApplication>
 
 #include <QDebug>
+#include <QDateTime>
+#include <QFile>
+#include <QKeyEvent>
 #include <QMap>
 #include <QPainter>
 #include <QWidget>
@@ -78,10 +81,12 @@ public:
 
 signals:
     void sizeChanged();
+    void keyPressed(int key, const QString &text);
 
 protected:
     void paintEvent(QPaintEvent *event);
     void resizeEvent(QResizeEvent *event);
+    void keyPressEvent(QKeyEvent *event);
 
 private:
     bool showUnderline(unsigned char attribute);
@@ -165,6 +170,14 @@ void TerminalDisplayWidget::resizeEvent(QResizeEvent *event)
     emit sizeChanged();
 }
 
+void TerminalDisplayWidget::keyPressEvent(QKeyEvent *event)
+{
+    qDebug() << "KEY PRESSED"
+             << event->key()
+             << event->text();
+    emit keyPressed(event->key(), event->text());
+}
+
 bool TerminalDisplayWidget::showUnderline(unsigned char attribute)
 {
     static const unsigned short UNDERLINE_MASK = 0x04;
@@ -207,6 +220,8 @@ Main::Main(QObject *parent) :
             terminal, &TerminalEmulator::dataReceived);
     connect(display, &TerminalDisplayWidget::sizeChanged,
             terminal, &TerminalEmulator::update);
+    connect(display, &TerminalDisplayWidget::keyPressed,
+            terminal, &TerminalEmulator::keyPressed);
     connect(terminal, &TerminalEmulator::updateFinished,
             display, static_cast<void (QWidget::*)()>(&QWidget::update));
 
@@ -232,9 +247,41 @@ void Main::dataReceived(const QByteArray &data)
 //    qDebug() << "Valid?" << stream.isValid();
 }
 
+void customMessageHandler(QtMsgType type, const QMessageLogContext &context, const QString &msg)
+{
+   Q_UNUSED(context);
+
+   QString dt = QDateTime::currentDateTime().toString("dd/MM/yyyy hh:mm:ss");
+   QString txt = QString("[%1] ").arg(dt);
+
+   switch (type)
+   {
+      case QtDebugMsg:
+         txt += QString("{Debug} \t\t %1").arg(msg);
+         break;
+      case QtWarningMsg:
+         txt += QString("{Warning} \t %1").arg(msg);
+         break;
+      case QtCriticalMsg:
+         txt += QString("{Critical} \t %1").arg(msg);
+         break;
+      case QtFatalMsg:
+         txt += QString("{Fatal} \t\t %1").arg(msg);
+         abort();
+         break;
+   }
+
+   QFile outFile("LogFile.log");
+   outFile.open(QIODevice::WriteOnly | QIODevice::Append);
+
+   QTextStream textStream(&outFile);
+   textStream << txt << endl;
+}
+
 int main(int argc, char *argv[])
 {
     QApplication app(argc, argv);
+    qInstallMessageHandler(customMessageHandler);
 
     Main main;
 

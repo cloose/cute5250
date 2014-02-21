@@ -53,6 +53,7 @@ signals:
 public slots:
     void dataReceived(const QByteArray &data);
     void update();
+    void keyPressed(int key, const QString &text);
 
 private:
     void handleWriteToDisplayCommand(GeneralDataStream &stream);

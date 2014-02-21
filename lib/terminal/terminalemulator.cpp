@@ -25,6 +25,7 @@
  */
 #include "terminalemulator.h"
 
+#include <QEvent>
 #include <QTextCodec>
 
 #include "displaybuffer.h"
@@ -110,6 +111,14 @@ void TerminalEmulator::update()
     }
 
     emit updateFinished();
+}
+
+void TerminalEmulator::keyPressed(int key, const QString &text)
+{
+    QByteArray ebcdic = codec->fromUnicode(text);
+    displayBuffer->setCharacter(ebcdic.at(0));
+
+    update();
 }
 
 void TerminalEmulator::handleWriteToDisplayCommand(GeneralDataStream &stream)
