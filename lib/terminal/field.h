@@ -33,6 +33,9 @@ struct Field
     unsigned short format;
     unsigned char attribute;
     unsigned short length;
+
+    unsigned char startColumn;
+    unsigned char startRow;
 };
 
 } // namespace q5250
