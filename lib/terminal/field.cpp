@@ -23,23 +23,13 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#ifndef Q5250_FIELD_H
-#define Q5250_FIELD_H
+#include "field.h"
 
 namespace q5250 {
 
-struct Field
+bool Field::isBypassField() const
 {
-    unsigned short format;
-    unsigned char attribute;
-    unsigned short length;
-
-    unsigned char startColumn;
-    unsigned char startRow;
-
-    bool isBypassField() const;
-};
+    return format & 0x2000;
+}
 
 } // namespace q5250
-
-#endif // Q5250_FIELD_H
