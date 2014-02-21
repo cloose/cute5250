@@ -29,6 +29,9 @@
 #include "q5250_global.h"
 #include <QObject>
 
+#include "cursor.h"
+#include "field.h"
+
 class QTextCodec;
 
 namespace q5250 {
@@ -61,6 +64,8 @@ private:
     DisplayBuffer *displayBuffer;
     TerminalDisplay *terminalDisplay;
     QTextCodec *codec;
+    QList<Field> fieldList;
+    Cursor cursor;
 };
 
 } // namespace q5250

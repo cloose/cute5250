@@ -25,6 +25,7 @@
  */
 #include "terminalemulator.h"
 
+#include <QDebug>
 #include <QEvent>
 #include <QTextCodec>
 
@@ -68,6 +69,19 @@ void TerminalEmulator::dataReceived(const QByteArray &data)
             case 0x40 /*CLEAR UNIT*/:
                 displayBuffer->setSize(80, 25);
                 displayBuffer->clearFormatTable();
+                break;
+            case 0x52 /*READ MDT FIELDS*/:
+                {
+                    foreach (const Field field, fieldList) {
+                        if (!field.isBypassField()) {
+                            cursor.setPosition(field.startColumn, field.startRow);
+                            break;
+                        }
+                    }
+                }
+                break;
+            default:
+                qWarning() << "UNKNOWN COMMAND" << hex << showbase << byte;
                 break;
             }
         }
@@ -115,8 +129,13 @@ void TerminalEmulator::update()
 
 void TerminalEmulator::keyPressed(int key, const QString &text)
 {
+    if (text.isEmpty()) return;
+
     QByteArray ebcdic = codec->fromUnicode(text);
+    qDebug() << "KEY PRESSED" << key << text << cursor.column() << cursor.row() << hex << showbase << (uchar)ebcdic.at(0);
+    displayBuffer->setBufferAddress(cursor.column(), cursor.row());
     displayBuffer->setCharacter(ebcdic.at(0));
+    cursor.moveRight();
 
     update();
 }
@@ -133,6 +152,7 @@ void TerminalEmulator::handleWriteToDisplayCommand(GeneralDataStream &stream)
         case 0x01 /*START OF HEADER*/:
             {
                 unsigned dataLength = stream.readByte();
+                qDebug() << "SOH" << dataLength;
                 displayBuffer->clearFormatTable();
             }
             break;
@@ -141,6 +161,7 @@ void TerminalEmulator::handleWriteToDisplayCommand(GeneralDataStream &stream)
                 unsigned char row = stream.readByte();
                 unsigned char column = stream.readByte();
                 unsigned char character = stream.readByte();
+                qDebug() << "RA" << row << column << (char)character;
                 displayBuffer->repeatCharacterToAddress(column, row, character);
             }
             break;
@@ -151,6 +172,7 @@ void TerminalEmulator::handleWriteToDisplayCommand(GeneralDataStream &stream)
             {
                 unsigned char row = stream.readByte();
                 unsigned char column = stream.readByte();
+                qDebug() << "SBA" << row << column;
                 displayBuffer->setBufferAddress(column, row);
             }
             break;
@@ -171,7 +193,14 @@ void TerminalEmulator::handleWriteToDisplayCommand(GeneralDataStream &stream)
                 unsigned char fieldLength2 = stream.readByte();
                 field.length = (fieldLength1 << 8) | fieldLength2;
 
+                qDebug() << "SF" << hex << showbase << field.format
+                                 << field.attribute
+                                 << dec << field.length;
                 displayBuffer->addField(field);
+
+                if (field.format > 0) {
+                    fieldList.append(field);
+                }
             }
             break;
         default:

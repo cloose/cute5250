@@ -172,9 +172,6 @@ void TerminalDisplayWidget::resizeEvent(QResizeEvent *event)
 
 void TerminalDisplayWidget::keyPressEvent(QKeyEvent *event)
 {
-    qDebug() << "KEY PRESSED"
-             << event->key()
-             << event->text();
     emit keyPressed(event->key(), event->text());
 }
 
