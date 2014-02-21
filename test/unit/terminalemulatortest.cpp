@@ -27,6 +27,7 @@
 using namespace testing;
 
 #include <QByteArray>
+#include <QSignalSpy>
 #include <QTextCodec>
 
 #include <terminal/displaybuffer.h>
@@ -286,4 +287,19 @@ TEST_F(ATerminalEmulator, addsInputFieldWithoutControlWordsToDisplayBuffer)
     EXPECT_CALL(displayBuffer, addField(inputField));
 
     terminal.dataReceived(data);
+}
+
+TEST_F(ATerminalEmulator, emitsUpdateFinishedAfterUpdate)
+{
+    QSignalSpy spy(&terminal, SIGNAL(updateFinished()));
+    const QByteArray ebcdicText = textAsEbcdic("A");
+    displayBuffer.setCharacter(ebcdicText.at(0));
+
+    ON_CALL(displayBuffer, size()).WillByDefault(Return(QSize(1, 1)));
+    EXPECT_CALL(displayBuffer, characterAt(1, 1)).WillOnce(Return(ebcdicText.at(0)));
+    EXPECT_CALL(terminalDisplay, displayText(1, 1, QString("A")));
+
+    terminal.update();
+
+    ASSERT_THAT(spy.count(), Eq(1));
 }

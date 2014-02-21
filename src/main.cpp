@@ -207,6 +207,8 @@ Main::Main(QObject *parent) :
             terminal, &TerminalEmulator::dataReceived);
     connect(display, &TerminalDisplayWidget::sizeChanged,
             terminal, &TerminalEmulator::update);
+    connect(terminal, &TerminalEmulator::updateFinished,
+            display, static_cast<void (QWidget::*)()>(&QWidget::update));
 
     client->setTerminalType("IBM-3477-FC");
     terminal->setDisplayBuffer(new TerminalDisplayBuffer());

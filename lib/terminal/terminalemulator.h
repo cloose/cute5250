@@ -47,6 +47,9 @@ public:
     void setDisplayBuffer(DisplayBuffer *buffer);
     void setTerminalDisplay(TerminalDisplay *display);
 
+signals:
+    void updateFinished();
+
 public slots:
     void dataReceived(const QByteArray &data);
     void update();

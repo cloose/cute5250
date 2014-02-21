@@ -108,6 +108,8 @@ void TerminalEmulator::update()
             text.clear();
         }
     }
+
+    emit updateFinished();
 }
 
 void TerminalEmulator::handleWriteToDisplayCommand(GeneralDataStream &stream)
