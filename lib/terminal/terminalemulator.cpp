@@ -129,13 +129,30 @@ void TerminalEmulator::update()
 
 void TerminalEmulator::keyPressed(int key, const QString &text)
 {
-    if (text.isEmpty()) return;
+    qDebug() << "KEY PRESSED" << key << text << cursor.column() << cursor.row();
 
-    QByteArray ebcdic = codec->fromUnicode(text);
-    qDebug() << "KEY PRESSED" << key << text << cursor.column() << cursor.row() << hex << showbase << (uchar)ebcdic.at(0);
-    displayBuffer->setBufferAddress(cursor.column(), cursor.row());
-    displayBuffer->setCharacter(ebcdic.at(0));
-    cursor.moveRight();
+    switch (key) {
+    case Qt::Key_Up:
+        cursor.moveUp();
+        break;
+    case Qt::Key_Down:
+        cursor.moveDown();
+        break;
+    case Qt::Key_Left:
+        cursor.moveLeft();
+        break;
+    case Qt::Key_Right:
+        cursor.moveRight();
+        break;
+    default:
+        if (!text.isEmpty()) {
+            QByteArray ebcdic = codec->fromUnicode(text);
+            displayBuffer->setBufferAddress(cursor.column(), cursor.row());
+            displayBuffer->setCharacter(ebcdic.at(0));
+            cursor.moveRight();
+        }
+        break;
+    }
 
     update();
 }

@@ -37,7 +37,9 @@ public:
     unsigned char row() const { return cursorRow; }
     void setPosition(unsigned column, unsigned row);
 
+    void moveUp();
     void moveDown();
+    void moveLeft();
     void moveRight();
 
 private:

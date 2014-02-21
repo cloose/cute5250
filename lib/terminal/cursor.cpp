@@ -39,13 +39,34 @@ void Cursor::setPosition(unsigned column, unsigned row)
     cursorRow = row;
 }
 
+void Cursor::moveUp()
+{
+    --cursorRow;
+
+    if (cursorRow < 1)
+    {
+        cursorRow = 24;
+    }
+}
+
 void Cursor::moveDown()
 {
     ++cursorRow;
 
-    if( cursorRow > 24 )
+    if (cursorRow > 24)
     {
         cursorRow = 1;
+    }
+}
+
+void Cursor::moveLeft()
+{
+    --cursorColumn;
+
+    if (cursorColumn < 1)
+    {
+        cursorColumn = 80;
+        moveUp();
     }
 }
 
@@ -53,7 +74,7 @@ void Cursor::moveRight()
 {
     cursorColumn += 1;
 
-    if( cursorColumn > 80 )
+    if (cursorColumn > 80)
     {
         cursorColumn = 1;
         moveDown();
