@@ -1,16 +1,16 @@
 /*
- * Copyright (c) 2013, Christian Loose
+ * Copyright (c) 2013-2014, Christian Loose
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
  * are permitted provided that the following conditions are met:
  *
  * * Redistributions of source code must retain the above copyright notice, this
- *   list of conditions and the following disclaimer.
+ * list of conditions and the following disclaimer.
  *
  * * Redistributions in binary form must reproduce the above copyright notice, this
- *   list of conditions and the following disclaimer in the documentation and/or
- *   other materials provided with the distribution.
+ * list of conditions and the following disclaimer in the documentation and/or
+ * other materials provided with the distribution.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
  * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
@@ -23,22 +23,42 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#include "telnetcommands.h"
+#ifndef Q5250_TERMINALEMULATOR_H
+#define Q5250_TERMINALEMULATOR_H
+
+#include "q5250_global.h"
+#include <QObject>
+
+class QTextCodec;
 
 namespace q5250 {
 
-bool Command::isInterpretAsCommand(unsigned char byte)
-{
-    return byte == Command::IAC;
-}
+class DisplayBuffer;
+class GeneralDataStream;
+class TerminalDisplay;
 
-bool Command::isOptionCommand(unsigned char byte)
+class Q5250SHARED_EXPORT TerminalEmulator : public QObject
 {
-    return byte == Command::WILL ||
-           byte == Command::WONT ||
-           byte == Command::DO   ||
-           byte == Command::DONT;
-}
+    Q_OBJECT
 
+public:
+    explicit TerminalEmulator(QObject *parent = 0);
+
+    void setDisplayBuffer(DisplayBuffer *buffer);
+    void setTerminalDisplay(TerminalDisplay *display);
+
+public slots:
+    void dataReceived(const QByteArray &data);
+    void update();
+
+private:
+    void handleWriteToDisplayCommand(GeneralDataStream &stream);
+
+    DisplayBuffer *displayBuffer;
+    TerminalDisplay *terminalDisplay;
+    QTextCodec *codec;
+};
 
 } // namespace q5250
+
+#endif // Q5250_TERMINALEMULATOR_H

@@ -26,7 +26,9 @@ message(STATUS "Module path: ${CMAKE_MODULE_PATH}")
 find_package(CXXFeatures)
 
 set(needed_features
-    CXXFeatures_auto)
+    CXXFeatures_auto
+    CXXFeatures_initializer_list
+)
 
 foreach(i ${needed_features})
     if(NOT ${i}_FOUND)
@@ -40,6 +42,10 @@ message(STATUS "C++ Flags: ${CMAKE_CXX_FLAGS}")
 ### Build Type ###
 
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
+
+### Build Options ###
+
+option(BUILD_WITH_CODE_COVERAGE "Enable code coverage with gconv" OFF)
 
 ### Dependencies ###
 

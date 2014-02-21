@@ -1,193 +1,189 @@
-#include <QtTest>
+/*
+ * Copyright (c) 2013-2014, Christian Loose
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *
+ * * Redistributions of source code must retain the above copyright notice, this
+ * list of conditions and the following disclaimer.
+ *
+ * * Redistributions in binary form must reproduce the above copyright notice, this
+ * list of conditions and the following disclaimer in the documentation and/or
+ * other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
+ * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
+ * ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+#include <gmock/gmock.h>
+using namespace testing;
 
-#include <QDataStream>
-#include <QString>
+#include <QByteArray>
+#include <QSignalSpy>
 
-#include <telnetclient.h>
-using q5250::TelnetClient;
+#include <telnet/telnetclient.h>
+#include <telnet/telnetcommand.h>
+#include <telnet/telnetconnection.h>
+#include <telnet/telnetoption.h>
+using namespace q5250;
 
-#include "faketelnetserver.h"
-
-class TelnetClientTest : public QObject
+class TelnetConnectionMock : public TelnetConnection
 {
-    Q_OBJECT
+public:
+    MOCK_METHOD2(connectToHost, void(const QString&, quint16));
 
-private Q_SLOTS:
-    void acknowledgesNewEnvironOption();
-    void acknowledgesTerminalTypeOption();
-    void acknowledgesEndOfRecordOption();
-    void acknowledgesTransmitBinaryOption();
-    void deniesOfferToUseUnsupportedOption();
-    void doesnotAcknowledgeRequestForEnteredModes();
-    void onlySendsAnOptionCommandOnce();
-    void repliesToMultipleOptions();
-    void statesTerminalTypeOnRequest();
-    void emitsDataThatIsNotACommand();
+    MOCK_METHOD0(readAll, QByteArray());
+    MOCK_METHOD1(write, void(const QByteArray&));
+
+protected:
+    MOCK_METHOD0(connected, void());
+    MOCK_METHOD0(readyRead, void());
 };
 
-
-void TelnetClientTest::acknowledgesNewEnvironOption()
+class ATelnetClient : public Test
 {
-    FakeTelnetServer server;
-    TelnetClient client;
+public:
+    QByteArray ArbitraryRawData{"A"};
+    static const char IAC = '\xff';
 
-    server.listenOnTelnetPort();
-    client.connectToHost("localhost", 8023);
-    server.hasConnectionFromClient();
+    QByteArray optionCommand(TelnetCommand command, TelnetOption option) {
+        QByteArray optionNegotiation;
 
-    server.sendCommandToClient(FakeTelnetServer::DO, FakeTelnetServer::NEW_ENVIRON);
-    server.hasReceivedCommand(FakeTelnetServer::WILL, FakeTelnetServer::NEW_ENVIRON);
+        optionNegotiation.append((char)TelnetCommand::IAC);
+        optionNegotiation.append((char)command);
+        optionNegotiation.append((char)option);
+
+        return optionNegotiation;
+    }
+
+    QByteArray subnegotiation(TelnetOption option, SubnegotiationCommand command, const QByteArray &parameters) {
+        QByteArray data;
+
+        data.append((char)TelnetCommand::IAC);
+        data.append((char)TelnetCommand::SB);
+        data.append((char)option);
+        data.append((char)command);
+        data.append(parameters);
+        data.append((char)TelnetCommand::IAC);
+        data.append((char)TelnetCommand::SE);
+
+        return data;
+    }
+};
+
+TEST_F(ATelnetClient, readsDataFromConnectionWhenReceivedReadyRead)
+{
+    TelnetConnectionMock connection;
+    TelnetClient client(&connection);
+    EXPECT_CALL(connection, readAll()).WillOnce(Return(ArbitraryRawData));
+
+    client.readyRead();
 }
 
-void TelnetClientTest::acknowledgesTerminalTypeOption()
+TEST_F(ATelnetClient, emitsDataReceivedForRawData)
 {
-    FakeTelnetServer server;
-    TelnetClient client;
+    TelnetConnectionMock connection;
+    TelnetClient client(&connection);
+    QSignalSpy spy(&client, SIGNAL(dataReceived(QByteArray)));
+    EXPECT_CALL(connection, readAll()).WillOnce(Return(ArbitraryRawData));
 
-    server.listenOnTelnetPort();
-    client.connectToHost("localhost", 8023);
-    server.hasConnectionFromClient();
+    client.readyRead();
 
-    server.sendCommandToClient(FakeTelnetServer::DO, FakeTelnetServer::TERMINAL_TYPE);
-    server.hasReceivedCommand(FakeTelnetServer::WILL, FakeTelnetServer::TERMINAL_TYPE);
+    ASSERT_THAT(spy.count(), Eq(1));
+    ASSERT_THAT(spy[0][0].toByteArray(), Eq(ArbitraryRawData));
 }
 
-void TelnetClientTest::acknowledgesEndOfRecordOption()
+TEST_F(ATelnetClient, deniesOfferToUseUnsupportedOption)
 {
-    FakeTelnetServer server;
-    TelnetClient client;
+    TelnetConnectionMock connection;
+    TelnetClient client(&connection);
+    EXPECT_CALL(connection, readAll()).WillOnce(Return(optionCommand(TelnetCommand::WILL, TelnetOption::ECHO)));
+    EXPECT_CALL(connection, write(optionCommand(TelnetCommand::DONT, TelnetOption::ECHO)));
 
-    server.listenOnTelnetPort();
-    client.connectToHost("localhost", 8023);
-    server.hasConnectionFromClient();
-
-    server.sendCommandToClient(FakeTelnetServer::DO, FakeTelnetServer::END_OF_RECORD);
-    server.sendCommandToClient(FakeTelnetServer::WILL, FakeTelnetServer::END_OF_RECORD);
-
-    server.hasReceivedCommand(FakeTelnetServer::WILL, FakeTelnetServer::END_OF_RECORD);
-    server.hasReceivedCommand(FakeTelnetServer::DO, FakeTelnetServer::END_OF_RECORD);
+    client.readyRead();
 }
 
-void TelnetClientTest::acknowledgesTransmitBinaryOption()
+TEST_F(ATelnetClient, deniesRequestToUseUnsupportedOption)
 {
-    FakeTelnetServer server;
-    TelnetClient client;
+    TelnetConnectionMock connection;
+    TelnetClient client(&connection);
+    EXPECT_CALL(connection, readAll()).WillOnce(Return(optionCommand(TelnetCommand::DO, TelnetOption::ECHO)));
+    EXPECT_CALL(connection, write(optionCommand(TelnetCommand::WONT, TelnetOption::ECHO)));
 
-    server.listenOnTelnetPort();
-    client.connectToHost("localhost", 8023);
-    server.hasConnectionFromClient();
-
-    server.sendCommandToClient(FakeTelnetServer::DO, FakeTelnetServer::TRANSMIT_BINARY);
-    server.sendCommandToClient(FakeTelnetServer::WILL, FakeTelnetServer::TRANSMIT_BINARY);
-
-    server.hasReceivedCommand(FakeTelnetServer::WILL, FakeTelnetServer::TRANSMIT_BINARY);
-    server.hasReceivedCommand(FakeTelnetServer::DO, FakeTelnetServer::TRANSMIT_BINARY);
+    client.readyRead();
 }
 
-void TelnetClientTest::deniesOfferToUseUnsupportedOption()
+TEST_F(ATelnetClient, acknowledgesTransmitBinaryOptionNegotiation)
 {
-    FakeTelnetServer server;
-    TelnetClient client;
+    TelnetConnectionMock connection;
+    TelnetClient client(&connection);
+    QByteArray transmitBinaryNegotiation = optionCommand(TelnetCommand::DO, TelnetOption::TRANSMIT_BINARY)
+                                         + optionCommand(TelnetCommand::WILL, TelnetOption::TRANSMIT_BINARY);
+    EXPECT_CALL(connection, readAll()).WillOnce(Return(transmitBinaryNegotiation));
+    {
+        InSequence replies;
+        EXPECT_CALL(connection, write(optionCommand(TelnetCommand::WILL, TelnetOption::TRANSMIT_BINARY)));
+        EXPECT_CALL(connection, write(optionCommand(TelnetCommand::DO, TelnetOption::TRANSMIT_BINARY)));
+    }
 
-    server.listenOnTelnetPort();
-    client.connectToHost("localhost", 8023);
-    server.hasConnectionFromClient();
-
-    server.sendCommandToClient(FakeTelnetServer::WILL, FakeTelnetServer::ECHO);
-    server.sendCommandToClient(FakeTelnetServer::WILL, FakeTelnetServer::SUPPRESS_GO_AHEAD);
-
-    server.hasReceivedCommand(FakeTelnetServer::DONT, FakeTelnetServer::ECHO);
-    server.hasReceivedCommand(FakeTelnetServer::DONT, FakeTelnetServer::SUPPRESS_GO_AHEAD);
+    client.readyRead();
 }
 
-void TelnetClientTest::doesnotAcknowledgeRequestForEnteredModes()
+TEST_F(ATelnetClient, acknowledgesNewEnvironOptionRequest)
 {
-    // RFC854 requires that we don't acknowledge
-    // requests to enter a mode we're already in
-    FakeTelnetServer server;
-    TelnetClient client;
+    TelnetConnectionMock connection;
+    TelnetClient client(&connection);
+    EXPECT_CALL(connection, readAll()).WillOnce(Return(optionCommand(TelnetCommand::DO, TelnetOption::NEW_ENVIRON)));
+    EXPECT_CALL(connection, write(optionCommand(TelnetCommand::WILL, TelnetOption::NEW_ENVIRON)));
 
-    server.listenOnTelnetPort();
-    client.connectToHost("localhost", 8023);
-    server.hasConnectionFromClient();
-
-    server.sendCommandToClient(FakeTelnetServer::DO, FakeTelnetServer::TERMINAL_TYPE);
-    server.hasReceivedCommand(FakeTelnetServer::WILL, FakeTelnetServer::TERMINAL_TYPE);
-
-    server.sendCommandToClient(FakeTelnetServer::DO, FakeTelnetServer::TERMINAL_TYPE);
-    server.sendCommandToClient(FakeTelnetServer::DO, FakeTelnetServer::NEW_ENVIRON);
-    server.hasReceivedCommand(FakeTelnetServer::WILL, FakeTelnetServer::NEW_ENVIRON);
+    client.readyRead();
 }
 
-void TelnetClientTest::onlySendsAnOptionCommandOnce()
+TEST_F(ATelnetClient, acknowledgesTerminalTypeOptionRequest)
 {
-    FakeTelnetServer server;
-    TelnetClient client;
+    TelnetConnectionMock connection;
+    TelnetClient client(&connection);
+    EXPECT_CALL(connection, readAll()).WillOnce(Return(optionCommand(TelnetCommand::DO, TelnetOption::TERMINAL_TYPE)));
+    EXPECT_CALL(connection, write(optionCommand(TelnetCommand::WILL, TelnetOption::TERMINAL_TYPE)));
 
-    server.listenOnTelnetPort();
-    client.connectToHost("localhost", 8023);
-    server.hasConnectionFromClient();
-
-    server.sendCommandToClient(FakeTelnetServer::WONT, FakeTelnetServer::ECHO);
-    server.hasReceivedCommand(FakeTelnetServer::DONT, FakeTelnetServer::ECHO);
-
-    server.sendCommandToClient(FakeTelnetServer::WONT, FakeTelnetServer::ECHO);
-    server.sendCommandToClient(FakeTelnetServer::DO, FakeTelnetServer::TERMINAL_TYPE);
-    server.hasReceivedCommand(FakeTelnetServer::WILL, FakeTelnetServer::TERMINAL_TYPE);
+    client.readyRead();
 }
 
-void TelnetClientTest::repliesToMultipleOptions()
+TEST_F(ATelnetClient, acknowledgesEndOfRecordOptionRequest)
 {
-    FakeTelnetServer server;
-    TelnetClient client;
+    TelnetConnectionMock connection;
+    TelnetClient client(&connection);
+    EXPECT_CALL(connection, readAll()).WillOnce(Return(optionCommand(TelnetCommand::DO, TelnetOption::END_OF_RECORD)));
+    EXPECT_CALL(connection, write(optionCommand(TelnetCommand::WILL, TelnetOption::END_OF_RECORD)));
 
-    server.listenOnTelnetPort();
-    client.connectToHost("localhost", 8023);
-    server.hasConnectionFromClient();
-
-    server.sendCommandToClient(FakeTelnetServer::DO, FakeTelnetServer::NEW_ENVIRON);
-    server.sendCommandToClient(FakeTelnetServer::DO, FakeTelnetServer::TERMINAL_TYPE);
-
-    server.hasReceivedCommand(FakeTelnetServer::WILL, FakeTelnetServer::NEW_ENVIRON);
-    server.hasReceivedCommand(FakeTelnetServer::WILL, FakeTelnetServer::TERMINAL_TYPE);
+    client.readyRead();
 }
 
-void TelnetClientTest::statesTerminalTypeOnRequest()
+TEST_F(ATelnetClient, statesTerminalTypeOnRequest)
 {
-    FakeTelnetServer server;
-    TelnetClient client;
+    TelnetConnectionMock connection;
+    TelnetClient client(&connection);
+    EXPECT_CALL(connection, readAll()).WillOnce(Return(subnegotiation(TelnetOption::TERMINAL_TYPE, SubnegotiationCommand::SEND, QByteArray())));
+    EXPECT_CALL(connection, write(subnegotiation(TelnetOption::TERMINAL_TYPE, SubnegotiationCommand::IS, QByteArray{"UNKNOWN"})));
 
-    server.listenOnTelnetPort();
-    client.connectToHost("localhost", 8023);
-    server.hasConnectionFromClient();
+    client.readyRead();
+}
 
-    server.sendSubnegotiationToClient(FakeTelnetServer::TERMINAL_TYPE, FakeTelnetServer::SEND);
-    server.hasReceivedTerminalType("UNKNOWN");
+TEST_F(ATelnetClient, statesSetTerminalTypeOnRequest)
+{
+    TelnetConnectionMock connection;
+    TelnetClient client(&connection);
+    EXPECT_CALL(connection, readAll()).WillOnce(Return(subnegotiation(TelnetOption::TERMINAL_TYPE, SubnegotiationCommand::SEND, QByteArray())));
+    EXPECT_CALL(connection, write(subnegotiation(TelnetOption::TERMINAL_TYPE, SubnegotiationCommand::IS, QByteArray{"IBM-3477-FC"})));
 
     client.setTerminalType("IBM-3477-FC");
-    server.sendSubnegotiationToClient(FakeTelnetServer::TERMINAL_TYPE, FakeTelnetServer::SEND);
-    server.hasReceivedTerminalType("IBM-3477-FC");
+    client.readyRead();
 }
-
-void TelnetClientTest::emitsDataThatIsNotACommand()
-{
-    FakeTelnetServer server;
-    TelnetClient client;
-
-    server.listenOnTelnetPort();
-    client.connectToHost("localhost", 8023);
-    server.hasConnectionFromClient();
-
-    QSignalSpy spy(&client, SIGNAL(dataReceived(QByteArray)));
-
-    QByteArray data;
-    QDataStream stream(&data, QIODevice::WriteOnly);
-    stream << 0x00 << 0x85 << 0x12 << 0xa0;
-    server.sendDataToClient(data);
-
-    QVERIFY(spy.wait());
-}
-
-QTEST_MAIN(TelnetClientTest)
-
-#include "telnetclienttest.moc"

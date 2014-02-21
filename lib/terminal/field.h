@@ -1,16 +1,16 @@
 /*
- * Copyright (c) 2013, Christian Loose
+ * Copyright (c) 2014, Christian Loose
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
  * are permitted provided that the following conditions are met:
  *
  * * Redistributions of source code must retain the above copyright notice, this
- *   list of conditions and the following disclaimer.
+ * list of conditions and the following disclaimer.
  *
  * * Redistributions in binary form must reproduce the above copyright notice, this
- *   list of conditions and the following disclaimer in the documentation and/or
- *   other materials provided with the distribution.
+ * list of conditions and the following disclaimer in the documentation and/or
+ * other materials provided with the distribution.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
  * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
@@ -23,23 +23,18 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#include "clearunitcommand.h"
-
-#include <QDebug>
-#include <QPainter>
+#ifndef Q5250_FIELD_H
+#define Q5250_FIELD_H
 
 namespace q5250 {
 
-ClearUnitCommand::ClearUnitCommand(const QRect &rect) :
-    widgetRect(rect)
+struct Field
 {
-}
-
-void ClearUnitCommand::execute(QPainter *p)
-{
-    qDebug() << "PAINT: CLEAR UNIT" << widgetRect;
-    p->setBackground(Qt::black);
-    p->eraseRect(widgetRect);
-}
+    unsigned short format;
+    unsigned char attribute;
+    unsigned short length;
+};
 
 } // namespace q5250
+
+#endif // Q5250_FIELD_H

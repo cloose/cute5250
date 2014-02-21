@@ -1,16 +1,16 @@
 /*
- * Copyright (c) 2013, Christian Loose
+ * Copyright (c) 2013-2014, Christian Loose
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
  * are permitted provided that the following conditions are met:
  *
  * * Redistributions of source code must retain the above copyright notice, this
- *   list of conditions and the following disclaimer.
+ * list of conditions and the following disclaimer.
  *
  * * Redistributions in binary form must reproduce the above copyright notice, this
- *   list of conditions and the following disclaimer in the documentation and/or
- *   other materials provided with the distribution.
+ * list of conditions and the following disclaimer in the documentation and/or
+ * other materials provided with the distribution.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
  * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
@@ -25,13 +25,10 @@
  */
 #include "generaldatastream.h"
 
-#include <QDebug>
 #include <QDataStream>
+#include <QScopedPointer>
 
 namespace q5250 {
-
-static const quint16 GDS_RECORD_TYPE = 0x12a0;
-static const qint64 GDS_HEADER_LENGTH = 9;
 
 class GeneralDataStream::Private
 {
@@ -41,54 +38,63 @@ public:
         quint16 recordLength;
         quint16 recordType;
         quint16 reservedBytes;
-        quint8  varHdrLen;
+        quint8 varHdrLen;
         quint16 flags;
-        quint8  opcode;
+        quint8 opcode;
     };
 
-    explicit Private(const QByteArray &data);
-    ~Private();
-
-    void readHeader();
-    bool atStart();
-
-    QDataStream *dataStream;
+    QScopedPointer<QDataStream> stream;
     Header header;
+    static const quint16 GdsRecordType{0x12a0};
+    static const qint64 GdsHeaderLength{10};
+
+    explicit Private(const QByteArray &data);
+    void readHeader();
+
+    bool isValid() const;
+    bool atStart() const;
+
+    qint64 currentPosition() const;
+    void seekToPosition(qint64 pos);
 };
 
 GeneralDataStream::Private::Private(const QByteArray &data) :
-    dataStream(new QDataStream(data))
+    stream(new QDataStream(data))
 {
     readHeader();
-
-    qDebug() << "---GDS HEADER---"
-             << "LEN" << QString::number(header.recordLength, 16)
-             << "SIZE" << QString::number(data.size(), 16)
-             << "TYPE" << QString::number(header.recordType, 16)
-             << "VARHDRLEN" << QString::number(header.varHdrLen, 16)
-             << "FLAGS" << QString::number(header.flags, 2)
-             << "OPCODE" << QString::number(header.opcode, 16);
-}
-
-GeneralDataStream::Private::~Private()
-{
-    delete dataStream;
 }
 
 void GeneralDataStream::Private::readHeader()
 {
-    *dataStream >> header.recordLength
-                >> header.recordType
-                >> header.reservedBytes
-                >> header.varHdrLen
-                >> header.flags
-                >> header.opcode;
+    *stream >> header.recordLength
+            >> header.recordType
+            >> header.reservedBytes
+            >> header.varHdrLen
+            >> header.flags
+            >> header.opcode;
 }
 
-bool GeneralDataStream::Private::atStart()
+bool GeneralDataStream::Private::isValid() const
 {
-    return dataStream->device()->pos() == GDS_HEADER_LENGTH + 1;
+    return header.recordLength == stream->device()->size() &&
+           header.recordType == GdsRecordType;
 }
+
+bool GeneralDataStream::Private::atStart() const
+{
+    return stream->device()->pos() == GdsHeaderLength;
+}
+
+qint64 GeneralDataStream::Private::currentPosition() const
+{
+    return stream->device()->pos();
+}
+
+void GeneralDataStream::Private::seekToPosition(qint64 pos)
+{
+    stream->device()->seek(pos);
+}
+
 
 GeneralDataStream::GeneralDataStream(const QByteArray &data) :
     d(new Private(data))
@@ -101,28 +107,27 @@ GeneralDataStream::~GeneralDataStream()
 
 bool GeneralDataStream::isValid() const
 {
-    return d->header.recordType == GDS_RECORD_TYPE;
+    return d->isValid();
 }
 
 bool GeneralDataStream::atEnd() const
 {
-    return d->dataStream->atEnd();
+    return d->stream->atEnd();
 }
 
-unsigned char GeneralDataStream::readByte() const
+unsigned char GeneralDataStream::readByte()
 {
     unsigned char byte;
-    *d->dataStream >> byte;
+    *d->stream >> byte;
     return byte;
 }
 
 void GeneralDataStream::seekToPreviousByte()
 {
-    if (d->atStart()) {
+    if (d->atStart())
         return;
-    }
 
-    d->dataStream->device()->seek(d->dataStream->device()->pos()-1);
+    d->seekToPosition(d->currentPosition()-1);
 }
 
 } // namespace q5250

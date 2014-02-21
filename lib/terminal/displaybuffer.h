@@ -1,16 +1,16 @@
 /*
- * Copyright (c) 2013, Christian Loose
+ * Copyright (c) 2014, Christian Loose
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
  * are permitted provided that the following conditions are met:
  *
  * * Redistributions of source code must retain the above copyright notice, this
- *   list of conditions and the following disclaimer.
+ * list of conditions and the following disclaimer.
  *
  * * Redistributions in binary form must reproduce the above copyright notice, this
- *   list of conditions and the following disclaimer in the documentation and/or
- *   other materials provided with the distribution.
+ * list of conditions and the following disclaimer in the documentation and/or
+ * other materials provided with the distribution.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
  * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
@@ -23,37 +23,32 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#ifndef Q5250_TERMINALEMULATION_H
-#define Q5250_TERMINALEMULATION_H
+#ifndef Q5250_DISPLAYBUFFER_H
+#define Q5250_DISPLAYBUFFER_H
 
 #include "q5250_global.h"
-
-#include <memory>
-
-#include <QObject>
+#include <QSize>
 
 namespace q5250 {
 
-class Q5250SHARED_EXPORT TerminalEmulation : public QObject
+struct Field;
+
+class DisplayBuffer
 {
-    Q_OBJECT
-
 public:
-    explicit TerminalEmulation(QObject *parent = 0);
-    ~TerminalEmulation();
+    virtual QSize size() const = 0;
+    virtual void setSize(unsigned char columns, unsigned char rows) = 0;
 
-Q_SIGNALS:
-    void clearUnit();
-    void setBufferAddress(unsigned char column, unsigned char row);
+    virtual void setBufferAddress(unsigned char column, unsigned char row) = 0;
 
-public Q_SLOTS:
-    void dataReceived(const QByteArray &data);
+    virtual unsigned char characterAt(unsigned char column, unsigned char row) const = 0;
+    virtual void setCharacter(unsigned char character) = 0;
+    virtual void repeatCharacterToAddress(unsigned char column, unsigned char row, unsigned char character) = 0;
 
-private:
-    class Private;
-    std::unique_ptr<Private> d;
+    virtual void clearFormatTable() = 0;
+    virtual void addField(const Field &field) = 0;
 };
 
 } // namespace q5250
 
-#endif // Q5250_TERMINALEMULATION_H
+#endif // Q5250_DISPLAYBUFFER_H

@@ -23,32 +23,28 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#ifndef Q5250_GENERALDATASTREAM_H
-#define Q5250_GENERALDATASTREAM_H
+#ifndef Q5250_TELNETCONNECTION_H
+#define Q5250_TELNETCONNECTION_H
 
 #include "q5250_global.h"
 
-#include <memory>
+#include <QByteArray>
 
 namespace q5250 {
 
-class Q5250SHARED_EXPORT GeneralDataStream
+class Q5250SHARED_EXPORT TelnetConnection
 {
 public:
-    explicit GeneralDataStream(const QByteArray &data);
-    ~GeneralDataStream();
+    virtual void connectToHost(const QString &hostName, quint16 port) = 0;
 
-    bool isValid() const;
-    bool atEnd() const;
+    virtual QByteArray readAll() = 0;
+    virtual void write(const QByteArray &data) = 0;
 
-    unsigned char readByte();
-    void seekToPreviousByte();
-
-private:
-    class Private;
-    std::unique_ptr<Private> d;
+signals:
+    virtual void connected() = 0;
+    virtual void readyRead() = 0;
 };
 
 } // namespace q5250
 
-#endif // Q5250_GENERALDATASTREAM_H
+#endif // Q5250_TELNETCONNECTION_H

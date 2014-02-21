@@ -23,32 +23,49 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#ifndef Q5250_GENERALDATASTREAM_H
-#define Q5250_GENERALDATASTREAM_H
+#ifndef Q5250_TELNETCLIENT_H
+#define Q5250_TELNETCLIENT_H
 
 #include "q5250_global.h"
+#include <QObject>
 
-#include <memory>
+#include "telnetcommand.h"
+#include "telnetoption.h"
+#include "telnetparser.h"
 
 namespace q5250 {
 
-class Q5250SHARED_EXPORT GeneralDataStream
+class TelnetConnection;
+
+class Q5250SHARED_EXPORT TelnetClient : public QObject
 {
+    Q_OBJECT
+
 public:
-    explicit GeneralDataStream(const QByteArray &data);
-    ~GeneralDataStream();
+    explicit TelnetClient(TelnetConnection *conn);
 
-    bool isValid() const;
-    bool atEnd() const;
+    void setTerminalType(const QString &type);
 
-    unsigned char readByte();
-    void seekToPreviousByte();
+    void readyRead();
+
+signals:
+    void dataReceived(const QByteArray &data);
+
+private slots:
+    void optionNegotiationReceived(const q5250::OptionNegotiation &optionNegotiation);
+    void subnegotiationReceived(const q5250::Subnegotiation &subnegotiation);
 
 private:
-    class Private;
-    std::unique_ptr<Private> d;
+    void sendCommand(TelnetCommand command, TelnetOption option);
+    void sendCommand(const QByteArray &command);
+    bool isOptionSupported(TelnetOption option);
+    TelnetCommand replyFor(TelnetCommand command, bool supported);
+
+    TelnetConnection *connection;
+    TelnetParser parser;
+    QString terminalType;
 };
 
 } // namespace q5250
 
-#endif // Q5250_GENERALDATASTREAM_H
+#endif // Q5250_TELNETCLIENT_H

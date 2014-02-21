@@ -1,29 +1,17 @@
-include_directories(${CMAKE_SOURCE_DIR}/lib)
-
-macro(create_test NAME)
-    add_executable(${NAME} ${NAME}.cpp)
-    target_link_libraries(${NAME} q5250)
-    qt5_use_modules(${NAME} Test)
-
-    add_test(NAME ${NAME} COMMAND ${NAME})
-endmacro(create_test)
-
 ### unit tests ###
 
-create_test(generaldatastreamtest)
-create_test(telnetcommandstest)
-create_test(telnetparsertest)
-create_test(terminalemulationtest)
-
-### telnet client unit test ###
-
-set(telnetclienttest_SRCS
-    faketelnetserver.cpp
+set(unittest_SRCS
+    main.cpp
+    generaldatastreamtest.cpp
     telnetclienttest.cpp
+    telnetparsertest.cpp
+    terminaldisplaybuffertest.cpp
+    terminalemulatortest.cpp
 )
 
-add_executable(telnetclienttest ${telnetclienttest_SRCS})
-target_link_libraries(telnetclienttest q5250)
-qt5_use_modules(telnetclienttest Network Test)
+add_executable(unittest ${unittest_SRCS})
+target_link_libraries(unittest pthread gmock gtest q5250)
+target_include_directories(unittest PRIVATE ${CMAKE_SOURCE_DIR}/lib)
+qt5_use_modules(unittest Core Test)
 
-add_test(NAME telnetclienttest COMMAND telnetclienttest)
+add_test(NAME unittest COMMAND unittest)

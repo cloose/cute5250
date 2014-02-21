@@ -1,158 +1,96 @@
-#include <QtTest>
+/*
+ * Copyright (c) 2013-2014, Christian Loose
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *
+ * * Redistributions of source code must retain the above copyright notice, this
+ * list of conditions and the following disclaimer.
+ *
+ * * Redistributions in binary form must reproduce the above copyright notice, this
+ * list of conditions and the following disclaimer in the documentation and/or
+ * other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
+ * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
+ * ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+#include <gmock/gmock.h>
+using namespace testing;
+
+#include <QByteArray>
 
 #include <generaldatastream.h>
-using q5250::GeneralDataStream;
+using namespace q5250;
 
-namespace QTest {
-
-template<>
-char *toString<uchar>(const uchar &value)
-{
-    QByteArray ba = "<";
-    ba += QByteArray::number(value);
-    ba += ">";
-    return qstrdup(ba.data());
-}
-
-}
-
-class GeneralDataStreamTest : public QObject
-{
-    Q_OBJECT
-
-private Q_SLOTS:
-    void copesWithEmptyByteArray();
-    void reportsAtEndIfContainsOnlyHeader();
-    void invalidIfRecordTypeWrong();
-    void skipsHeaderWhenReading();
-    void canSeekToPreviousByte();
-    void doesNotSeekToPreviousByteBeyondStartOfContent();
-};
-
-
-void GeneralDataStreamTest::copesWithEmptyByteArray()
+TEST(AGeneralDataStream, reportsAtEndIfEmpty)
 {
     QByteArray data;
     GeneralDataStream stream(data);
-
-    QVERIFY(stream.atEnd());
-    QCOMPARE(stream.readByte(), (unsigned char)0);
+    ASSERT_TRUE(stream.atEnd());
 }
 
-void GeneralDataStreamTest::reportsAtEndIfContainsOnlyHeader()
+TEST(AGeneralDataStream, isNotAtEndIfDataAvailable)
 {
-    QByteArray data;
-
-    QDataStream dataStream(&data, QIODevice::WriteOnly);
-    // GDS header record
-    dataStream << (quint16)0x000a; // record length
-    dataStream << (quint16)0x12a0; // record type
-    dataStream << (quint16)0x0000; // reserved bytes
-    dataStream << (quint8)0x04;    // variable header length
-    dataStream << (quint16)0x0000; // flags
-    dataStream << (quint8)0x03;    // opcode
-
+    const char gdsHeader[] { 0x00, 0x0b, 0x12, (char)0xa0, 0x00, 0x00, 0x04, 0x00, 0x00, 0x03, 0x04 };
+    QByteArray data = QByteArray::fromRawData(gdsHeader, 11);
     GeneralDataStream stream(data);
 
-    QVERIFY(stream.isValid());
-    QVERIFY(stream.atEnd());
-    QCOMPARE(stream.readByte(), (unsigned char)0);
+    ASSERT_FALSE(stream.atEnd());
 }
 
-void GeneralDataStreamTest::invalidIfRecordTypeWrong()
+TEST(AGeneralDataStream, isValidIfGdsHeaderRecordTypeAndLengthIsCorrect)
 {
-    QByteArray data;
+    const char gdsHeader[] { 0x00, 0x0a, 0x12, (char)0xa0, 0x00, 0x00, 0x04, 0x00, 0x00, 0x03 };
+    GeneralDataStream stream(QByteArray::fromRawData(gdsHeader, 10));
+    ASSERT_TRUE(stream.isValid());
+}
 
-    QDataStream dataStream(&data, QIODevice::WriteOnly);
-    // GDS header record
-    dataStream << (quint16)0x000c; // record length
-    dataStream << (quint16)0x9999; // record type
-    dataStream << (quint16)0x0000; // reserved bytes
-    dataStream << (quint8)0x04;    // variable header length
-    dataStream << (quint16)0x0000; // flags
-    dataStream << (quint8)0x03;    // opcode
-
-    // stream content (ESC,CU)
-    dataStream << (quint8)0x04 << (quint8)0x40;
-
+TEST(AGeneralDataStream, startsToReadAfterHeader)
+{
+    const char gdsHeader[] { 0x00, 0x0c, 0x12, (char)0xa0, 0x00, 0x00, 0x04, 0x00, 0x00, 0x03 };
+    QByteArray data = QByteArray::fromRawData(gdsHeader, 10);
+    data += 0x04;       // ESC
+    data += 0x40;       // CU
     GeneralDataStream stream(data);
 
-    QVERIFY(stream.isValid() == false);
+    ASSERT_THAT(stream.readByte(), Eq(0x04));
+    ASSERT_THAT(stream.readByte(), Eq(0x40));
 }
 
-void GeneralDataStreamTest::skipsHeaderWhenReading()
+TEST(AGeneralDataStream, canSeekToPreviousByte)
 {
-    QByteArray data;
-
-    QDataStream dataStream(&data, QIODevice::WriteOnly);
-    // GDS header record
-    dataStream << (quint16)0x000c; // record length
-    dataStream << (quint16)0x12a0; // record type
-    dataStream << (quint16)0x0000; // reserved bytes
-    dataStream << (quint8)0x04;    // variable header length
-    dataStream << (quint16)0x0000; // flags
-    dataStream << (quint8)0x03;    // opcode
-
-    // stream content (ESC,CU)
-    dataStream << (quint8)0x04 << (quint8)0x40;
-
-    GeneralDataStream stream(data);
-
-    QCOMPARE(stream.readByte(), (unsigned char)0x04);
-    QCOMPARE(stream.readByte(), (unsigned char)0x40);
-}
-
-void GeneralDataStreamTest::canSeekToPreviousByte()
-{
-    QByteArray data;
-
-    QDataStream dataStream(&data, QIODevice::WriteOnly);
-    // GDS header record
-    dataStream << (quint16)0x000c; // record length
-    dataStream << (quint16)0x12a0; // record type
-    dataStream << (quint16)0x0000; // reserved bytes
-    dataStream << (quint8)0x04;    // variable header length
-    dataStream << (quint16)0x0000; // flags
-    dataStream << (quint8)0x03;    // opcode
-
-    // stream content (ESC,CU)
-    dataStream << (quint8)0x04 << (quint8)0x40;
-
+    const char gdsHeader[] { 0x00, 0x0c, 0x12, (char)0xa0, 0x00, 0x00, 0x04, 0x00, 0x00, 0x03 };
+    QByteArray data = QByteArray::fromRawData(gdsHeader, 10);
+    data += 0x04;       // ESC
+    data += 0x40;       // CU
     GeneralDataStream stream(data);
 
     stream.readByte();
     stream.seekToPreviousByte();
 
-    QCOMPARE(stream.readByte(), (unsigned char)0x04);
-    QCOMPARE(stream.readByte(), (unsigned char)0x40);
+    ASSERT_THAT(stream.readByte(), Eq(0x04));
 }
 
-void GeneralDataStreamTest::doesNotSeekToPreviousByteBeyondStartOfContent()
+TEST(AGeneralDataStream, doesNotSeekToPreviousByteBeyondStartOfContent)
 {
-    QByteArray data;
-
-    QDataStream dataStream(&data, QIODevice::WriteOnly);
-    // GDS header record
-    dataStream << (quint16)0x000c; // record length
-    dataStream << (quint16)0x12a0; // record type
-    dataStream << (quint16)0x0000; // reserved bytes
-    dataStream << (quint8)0x04;    // variable header length
-    dataStream << (quint16)0x0000; // flags
-    dataStream << (quint8)0x03;    // opcode
-
-    // stream content (ESC,CU)
-    dataStream << (quint8)0x04 << (quint8)0x40;
-
+    const char gdsHeader[] { 0x00, 0x0c, 0x12, (char)0xa0, 0x00, 0x00, 0x04, 0x00, 0x00, 0x03 };
+    QByteArray data = QByteArray::fromRawData(gdsHeader, 10);
+    data += 0x04;       // ESC
+    data += 0x40;       // CU
     GeneralDataStream stream(data);
 
     stream.readByte();
     stream.seekToPreviousByte();
     stream.seekToPreviousByte();
 
-    QCOMPARE(stream.readByte(), (unsigned char)0x04);
-    QCOMPARE(stream.readByte(), (unsigned char)0x40);
+    ASSERT_THAT(stream.readByte(), Eq(0x04));
 }
-
-QTEST_APPLESS_MAIN(GeneralDataStreamTest)
-
-#include "generaldatastreamtest.moc"

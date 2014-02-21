@@ -1,16 +1,16 @@
 /*
- * Copyright (c) 2013, Christian Loose
+ * Copyright (c) 2013-2014, Christian Loose
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
  * are permitted provided that the following conditions are met:
  *
  * * Redistributions of source code must retain the above copyright notice, this
- *   list of conditions and the following disclaimer.
+ * list of conditions and the following disclaimer.
  *
  * * Redistributions in binary form must reproduce the above copyright notice, this
- *   list of conditions and the following disclaimer in the documentation and/or
- *   other materials provided with the distribution.
+ * list of conditions and the following disclaimer in the documentation and/or
+ * other materials provided with the distribution.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
  * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
@@ -23,30 +23,39 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#ifndef Q5250_TELNETCOMMANDS_H
-#define Q5250_TELNETCOMMANDS_H
+#include "tcpsockettelnetconnection.h"
 
-#include "q5250_global.h"
+#include <QTcpSocket>
 
 namespace q5250 {
 
-namespace Command {
+TcpSocketTelnetConnection::TcpSocketTelnetConnection(QObject *parent) :
+    QObject(parent),
+    socket(new QTcpSocket(this))
+{
+    connect(socket, &QTcpSocket::connected,
+            this, &TcpSocketTelnetConnection::connected);
+    connect(socket, &QTcpSocket::readyRead,
+            this, &TcpSocketTelnetConnection::readyRead);
+}
 
-enum Commands {
-    SE = 240,
-    SB = 250,
-    WILL = 251,
-    WONT = 252,
-    DO = 253,
-    DONT = 254,
-    IAC = 255       // Interpret as Command
-};
+TcpSocketTelnetConnection::~TcpSocketTelnetConnection()
+{
+}
 
-Q5250SHARED_EXPORT bool isInterpretAsCommand(unsigned char byte);
-Q5250SHARED_EXPORT bool isOptionCommand(unsigned char byte);
+void TcpSocketTelnetConnection::connectToHost(const QString &hostName, quint16 port)
+{
+    socket->connectToHost(hostName, port);
+}
 
-} // namespace Command
+QByteArray TcpSocketTelnetConnection::readAll()
+{
+    return socket->readAll();
+}
+
+void TcpSocketTelnetConnection::write(const QByteArray &data)
+{
+    socket->write(data);
+}
 
 } // namespace q5250
-
-#endif // Q5250_TELNETCOMMANDS_H

@@ -1,16 +1,16 @@
 /*
- * Copyright (c) 2013, Christian Loose
+ * Copyright (c) 2013-2014, Christian Loose
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
  * are permitted provided that the following conditions are met:
  *
  * * Redistributions of source code must retain the above copyright notice, this
- *   list of conditions and the following disclaimer.
+ * list of conditions and the following disclaimer.
  *
  * * Redistributions in binary form must reproduce the above copyright notice, this
- *   list of conditions and the following disclaimer in the documentation and/or
- *   other materials provided with the distribution.
+ * list of conditions and the following disclaimer in the documentation and/or
+ * other materials provided with the distribution.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
  * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
@@ -23,37 +23,25 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#ifndef Q5250_TERMINALWIDGET_H
-#define Q5250_TERMINALWIDGET_H
-
-#include "q5250_global.h"
-
-#include <memory>
-
-#include <QWidget>
+#ifndef Q5250_TELNETCOMMANDS_H
+#define Q5250_TELNETCOMMANDS_H
 
 namespace q5250 {
 
-class Q5250SHARED_EXPORT TerminalWidget : public QWidget
+enum class TelnetCommand : unsigned char
 {
-    Q_OBJECT
-
-public:
-    explicit TerminalWidget(QWidget *parent);
-    ~TerminalWidget();
-
-public Q_SLOTS:
-    void clearUnit();
-    void positionCursor(uint column, uint row);
-
-protected:
-    void paintEvent(QPaintEvent *event);
-
-private:
-    class Private;
-    std::unique_ptr<Private> d;
+    SE = 240,
+    NOP = 241,
+    SB = 250,
+    WILL = 251,
+    WONT = 252,
+    DO = 253,
+    DONT = 254,
+    IAC = 255
 };
 
 } // namespace q5250
 
-#endif // Q5250_TERMINALWIDGET_H
+Q_DECLARE_METATYPE(q5250::TelnetCommand);
+
+#endif // Q5250_TELNETCOMMANDS_H

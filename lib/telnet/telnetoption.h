@@ -1,16 +1,16 @@
 /*
- * Copyright (c) 2013, Christian Loose
+ * Copyright (c) 2013-2014, Christian Loose
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
  * are permitted provided that the following conditions are met:
  *
  * * Redistributions of source code must retain the above copyright notice, this
- *   list of conditions and the following disclaimer.
+ * list of conditions and the following disclaimer.
  *
  * * Redistributions in binary form must reproduce the above copyright notice, this
- *   list of conditions and the following disclaimer in the documentation and/or
- *   other materials provided with the distribution.
+ * list of conditions and the following disclaimer in the documentation and/or
+ * other materials provided with the distribution.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
  * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
@@ -23,33 +23,26 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#ifndef Q5250_TELNETPARSER_H
-#define Q5250_TELNETPARSER_H
-
-#include "q5250_global.h"
-#include <QObject>
+#ifndef Q5250_TELNETOPTION_H
+#define Q5250_TELNETOPTION_H
 
 namespace q5250 {
 
-class Q5250SHARED_EXPORT TelnetParser : public QObject
+enum class TelnetOption : unsigned char
 {
-    Q_OBJECT
-
-public:
-    explicit TelnetParser(QObject *parent = 0);
-
-    void parse(const QByteArray &buffer);
-
-Q_SIGNALS:
-    void dataReceived(const QByteArray &data);
-    void optionCommandReceived(uchar command, uchar option);
-    void subnegotationReceived(uchar option, uchar subnegotiationCommand);
-
-private:
-    int parseCommand(const QByteArray &buffer);
-    QByteArray replaceEscapedIACBytes(const QByteArray &data);
+    TRANSMIT_BINARY = 0,    // RFC856
+    ECHO = 1,               // RFC857
+    SUPPRESS_GO_AHEAD = 3,  // RFC858
+    STATUS = 5,             // RFC859
+    LOGOUT = 18,            // RFC727
+    TERMINAL_TYPE = 24,     // RFC1091
+    END_OF_RECORD = 25,     // RFC885
+    NAWS = 31,              // RFC1073
+    NEW_ENVIRON = 39        // RFC1572
 };
 
 } // namespace q5250
 
-#endif // Q5250_TELNETPARSER_H
+Q_DECLARE_METATYPE(q5250::TelnetOption);
+
+#endif // Q5250_TELNETOPTION_H

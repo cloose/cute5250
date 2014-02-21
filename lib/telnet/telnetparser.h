@@ -1,16 +1,16 @@
 /*
- * Copyright (c) 2013, Christian Loose
+ * Copyright (c) 2013-2014, Christian Loose
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
  * are permitted provided that the following conditions are met:
  *
  * * Redistributions of source code must retain the above copyright notice, this
- *   list of conditions and the following disclaimer.
+ * list of conditions and the following disclaimer.
  *
  * * Redistributions in binary form must reproduce the above copyright notice, this
- *   list of conditions and the following disclaimer in the documentation and/or
- *   other materials provided with the distribution.
+ * list of conditions and the following disclaimer in the documentation and/or
+ * other materials provided with the distribution.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
  * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
@@ -23,32 +23,59 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#ifndef Q5250_TELNETCLIENT_H
-#define Q5250_TELNETCLIENT_H
+#ifndef Q5250_TELNETPARSER_H
+#define Q5250_TELNETPARSER_H
 
 #include "q5250_global.h"
 
+#include <QObject>
+
 #include <memory>
 
-#include <QObject>
+#include "subnegotiationcommand.h"
+#include "telnetcommand.h"
+#include "telnetoption.h"
 
 namespace q5250 {
 
-class Q5250SHARED_EXPORT TelnetClient : public QObject
+struct Q5250SHARED_EXPORT OptionNegotiation
+{
+    TelnetCommand command;
+    TelnetOption option;
+
+    OptionNegotiation() {}
+    OptionNegotiation(TelnetCommand c, TelnetOption o) : command(c), option(o) {}
+};
+
+struct Q5250SHARED_EXPORT Subnegotiation
+{
+    TelnetOption option;
+    SubnegotiationCommand command;
+    QByteArray parameters;
+
+    Subnegotiation() {}
+    Subnegotiation(TelnetOption o, SubnegotiationCommand c, const QByteArray &p) :
+        option(o),
+        command(c),
+        parameters(p)
+    {
+    }
+};
+
+class Q5250SHARED_EXPORT TelnetParser : public QObject
 {
     Q_OBJECT
 
 public:
-    explicit TelnetClient(QObject *parent = 0);
-    ~TelnetClient();
+    explicit TelnetParser(QObject *parent = 0);
+    ~TelnetParser();
 
-    void setTerminalType(const QString &terminalType);
-    QString terminalType() const;
-
-    void connectToHost(const QString &hostName, quint16 port = 23);
+    void parse(const QByteArray &data);
 
 signals:
     void dataReceived(const QByteArray &data);
+    void optionNegotiationReceived(const q5250::OptionNegotiation &optionNegotiation);
+    void subnegotiationReceived(const q5250::Subnegotiation &subnegotiation);
 
 private:
     class Private;
@@ -57,4 +84,7 @@ private:
 
 } // namespace q5250
 
-#endif // Q5250_TELNETCLIENT_H
+Q_DECLARE_METATYPE(q5250::OptionNegotiation)
+Q_DECLARE_METATYPE(q5250::Subnegotiation)
+
+#endif // Q5250_TELNETPARSER_H

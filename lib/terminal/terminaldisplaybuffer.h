@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2014, Christian Loose
+ * Copyright (c) 2014, Christian Loose
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -23,32 +23,46 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#ifndef Q5250_GENERALDATASTREAM_H
-#define Q5250_GENERALDATASTREAM_H
+#ifndef Q5250_TERMINALDISPLAYBUFFER_H
+#define Q5250_TERMINALDISPLAYBUFFER_H
 
 #include "q5250_global.h"
+#include "displaybuffer.h"
 
-#include <memory>
+class QByteArray;
 
 namespace q5250 {
 
-class Q5250SHARED_EXPORT GeneralDataStream
+struct Field;
+
+class Q5250SHARED_EXPORT TerminalDisplayBuffer : public DisplayBuffer
 {
 public:
-    explicit GeneralDataStream(const QByteArray &data);
-    ~GeneralDataStream();
+    TerminalDisplayBuffer();
+    ~TerminalDisplayBuffer();
 
-    bool isValid() const;
-    bool atEnd() const;
+    QSize size() const;
+    void setSize(unsigned char columns, unsigned char rows);
 
-    unsigned char readByte();
-    void seekToPreviousByte();
+    void setBufferAddress(unsigned char column, unsigned char row);
+
+    unsigned char characterAt(unsigned char column, unsigned char row) const;
+    void setCharacter(unsigned char character);
+    void repeatCharacterToAddress(unsigned char column, unsigned char row, unsigned char character);
+
+    void clearFormatTable();
+    void addField(const Field &field);
 
 private:
-    class Private;
-    std::unique_ptr<Private> d;
+    unsigned int convertToAddress(unsigned char column, unsigned char row) const;
+    void increaseBufferAddress(unsigned char increment = 1);
+
+    unsigned char addressColumn;
+    unsigned char addressRow;
+    QSize bufferSize;
+    QByteArray *buffer;
 };
 
 } // namespace q5250
 
-#endif // Q5250_GENERALDATASTREAM_H
+#endif // Q5250_TERMINALDISPLAYBUFFER_H
