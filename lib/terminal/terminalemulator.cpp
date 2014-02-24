@@ -69,12 +69,13 @@ void TerminalEmulator::dataReceived(const QByteArray &data)
             case 0x40 /*CLEAR UNIT*/:
                 displayBuffer->setSize(80, 25);
                 displayBuffer->clearFormatTable();
+                qDeleteAll(fieldList);
                 break;
             case 0x52 /*READ MDT FIELDS*/:
                 {
-                    foreach (const Field field, fieldList) {
-                        if (!field.isBypassField()) {
-                            cursor.setPosition(field.startColumn, field.startRow);
+                    foreach (const Field *field, fieldList) {
+                        if (!field->isBypassField()) {
+                            cursor.setPosition(field->startColumn, field->startRow);
                             break;
                         }
                     }
@@ -146,6 +147,7 @@ void TerminalEmulator::keyPressed(int key, const QString &text)
         break;
     default:
         if (!text.isEmpty()) {
+
             QByteArray ebcdic = codec->fromUnicode(text);
             displayBuffer->setBufferAddress(cursor.column(), cursor.row());
             displayBuffer->setCharacter(ebcdic.at(0));
@@ -195,27 +197,27 @@ void TerminalEmulator::handleWriteToDisplayCommand(GeneralDataStream &stream)
             break;
         case 0x1d /*START OF FIELD*/:
             {
-                Field field;
+                Field *field = new Field();
 
                 unsigned char byte = stream.readByte();
                 if (byte & 0x40 /*is input field?*/) {
                     unsigned char ffw2 = stream.readByte();
-                    field.format = (byte << 8) | ffw2;
-                    field.attribute = stream.readByte();
+                    field->format = (byte << 8) | ffw2;
+                    field->attribute = stream.readByte();
                 } else {
-                    field.attribute = byte;
+                    field->attribute = byte;
                 }
 
                 unsigned char fieldLength1 = stream.readByte();
                 unsigned char fieldLength2 = stream.readByte();
-                field.length = (fieldLength1 << 8) | fieldLength2;
+                field->length = (fieldLength1 << 8) | fieldLength2;
 
-                qDebug() << "SF" << hex << showbase << field.format
-                                 << field.attribute
-                                 << dec << field.length;
+                qDebug() << "SF" << hex << showbase << field->format
+                                 << field->attribute
+                                 << dec << field->length;
                 displayBuffer->addField(field);
 
-                if (field.format > 0) {
+                if (field->format > 0) {
                     fieldList.append(field);
                 }
             }

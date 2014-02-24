@@ -51,7 +51,7 @@ public:
     void repeatCharacterToAddress(unsigned char column, unsigned char row, unsigned char character);
 
     void clearFormatTable();
-    void addField(Field &field);
+    void addField(Field *field);
 
 private:
     unsigned int convertToAddress(unsigned char column, unsigned char row) const;

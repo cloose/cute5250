@@ -93,14 +93,14 @@ void TerminalDisplayBuffer::clearFormatTable()
 {
 }
 
-void TerminalDisplayBuffer::addField(Field &field)
+void TerminalDisplayBuffer::addField(Field *field)
 {
-    setCharacter(field.attribute);
+    setCharacter(field->attribute);
 
-    field.startColumn = addressColumn;
-    field.startRow    = addressRow;
+    field->startColumn = addressColumn;
+    field->startRow    = addressRow;
 
-    increaseBufferAddress(field.length);
+    increaseBufferAddress(field->length);
 
     // FIXME: replace with enum
     setCharacter(0x20);

@@ -30,13 +30,13 @@
 #include <QObject>
 
 #include "cursor.h"
-#include "field.h"
 
 class QTextCodec;
 
 namespace q5250 {
 
 class DisplayBuffer;
+class Field;
 class GeneralDataStream;
 class TerminalDisplay;
 
@@ -64,7 +64,7 @@ private:
     DisplayBuffer *displayBuffer;
     TerminalDisplay *terminalDisplay;
     QTextCodec *codec;
-    QList<Field> fieldList;
+    QList<Field*> fieldList;
     Cursor cursor;
 };
 

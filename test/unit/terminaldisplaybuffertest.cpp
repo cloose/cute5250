@@ -100,7 +100,7 @@ TEST_F(ATerminalDisplayBuffer, writesAttributesOfOutputField)
     displayBuffer->setBufferAddress(startColumn, startRow);
     q5250::Field outputField = { .format = 0, .attribute = UnderlineAttribute, .length = fieldLength };
 
-    displayBuffer->addField(outputField);
+    displayBuffer->addField(&outputField);
 
     ASSERT_THAT(displayBuffer->characterAt(startColumn, startRow), Eq(UnderlineAttribute));
     ASSERT_THAT(displayBuffer->characterAt(endFieldColumn+1, startRow), Eq(NormalAttribute));
@@ -114,7 +114,7 @@ TEST_F(ATerminalDisplayBuffer, setsStartPositionOfFieldOnAddField)
     displayBuffer->setBufferAddress(startColumn, startRow);
     q5250::Field outputField = { .format = 0, .attribute = UnderlineAttribute, .length = fieldLength };
 
-    displayBuffer->addField(outputField);
+    displayBuffer->addField(&outputField);
 
     ASSERT_THAT(outputField.startColumn, Eq(startColumn+1));
     ASSERT_THAT(outputField.startRow, Eq(startRow));

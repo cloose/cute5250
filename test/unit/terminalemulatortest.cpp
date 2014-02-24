@@ -46,7 +46,7 @@ public:
     MOCK_METHOD1(setCharacter, void(unsigned char));
     MOCK_METHOD3(repeatCharacterToAddress, void(unsigned char, unsigned char, unsigned char));
     MOCK_METHOD0(clearFormatTable, void());
-    MOCK_METHOD1(addField, void(q5250::Field&));
+    MOCK_METHOD1(addField, void(q5250::Field*));
 };
 
 class TerminalDisplayMock : public TerminalDisplay
@@ -272,7 +272,7 @@ TEST_F(ATerminalEmulator, addsOutputFieldToDisplayBuffer)
     const QByteArray data = createWriteToDisplayCommandWithOrderLength(4) + QByteArray::fromRawData(streamData, 4);
     q5250::Field outputField = { .format = 0, .attribute = GreenUnderlineAttribute, .length = fieldLength };
 
-    EXPECT_CALL(displayBuffer, addField(outputField));
+    EXPECT_CALL(displayBuffer, addField(Pointee(outputField)));
 
     terminal.dataReceived(data);
 }
@@ -284,7 +284,7 @@ TEST_F(ATerminalEmulator, addsInputFieldWithoutControlWordsToDisplayBuffer)
     const QByteArray data = createWriteToDisplayCommandWithOrderLength(6) + QByteArray::fromRawData(streamData, 6);
     q5250::Field inputField = { .format = 0x4000, .attribute = GreenUnderlineAttribute, .length = fieldLength };
 
-    EXPECT_CALL(displayBuffer, addField(inputField));
+    EXPECT_CALL(displayBuffer, addField(Pointee(inputField)));
 
     terminal.dataReceived(data);
 }
