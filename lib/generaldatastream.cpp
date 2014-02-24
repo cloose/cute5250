@@ -25,6 +25,7 @@
  */
 #include "generaldatastream.h"
 
+#include <QDebug>
 #include <QDataStream>
 #include <QScopedPointer>
 
@@ -62,6 +63,14 @@ GeneralDataStream::Private::Private(const QByteArray &data) :
     stream(new QDataStream(data))
 {
     readHeader();
+
+//    qDebug() << "---GDS HEADER---"
+//             << "LEN" << QString::number(header.recordLength, 16)
+//             << "SIZE" << QString::number(data.size(), 16)
+//             << "TYPE" << QString::number(header.recordType, 16)
+//             << "VARHDRLEN" << QString::number(header.varHdrLen, 16)
+//             << "FLAGS" << QString::number(header.flags, 2)
+//             << "OPCODE" << QString::number(header.opcode, 16);
 }
 
 void GeneralDataStream::Private::readHeader()

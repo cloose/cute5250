@@ -52,6 +52,7 @@ public:
 
 signals:
     void updateFinished();
+    void sendData(const QByteArray &data);
 
 public slots:
     void dataReceived(const QByteArray &data);

@@ -26,6 +26,8 @@
 #ifndef Q5250_FIELD_H
 #define Q5250_FIELD_H
 
+#include <QByteArray>
+
 namespace q5250 {
 
 struct Field
@@ -37,7 +39,12 @@ struct Field
     unsigned char startColumn;
     unsigned char startRow;
 
+    QByteArray content;
+
     bool isBypassField() const;
+
+    void setLength(unsigned short length);
+    void setContent(unsigned char column, unsigned char row, const QByteArray& input);
 };
 
 } // namespace q5250

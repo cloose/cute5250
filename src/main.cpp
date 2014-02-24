@@ -237,6 +237,8 @@ Main::Main(QObject *parent) :
             client, &TelnetClient::readyRead);
     connect(client, &TelnetClient::dataReceived,
             terminal, &TerminalEmulator::dataReceived);
+    connect(terminal, &TerminalEmulator::sendData,
+            client, &TelnetClient::sendData);
     connect(display, &TerminalDisplayWidget::sizeChanged,
             terminal, &TerminalEmulator::update);
     connect(display, &TerminalDisplayWidget::keyPressed,

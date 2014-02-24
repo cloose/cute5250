@@ -32,4 +32,19 @@ bool Field::isBypassField() const
     return format & 0x2000;
 }
 
+void Field::setLength(unsigned short length)
+{
+    content.fill('\x40', length);
+    this->length = length;
+}
+
+void Field::setContent(unsigned char column, unsigned char row, const QByteArray &input)
+{
+    unsigned char pos = column - startColumn;
+    content[pos] = input.at(0);
+
+    // mark as modified
+    format |= 0x800;
+}
+
 } // namespace q5250

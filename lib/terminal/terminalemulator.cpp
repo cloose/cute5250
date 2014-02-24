@@ -26,6 +26,7 @@
 #include "terminalemulator.h"
 
 #include <QDebug>
+#include <QDataStream>
 #include <QEvent>
 #include <QTextCodec>
 
@@ -134,6 +135,8 @@ void TerminalEmulator::update()
 
 void TerminalEmulator::keyPressed(int key, const QString &text)
 {
+    static const unsigned short HEADER_SIZE = 10;
+
     qDebug() << "KEY PRESSED" << key << text << cursor.column() << cursor.row();
 
     switch (key) {
@@ -149,12 +152,50 @@ void TerminalEmulator::keyPressed(int key, const QString &text)
     case Qt::Key_Right:
         cursor.moveRight();
         break;
+    case Qt::Key_Return:
+        {
+            QByteArray buffer;
+            QDataStream out(&buffer, QIODevice::WriteOnly);
+
+            out << (quint8)cursor.row() << (quint8)cursor.column() << (quint8)0xf1 /*AID*/;
+
+            foreach (Field *field, fieldList) {
+                qDebug() << codec->toUnicode(field->content);
+                if (field->format & 0x800 /*is modified?*/) {
+                    out << (quint8)0x11 /*SBA*/
+                        << (quint8)field->startRow
+                        << (quint8)field->startColumn;
+
+                    for (int i = 0; i < field->content.size(); ++i) {
+                        out << (quint8)field->content.at(i);
+                    }
+                }
+            }
+
+            quint16 length = HEADER_SIZE + buffer.size();
+
+            QByteArray gdsData;
+            QDataStream gds(&gdsData, QIODevice::WriteOnly);
+
+            // write GDS header (see RFC 1205 section 3)
+            gds << length;              // length
+            gds << (quint16)0x12a0;     // record type GDS
+            gds << (quint16)0x0000;     // reserved
+            gds << (quint8)0x04;        // variable header length
+            gds << (quint16)0x0000;     // flags
+            gds << (quint8)0x00;        // opcode
+
+            gdsData.append(buffer);
+
+            emit sendData(gdsData);
+        }
+        break;
     default:
         if (!text.isEmpty()) {
             unsigned address = cursor.row() * displayBuffer->size().width() + cursor.column();
 
-            const Field *currentField = 0;
-            foreach (const Field *field, fieldList) {
+            Field *currentField = 0;
+            foreach (Field *field, fieldList) {
                 unsigned startFieldAddress = field->startRow * displayBuffer->size().width() + field->startColumn;
                 unsigned endFieldAddress = startFieldAddress + field->length - 1;
                 if (address >= startFieldAddress && address <= endFieldAddress) {
@@ -167,6 +208,7 @@ void TerminalEmulator::keyPressed(int key, const QString &text)
                 QByteArray ebcdic = codec->fromUnicode(text);
                 displayBuffer->setBufferAddress(cursor.column(), cursor.row());
                 displayBuffer->setCharacter(ebcdic.at(0));
+                currentField->setContent(cursor.column(), cursor.row(), ebcdic);
                 cursor.moveRight();
             }
         }
@@ -227,7 +269,7 @@ void TerminalEmulator::handleWriteToDisplayCommand(GeneralDataStream &stream)
 
                 unsigned char fieldLength1 = stream.readByte();
                 unsigned char fieldLength2 = stream.readByte();
-                field->length = (fieldLength1 << 8) | fieldLength2;
+                field->setLength((fieldLength1 << 8) | fieldLength2);
 
                 qDebug() << "SF" << hex << showbase << field->format
                                  << field->attribute

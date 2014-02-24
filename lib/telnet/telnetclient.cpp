@@ -26,8 +26,19 @@
 #include "telnetclient.h"
 
 #include "telnetconnection.h"
+#include <QDebug>
 
 namespace q5250 {
+
+void OutputData(const QByteArray &data, const QString &who = QStringLiteral("--- SERVER ---"))
+{
+    qDebug() << who;
+    for (int i = 0; i < data.size(); ++i) {
+        qDebug() << data[i]
+                 << hex << showbase << uchar(data[i])
+                 << QString::number(uchar(data[i]));
+    }
+}
 
 TelnetClient::TelnetClient(TelnetConnection *conn) :
     connection(conn),
@@ -49,7 +60,19 @@ void TelnetClient::setTerminalType(const QString &type)
 void TelnetClient::readyRead()
 {
     QByteArray buffer = connection->readAll();
+    OutputData(buffer);
     parser.parse(buffer);
+}
+
+void TelnetClient::sendData(const QByteArray &data)
+{
+    qDebug() << Q_FUNC_INFO;
+
+    QByteArray ba(data);
+    ba.append(0xff);    // IAC
+    ba.append(0xef);    // EOR
+
+    connection->write(ba);
 }
 
 void TelnetClient::optionNegotiationReceived(const OptionNegotiation &optionNegotiation)
@@ -87,6 +110,7 @@ void TelnetClient::sendCommand(TelnetCommand command, TelnetOption option)
 
 void TelnetClient::sendCommand(const QByteArray &command)
 {
+    OutputData(command, "--- CLIENT ---");
     connection->write(command);
 }
 
