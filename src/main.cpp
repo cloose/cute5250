@@ -76,8 +76,10 @@ class TerminalDisplayWidget : public QWidget, public TerminalDisplay
 public:
     TerminalDisplayWidget();
 
+    void clear();
     void displayText(unsigned char column, unsigned char row, const QString &text);
     void displayAttribute(unsigned char attribute);
+    void displayCursor(unsigned char column, unsigned char row);
 
 signals:
     void sizeChanged();
@@ -109,6 +111,11 @@ TerminalDisplayWidget::TerminalDisplayWidget() :
     painter->setFont(font);
 
     painter->setPen(Qt::green);
+}
+
+void TerminalDisplayWidget::clear()
+{
+    screen->fill(Qt::black);
 }
 
 void TerminalDisplayWidget::displayText(unsigned char column, unsigned char row, const QString &text)
@@ -143,6 +150,21 @@ void TerminalDisplayWidget::displayAttribute(unsigned char attribute)
     }
 
     lastAttribute = attribute;
+}
+
+void TerminalDisplayWidget::displayCursor(unsigned char column, unsigned char row)
+{
+    qDebug() << Q_FUNC_INFO << column << row;
+
+    QFontMetrics fm = painter->fontMetrics();
+    unsigned int x = column * fm.width('X');
+    unsigned int y = row * fm.height();
+
+    painter->save();
+    painter->setPen(Qt::white);
+    painter->setBrush(Qt::white);
+    painter->drawRect(x, y+3, fm.width('_'), 1);
+    painter->restore();
 }
 
 void TerminalDisplayWidget::paintEvent(QPaintEvent *event)

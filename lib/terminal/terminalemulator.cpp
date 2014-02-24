@@ -101,6 +101,8 @@ void TerminalEmulator::update()
     int bufferWidth = displayBuffer->size().width();
     int bufferHeight = displayBuffer->size().height();
 
+    terminalDisplay->clear();
+
     for (int row = 0; row < bufferHeight; ++row) {
         for (int column = 0; column < bufferWidth; ++column) {
             unsigned char character = displayBuffer->characterAt(column+1, row+1);
@@ -124,6 +126,8 @@ void TerminalEmulator::update()
             text.clear();
         }
     }
+
+    terminalDisplay->displayCursor(cursor.column(), cursor.row());
 
     emit updateFinished();
 }
