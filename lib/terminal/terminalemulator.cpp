@@ -147,11 +147,24 @@ void TerminalEmulator::keyPressed(int key, const QString &text)
         break;
     default:
         if (!text.isEmpty()) {
+            unsigned address = cursor.row() * displayBuffer->size().width() + cursor.column();
 
-            QByteArray ebcdic = codec->fromUnicode(text);
-            displayBuffer->setBufferAddress(cursor.column(), cursor.row());
-            displayBuffer->setCharacter(ebcdic.at(0));
-            cursor.moveRight();
+            const Field *currentField = 0;
+            foreach (const Field *field, fieldList) {
+                unsigned startFieldAddress = field->startRow * displayBuffer->size().width() + field->startColumn;
+                unsigned endFieldAddress = startFieldAddress + field->length - 1;
+                if (address >= startFieldAddress && address <= endFieldAddress) {
+                    currentField = field;
+                    break;
+                }
+            }
+
+            if (currentField && !currentField->isBypassField()) {
+                QByteArray ebcdic = codec->fromUnicode(text);
+                displayBuffer->setBufferAddress(cursor.column(), cursor.row());
+                displayBuffer->setCharacter(ebcdic.at(0));
+                cursor.moveRight();
+            }
         }
         break;
     }

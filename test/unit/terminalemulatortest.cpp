@@ -304,7 +304,7 @@ TEST_F(ATerminalEmulator, emitsUpdateFinishedAfterUpdate)
     ASSERT_THAT(spy.count(), Eq(1));
 }
 
-TEST_F(ATerminalEmulator, addsPressedTextKeyToDisplayBuffer)
+TEST_F(ATerminalEmulator, DISABLED_addsPressedTextKeyToDisplayBuffer)
 {
     const QString arbitraryTextKey("A");
     const QByteArray ebcdicText = textAsEbcdic(arbitraryTextKey);
