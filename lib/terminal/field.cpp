@@ -27,7 +27,13 @@
 
 namespace q5250 {
 
+static const unsigned short INPUT_FIELD_MASK = 0xc000;  // Bit 14-15
 static const unsigned short BYPASS_FIELD_MASK = 0x2000; // Bit 13
+
+bool Field::isInputField() const
+{
+    return (format & INPUT_FIELD_MASK) == 0x4000;
+}
 
 bool Field::isBypassField() const
 {

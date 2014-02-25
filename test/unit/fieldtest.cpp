@@ -28,7 +28,21 @@ using namespace testing;
 
 #include <terminal/field.h>
 
-TEST(AField, reportsIsBypassFieldIfBitSet)
+TEST(AField, reportsIsInputFieldIfMostSignificantBitsEqual01)
+{
+    q5250::Field field;
+
+    field.format = 0x0000;
+    ASSERT_FALSE(field.isInputField());
+
+    field.format = 0xc000;
+    ASSERT_FALSE(field.isInputField());
+
+    field.format = 0x4000;
+    ASSERT_TRUE(field.isInputField());
+}
+
+TEST(AField, reportsIsBypassFieldIfBit13Set)
 {
     q5250::Field field;
 
