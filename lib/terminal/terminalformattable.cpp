@@ -25,10 +25,13 @@
  */
 #include "terminalformattable.h"
 
+#include "field.h"
+
 namespace q5250 {
 
 void TerminalFormatTable::clear()
 {
+    qDeleteAll(fieldList);
     fieldList.clear();
 }
 
