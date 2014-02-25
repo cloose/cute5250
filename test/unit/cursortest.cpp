@@ -69,6 +69,17 @@ TEST_F(ACursor, addsOneToRowOnMoveDown)
     ASSERT_THAT(cursor.row(), Eq(2));
 }
 
+TEST_F(ACursor, subtractsOneFromColumnOnMoveLeft)
+{
+    const unsigned char column = 5;
+    const unsigned char row = 5;
+    cursor.setPosition(column, row);
+
+    cursor.moveLeft();
+
+    ASSERT_THAT(cursor.column(), Eq(column-1));
+}
+
 TEST_F(ACursor, addsOneToColumnOnMoveRight)
 {
     cursor.moveRight();

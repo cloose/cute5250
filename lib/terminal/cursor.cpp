@@ -49,6 +49,11 @@ void Cursor::moveDown()
     cursorRow += 1;
 }
 
+void Cursor::moveLeft()
+{
+    cursorColumn -= 1;
+}
+
 void Cursor::moveRight()
 {
     cursorColumn += 1;

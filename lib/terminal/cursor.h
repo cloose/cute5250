@@ -41,6 +41,7 @@ public:
 
     void moveUp();
     void moveDown();
+    void moveLeft();
     void moveRight();
 
 private:
