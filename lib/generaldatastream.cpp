@@ -122,6 +122,13 @@ unsigned char GeneralDataStream::readByte()
     return byte;
 }
 
+unsigned short GeneralDataStream::readWord()
+{
+    unsigned char highByte, lowByte;
+    *d->stream >> highByte >> lowByte;
+    return (highByte << 8) | lowByte;
+}
+
 void GeneralDataStream::seekToPreviousByte()
 {
     if (d->atStart())

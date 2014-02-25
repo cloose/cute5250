@@ -42,6 +42,7 @@ public:
     bool atEnd() const;
 
     unsigned char readByte();
+    unsigned short readWord();
     void seekToPreviousByte();
 
 private:
