@@ -5,6 +5,7 @@ set(q5250_SRCS
     telnet/tcpsockettelnetconnection.cpp
     telnet/telnetclient.cpp
     telnet/telnetparser.cpp
+    terminal/cursor.cpp
     terminal/field.cpp
     terminal/terminaldisplaybuffer.cpp
     terminal/terminalemulator.cpp
