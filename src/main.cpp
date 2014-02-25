@@ -79,6 +79,7 @@ public:
 
     void displayText(unsigned char column, unsigned char row, const QString &text);
     void displayAttribute(unsigned char attribute);
+    void displayCursor(unsigned char column, unsigned char row);
 
 signals:
     void sizeChanged();
@@ -144,6 +145,21 @@ void TerminalDisplayWidget::displayAttribute(unsigned char attribute)
     }
 
     lastAttribute = attribute;
+}
+
+void TerminalDisplayWidget::displayCursor(unsigned char column, unsigned char row)
+{
+    qDebug() << Q_FUNC_INFO << column << row;
+
+    QFontMetrics fm = painter->fontMetrics();
+    unsigned int x = column * fm.width('X');
+    unsigned int y = row * fm.height();
+
+    painter->save();
+    painter->setPen(Qt::white);
+    painter->setBrush(Qt::white);
+    painter->drawRect(x, y+3, fm.width('_'), 1);
+    painter->restore();
 }
 
 void TerminalDisplayWidget::paintEvent(QPaintEvent *event)

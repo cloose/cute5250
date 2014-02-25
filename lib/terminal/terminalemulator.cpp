@@ -25,6 +25,7 @@
  */
 #include "terminalemulator.h"
 
+#include <QDebug>
 #include <QEvent>
 #include <QTextCodec>
 
@@ -74,6 +75,7 @@ void TerminalEmulator::dataReceived(const QByteArray &data)
             case 0x40 /*CLEAR UNIT*/:
                 displayBuffer->setSize(80, 25);
                 formatTable->clear();
+                cursor.setPosition(1, 1);
                 break;
             }
         }
@@ -116,6 +118,8 @@ void TerminalEmulator::update()
         }
     }
 
+    terminalDisplay->displayCursor(cursor.column(), cursor.row());
+
     emit updateFinished();
 }
 
@@ -129,8 +133,10 @@ void TerminalEmulator::keyPressed(int key, const QString &text)
 
 void TerminalEmulator::handleWriteToDisplayCommand(GeneralDataStream &stream)
 {
-    stream.readByte();
-    stream.readByte();
+    unsigned char cc1 = stream.readByte();
+    unsigned char cc2 = stream.readByte();
+
+    qDebug() << bin << showbase << cc1 << cc2;
 
     while (!stream.atEnd()) {
         unsigned char byte = stream.readByte();

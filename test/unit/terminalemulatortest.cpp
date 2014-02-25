@@ -62,6 +62,7 @@ class TerminalDisplayMock : public TerminalDisplay
 public:
     MOCK_METHOD3(displayText, void(unsigned char, unsigned char, const QString&));
     MOCK_METHOD1(displayAttribute, void(unsigned char));
+    MOCK_METHOD2(displayCursor, void(unsigned char, unsigned char));
 };
 
 class ATerminalEmulator : public Test
@@ -336,6 +337,13 @@ TEST_F(ATerminalEmulator, emitsUpdateFinishedAfterUpdate)
     terminal.update();
 
     ASSERT_THAT(spy.count(), Eq(1));
+}
+
+TEST_F(ATerminalEmulator, displayCursorOnUpdate)
+{
+    EXPECT_CALL(terminalDisplay, displayCursor(1, 1));
+
+    terminal.update();
 }
 
 TEST_F(ATerminalEmulator, addsPressedTextKeyToDisplayBuffer)

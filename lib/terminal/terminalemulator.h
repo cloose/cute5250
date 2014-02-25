@@ -29,6 +29,8 @@
 #include "q5250_global.h"
 #include <QObject>
 
+#include "cursor.h"
+
 class QTextCodec;
 
 namespace q5250 {
@@ -64,6 +66,7 @@ private:
     TerminalDisplay *terminalDisplay;
     FormatTable *formatTable;
     QTextCodec *codec;
+    Cursor cursor;
 };
 
 } // namespace q5250
