@@ -52,14 +52,25 @@ TEST_F(ACursor, returnsSetColumnRowPosition)
     ASSERT_THAT(cursor.row(), Eq(row));
 }
 
-TEST_F(ACursor, addsOneToColumnOnMoveRight)
+TEST_F(ACursor, subtractsOneFromRowOnMoveUp)
 {
-    cursor.moveRight();
-    ASSERT_THAT(cursor.column(), Eq(2));
+    const unsigned char column = 5;
+    const unsigned char row = 5;
+    cursor.setPosition(column, row);
+
+    cursor.moveUp();
+
+    ASSERT_THAT(cursor.row(), Eq(row-1));
 }
 
 TEST_F(ACursor, addsOneToRowOnMoveDown)
 {
     cursor.moveDown();
     ASSERT_THAT(cursor.row(), Eq(2));
+}
+
+TEST_F(ACursor, addsOneToColumnOnMoveRight)
+{
+    cursor.moveRight();
+    ASSERT_THAT(cursor.column(), Eq(2));
 }
