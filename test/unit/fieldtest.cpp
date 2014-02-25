@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, Christian Loose
+ * Copyright (c) 2013-2014, Christian Loose
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -23,25 +23,18 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#ifndef Q5250_FIELD_H
-#define Q5250_FIELD_H
+#include <gmock/gmock.h>
+using namespace testing;
 
-#include "q5250_global.h"
+#include <terminal/field.h>
 
-namespace q5250 {
-
-struct Q5250SHARED_EXPORT Field
+TEST(AField, reportsIsBypassFieldIfBitSet)
 {
-    unsigned short format;
-    unsigned char attribute;
-    unsigned short length;
+    q5250::Field field;
 
-    unsigned char startColumn;
-    unsigned char startRow;
+    field.format = 0x0000;
+    ASSERT_FALSE(field.isBypassField());
 
-    bool isBypassField() const;
-};
-
-} // namespace q5250
-
-#endif // Q5250_FIELD_H
+    field.format = 0x2000;
+    ASSERT_TRUE(field.isBypassField());
+}

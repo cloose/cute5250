@@ -23,25 +23,15 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#ifndef Q5250_FIELD_H
-#define Q5250_FIELD_H
-
-#include "q5250_global.h"
+#include "field.h"
 
 namespace q5250 {
 
-struct Q5250SHARED_EXPORT Field
+static const unsigned short BYPASS_FIELD_MASK = 0x2000; // Bit 13
+
+bool Field::isBypassField() const
 {
-    unsigned short format;
-    unsigned char attribute;
-    unsigned short length;
-
-    unsigned char startColumn;
-    unsigned char startRow;
-
-    bool isBypassField() const;
-};
+    return format & BYPASS_FIELD_MASK;
+}
 
 } // namespace q5250
-
-#endif // Q5250_FIELD_H

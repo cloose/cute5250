@@ -2,6 +2,7 @@
 
 set(unittest_SRCS
     main.cpp
+    fieldtest.cpp
     generaldatastreamtest.cpp
     telnetclienttest.cpp
     telnetparsertest.cpp
