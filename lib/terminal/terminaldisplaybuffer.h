@@ -50,7 +50,6 @@ public:
     void setCharacter(unsigned char character);
     void repeatCharacterToAddress(unsigned char column, unsigned char row, unsigned char character);
 
-    void clearFormatTable();
     void addField(Field &field);
 
 private:

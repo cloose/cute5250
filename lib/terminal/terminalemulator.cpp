@@ -30,6 +30,7 @@
 
 #include "displaybuffer.h"
 #include "field.h"
+#include "formattable.h"
 #include "generaldatastream.h"
 #include "terminaldisplay.h"
 
@@ -44,6 +45,11 @@ TerminalEmulator::TerminalEmulator(QObject *parent) :
 void TerminalEmulator::setDisplayBuffer(DisplayBuffer *buffer)
 {
     displayBuffer = buffer;
+}
+
+void TerminalEmulator::setFormatTable(FormatTable *table)
+{
+    formatTable = table;
 }
 
 void TerminalEmulator::setTerminalDisplay(TerminalDisplay *display)
@@ -67,7 +73,7 @@ void TerminalEmulator::dataReceived(const QByteArray &data)
                 break;
             case 0x40 /*CLEAR UNIT*/:
                 displayBuffer->setSize(80, 25);
-                displayBuffer->clearFormatTable();
+                formatTable->clear();
                 break;
             }
         }
@@ -133,7 +139,7 @@ void TerminalEmulator::handleWriteToDisplayCommand(GeneralDataStream &stream)
         case 0x01 /*START OF HEADER*/:
             {
                 unsigned dataLength = stream.readByte();
-                displayBuffer->clearFormatTable();
+                formatTable->clear();
             }
             break;
         case 0x02 /*REPEAT TO ADDRESS*/:

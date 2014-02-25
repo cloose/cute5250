@@ -7,6 +7,7 @@ set(unittest_SRCS
     telnetparsertest.cpp
     terminaldisplaybuffertest.cpp
     terminalemulatortest.cpp
+    terminalformattabletest.cpp
 )
 
 add_executable(unittest ${unittest_SRCS})

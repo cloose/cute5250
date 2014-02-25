@@ -89,10 +89,6 @@ void TerminalDisplayBuffer::repeatCharacterToAddress(unsigned char column, unsig
     }
 }
 
-void TerminalDisplayBuffer::clearFormatTable()
-{
-}
-
 void TerminalDisplayBuffer::addField(Field &field)
 {
     setCharacter(field.attribute);

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2014, Christian Loose
+ * Copyright (c) 2014, Christian Loose
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -23,49 +23,19 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#ifndef Q5250_TERMINALEMULATOR_H
-#define Q5250_TERMINALEMULATOR_H
-
-#include "q5250_global.h"
-#include <QObject>
-
-class QTextCodec;
+#ifndef Q5250_FORMATTABLE_H
+#define Q5250_FORMATTABLE_H
 
 namespace q5250 {
 
-class DisplayBuffer;
-class FormatTable;
-class GeneralDataStream;
-class TerminalDisplay;
-
-class Q5250SHARED_EXPORT TerminalEmulator : public QObject
+class FormatTable
 {
-    Q_OBJECT
-
 public:
-    explicit TerminalEmulator(QObject *parent = 0);
+    virtual void clear() = 0;
 
-    void setDisplayBuffer(DisplayBuffer *buffer);
-    void setFormatTable(FormatTable *table);
-    void setTerminalDisplay(TerminalDisplay *display);
-
-signals:
-    void updateFinished();
-
-public slots:
-    void dataReceived(const QByteArray &data);
-    void update();
-    void keyPressed(int key, const QString &text);
-
-private:
-    void handleWriteToDisplayCommand(GeneralDataStream &stream);
-
-    DisplayBuffer *displayBuffer;
-    TerminalDisplay *terminalDisplay;
-    FormatTable *formatTable;
-    QTextCodec *codec;
+    virtual bool isEmpty() const = 0;
 };
 
 } // namespace q5250
 
-#endif // Q5250_TERMINALEMULATOR_H
+#endif // Q5250_FORMATTABLE_H

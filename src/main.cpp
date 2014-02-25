@@ -39,6 +39,7 @@
 #include <terminal/terminaldisplaybuffer.h>
 #include <terminal/terminaldisplay.h>
 #include <terminal/terminalemulator.h>
+#include <terminal/terminalformattable.h>
 using namespace q5250;
 
 static QMap<unsigned char, QPair<int, int>> InitColorMap()
@@ -227,6 +228,7 @@ Main::Main(QObject *parent) :
 
     client->setTerminalType("IBM-3477-FC");
     terminal->setDisplayBuffer(new TerminalDisplayBuffer());
+    terminal->setFormatTable(new TerminalFormatTable());
     terminal->setTerminalDisplay(display);
     connection->connectToHost(QStringLiteral("ASKNIDEV"), 23);
 

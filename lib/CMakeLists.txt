@@ -7,6 +7,7 @@ set(q5250_SRCS
     telnet/telnetparser.cpp
     terminal/terminaldisplaybuffer.cpp
     terminal/terminalemulator.cpp
+    terminal/terminalformattable.cpp
 )
 
 add_definitions(-DQ5250_LIBRARY)

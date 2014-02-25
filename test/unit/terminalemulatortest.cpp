@@ -32,6 +32,7 @@ using namespace testing;
 
 #include <terminal/displaybuffer.h>
 #include <terminal/field.h>
+#include <terminal/formattable.h>
 #include <terminal/terminaldisplay.h>
 #include <terminal/terminalemulator.h>
 using namespace q5250;
@@ -45,8 +46,14 @@ public:
     MOCK_CONST_METHOD2(characterAt, unsigned char(unsigned char, unsigned char));
     MOCK_METHOD1(setCharacter, void(unsigned char));
     MOCK_METHOD3(repeatCharacterToAddress, void(unsigned char, unsigned char, unsigned char));
-    MOCK_METHOD0(clearFormatTable, void());
     MOCK_METHOD1(addField, void(q5250::Field&));
+};
+
+class FormatTableMock : public FormatTable
+{
+public:
+    MOCK_METHOD0(clear, void());
+    MOCK_CONST_METHOD0(isEmpty, bool());
 };
 
 class TerminalDisplayMock : public TerminalDisplay
@@ -60,6 +67,7 @@ class ATerminalEmulator : public Test
 {
 public:
     DisplayBufferMock displayBuffer;
+    FormatTableMock formatTable;
     TerminalDisplayMock terminalDisplay;
     TerminalEmulator terminal;
 
@@ -79,6 +87,7 @@ public:
     ATerminalEmulator()
     {
         terminal.setDisplayBuffer(&displayBuffer);
+        terminal.setFormatTable(&formatTable);
         terminal.setTerminalDisplay(&terminalDisplay);
 
         DefaultValue<QSize>::Set(QSize(0, 0));
@@ -146,7 +155,7 @@ TEST_F(ATerminalEmulator, clearsFormatTableOnReceivingClearUnit)
     const char streamData[]{ESC, ClearUnitCommand};
     QByteArray data = createGdsHeaderWithLength(2) + QByteArray::fromRawData(streamData, 2);
 
-    EXPECT_CALL(displayBuffer, clearFormatTable());
+    EXPECT_CALL(formatTable, clear());
 
     terminal.dataReceived(data);
 }
@@ -260,7 +269,7 @@ TEST_F(ATerminalEmulator, clearsFormatTableOnReceivingStartOfHeader)
     const char streamData[]{StartOfHeaderOrder, length};
     QByteArray data = createWriteToDisplayCommandWithOrderLength(2) + QByteArray::fromRawData(streamData, 2);
 
-    EXPECT_CALL(displayBuffer, clearFormatTable());
+    EXPECT_CALL(formatTable, clear());
 
     terminal.dataReceived(data);
 }

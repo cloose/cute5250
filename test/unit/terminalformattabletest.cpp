@@ -23,49 +23,17 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#ifndef Q5250_TERMINALEMULATOR_H
-#define Q5250_TERMINALEMULATOR_H
+#include <gmock/gmock.h>
+using namespace testing;
 
-#include "q5250_global.h"
-#include <QObject>
+#include <terminal/terminalformattable.h>
+using namespace q5250;
 
-class QTextCodec;
-
-namespace q5250 {
-
-class DisplayBuffer;
-class FormatTable;
-class GeneralDataStream;
-class TerminalDisplay;
-
-class Q5250SHARED_EXPORT TerminalEmulator : public QObject
+TEST(ATerminalFormatTable, isEmptyAfterClear)
 {
-    Q_OBJECT
+    TerminalFormatTable formatTable;
 
-public:
-    explicit TerminalEmulator(QObject *parent = 0);
+    formatTable.clear();
 
-    void setDisplayBuffer(DisplayBuffer *buffer);
-    void setFormatTable(FormatTable *table);
-    void setTerminalDisplay(TerminalDisplay *display);
-
-signals:
-    void updateFinished();
-
-public slots:
-    void dataReceived(const QByteArray &data);
-    void update();
-    void keyPressed(int key, const QString &text);
-
-private:
-    void handleWriteToDisplayCommand(GeneralDataStream &stream);
-
-    DisplayBuffer *displayBuffer;
-    TerminalDisplay *terminalDisplay;
-    FormatTable *formatTable;
-    QTextCodec *codec;
-};
-
-} // namespace q5250
-
-#endif // Q5250_TERMINALEMULATOR_H
+    ASSERT_TRUE(formatTable.isEmpty());
+}
