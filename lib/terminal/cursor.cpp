@@ -39,6 +39,11 @@ void Cursor::setPosition(unsigned char column, unsigned char row)
     cursorRow = row;
 }
 
+void Cursor::moveDown()
+{
+    cursorRow += 1;
+}
+
 void Cursor::moveRight()
 {
     cursorColumn += 1;
