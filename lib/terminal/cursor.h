@@ -28,6 +28,8 @@
 
 #include "q5250_global.h"
 
+#include <QSize>
+
 namespace q5250 {
 
 class Q5250SHARED_EXPORT Cursor
@@ -44,9 +46,12 @@ public:
     void moveLeft();
     void moveRight();
 
+    void setDisplaySize(unsigned char columns, unsigned char rows);
+
 private:
     unsigned char cursorColumn;
     unsigned char cursorRow;
+    QSize displaySize;
 };
 
 } // namespace q5250

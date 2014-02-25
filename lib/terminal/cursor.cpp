@@ -31,6 +31,7 @@ Cursor::Cursor() :
     cursorColumn(1),
     cursorRow(1)
 {
+    setDisplaySize(80, 25);
 }
 
 void Cursor::setPosition(unsigned char column, unsigned char row)
@@ -57,6 +58,17 @@ void Cursor::moveLeft()
 void Cursor::moveRight()
 {
     cursorColumn += 1;
+
+    if (cursorColumn > displaySize.width()) {
+        cursorColumn = 1;
+        moveDown();
+    }
+}
+
+void Cursor::setDisplaySize(unsigned char columns, unsigned char rows)
+{
+    displaySize.setWidth(columns);
+    displaySize.setHeight(rows);
 }
 
 } // namespace q5250
