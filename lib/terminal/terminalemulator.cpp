@@ -55,6 +55,7 @@ void TerminalEmulator::setTerminalDisplay(TerminalDisplay *display)
 
 void TerminalEmulator::dataReceived(const QByteArray &data)
 {
+    static const unsigned short HEADER_SIZE = 10;
     GeneralDataStream stream(data);
 
     while (!stream.atEnd()) {
@@ -71,6 +72,7 @@ void TerminalEmulator::dataReceived(const QByteArray &data)
                 displayBuffer->setSize(80, 25);
                 displayBuffer->clearFormatTable();
                 qDeleteAll(fieldList);
+                fieldList.clear();
                 break;
             case 0x52 /*READ MDT FIELDS*/:
                 {
@@ -80,6 +82,105 @@ void TerminalEmulator::dataReceived(const QByteArray &data)
                             break;
                         }
                     }
+                }
+                break;
+            case 0xf3 /*WRITE STRUCTURED FIELD*/:
+                {
+                    unsigned char length1 = stream.readByte();
+                    unsigned char length2 = stream.readByte();
+                    unsigned short length = (length1 << 8) | length2;
+                    unsigned char commandClass = stream.readByte();
+                    unsigned char commandType = stream.readByte();
+                    unsigned char flag = stream.readByte();
+                    qDebug() << "WSF" << length << hex << showbase << commandClass << commandType << flag;
+
+                    QByteArray reply;
+                    QDataStream out(&reply, QIODevice::WriteOnly);
+
+                    out << (quint8)0x00     // cursor row
+                        << (quint8)0x00     // cursor column
+                        << (quint8)0x88     // Inbound Write Structured Field Aid
+                        << (quint8)0x00     // length of query reply
+                        << (quint8)0x3a
+                        << (quint8)0xd9     // command class
+                        << (quint8)0x70     // command type: QUERY
+                        << (quint8)0x80     // flag byte
+                        << (quint8)0x06
+                        << (quint8)0x00
+                        << (quint8)0x01
+                        << (quint8)0x01
+                        << (quint8)0x00
+                        << (quint8)0x00     // reserved
+                        << (quint8)0x00
+                        << (quint8)0x00
+                        << (quint8)0x00
+                        << (quint8)0x00
+                        << (quint8)0x00
+                        << (quint8)0x00
+                        << (quint8)0x00
+                        << (quint8)0x00
+                        << (quint8)0x00
+                        << (quint8)0x00
+                        << (quint8)0x00
+                        << (quint8)0x00
+                        << (quint8)0x00
+                        << (quint8)0x00
+                        << (quint8)0x00
+                        << (quint8)0x01;     // display or printer
+
+                    QByteArray term = codec->fromUnicode("5251011");
+                    for (int i = 0; i < term.size(); ++i) {
+                        out << (quint8)term.at(i);
+                    }
+
+                    out << (quint8)0x02     // standard keyboard
+                        << (quint8)0x00
+                        << (quint8)0x00
+                        << (quint8)0x00
+                        << (quint8)0x61
+                        << (quint8)0x50
+                        << (quint8)0x00
+                        << (quint8)0xff
+                        << (quint8)0xff
+                        << (quint8)0x00
+                        << (quint8)0x00
+                        << (quint8)0x00
+                        << (quint8)0x23
+                        << (quint8)0x31
+                        << (quint8)0x00
+                        << (quint8)0x00
+                        << (quint8)0x00
+                        << (quint8)0x00
+                        << (quint8)0x00
+                        << (quint8)0x00
+                        << (quint8)0x00
+                        << (quint8)0x00
+                        << (quint8)0x00
+                        << (quint8)0x00
+                        << (quint8)0x00
+                        << (quint8)0x00
+                        << (quint8)0x00
+                        << (quint8)0x00
+                        << (quint8)0x00
+                        << (quint8)0x00;
+
+
+                    quint16 dataLength = HEADER_SIZE + reply.size();
+
+                    QByteArray gdsData;
+                    QDataStream gds(&gdsData, QIODevice::WriteOnly);
+
+                    // write GDS header (see RFC 1205 section 3)
+                    gds << dataLength;              // length
+                    gds << (quint16)0x12a0;     // record type GDS
+                    gds << (quint16)0x0000;     // reserved
+                    gds << (quint8)0x04;        // variable header length
+                    gds << (quint16)0x0000;     // flags
+                    gds << (quint8)0x00;        // opcode
+
+                    gdsData.append(reply);
+
+                    emit sendData(gdsData);
                 }
                 break;
             default:
