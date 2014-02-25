@@ -51,3 +51,9 @@ TEST_F(ACursor, returnsSetColumnRowPosition)
     ASSERT_THAT(cursor.column(), Eq(column));
     ASSERT_THAT(cursor.row(), Eq(row));
 }
+
+TEST_F(ACursor, addsOneToColumnOnMoveRight)
+{
+    cursor.moveRight();
+    ASSERT_THAT(cursor.column(), Eq(2));
+}

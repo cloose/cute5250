@@ -39,6 +39,8 @@ public:
     unsigned char row() const { return cursorRow; }
     void setPosition(unsigned char column, unsigned char row);
 
+    void moveRight();
+
 private:
     unsigned char cursorColumn;
     unsigned char cursorRow;

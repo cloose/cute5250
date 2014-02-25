@@ -39,4 +39,9 @@ void Cursor::setPosition(unsigned char column, unsigned char row)
     cursorRow = row;
 }
 
+void Cursor::moveRight()
+{
+    cursorColumn += 1;
+}
+
 } // namespace q5250
