@@ -287,6 +287,18 @@ TEST_F(ATerminalEmulator, addsOutputFieldToDisplayBuffer)
     terminal.dataReceived(data);
 }
 
+TEST_F(ATerminalEmulator, doesNotAddOutputFieldToFormatTable)
+{
+    const char fieldLength = 5;
+    const char streamData[]{StartOfFieldOrder, GreenUnderlineAttribute, 0x00, fieldLength};
+    const QByteArray data = createWriteToDisplayCommandWithOrderLength(4) + QByteArray::fromRawData(streamData, 4);
+    q5250::Field outputField = { .format = 0, .attribute = GreenUnderlineAttribute, .length = fieldLength };
+
+    EXPECT_CALL(formatTable, append(Pointee(outputField))).Times(0);
+
+    terminal.dataReceived(data);
+}
+
 TEST_F(ATerminalEmulator, addsInputFieldWithoutControlWordsToDisplayBuffer)
 {
     const char fieldLength = 5;
@@ -295,6 +307,18 @@ TEST_F(ATerminalEmulator, addsInputFieldWithoutControlWordsToDisplayBuffer)
     q5250::Field inputField = { .format = 0x4000, .attribute = GreenUnderlineAttribute, .length = fieldLength };
 
     EXPECT_CALL(displayBuffer, addField(Pointee(inputField)));
+
+    terminal.dataReceived(data);
+}
+
+TEST_F(ATerminalEmulator, addsInputFieldWithoutControlWordsToFormatTable)
+{
+    const char fieldLength = 5;
+    const char streamData[]{StartOfFieldOrder, 0x40, 0x00, GreenUnderlineAttribute, 0x00, fieldLength};
+    const QByteArray data = createWriteToDisplayCommandWithOrderLength(6) + QByteArray::fromRawData(streamData, 6);
+    q5250::Field inputField = { .format = 0x4000, .attribute = GreenUnderlineAttribute, .length = fieldLength };
+
+    EXPECT_CALL(formatTable, append(Pointee(inputField)));
 
     terminal.dataReceived(data);
 }

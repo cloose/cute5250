@@ -176,6 +176,10 @@ void TerminalEmulator::handleWriteToDisplayCommand(GeneralDataStream &stream)
                 field->length = stream.readWord();
 
                 displayBuffer->addField(field);
+
+                if (field->isInputField()) {
+                    formatTable->append(field);
+                }
             }
             break;
         default:
