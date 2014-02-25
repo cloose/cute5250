@@ -40,3 +40,14 @@ TEST_F(ACursor, isAtColumnOneRowOneAfterCreation)
     ASSERT_THAT(cursor.column(), Eq(1));
     ASSERT_THAT(cursor.row(), Eq(1));
 }
+
+TEST_F(ACursor, returnsSetColumnRowPosition)
+{
+    const unsigned char column = 5;
+    const unsigned char row = 5;
+
+    cursor.setPosition(column, row);
+
+    ASSERT_THAT(cursor.column(), Eq(column));
+    ASSERT_THAT(cursor.row(), Eq(row));
+}

@@ -27,4 +27,16 @@
 
 namespace q5250 {
 
+Cursor::Cursor() :
+    cursorColumn(1),
+    cursorRow(1)
+{
+}
+
+void Cursor::setPosition(unsigned char column, unsigned char row)
+{
+    cursorColumn = column;
+    cursorRow = row;
+}
+
 } // namespace q5250

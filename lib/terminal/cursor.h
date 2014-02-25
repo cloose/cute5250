@@ -33,8 +33,15 @@ namespace q5250 {
 class Q5250SHARED_EXPORT Cursor
 {
 public:
-    unsigned char column() const { return 1; }
-    unsigned char row() const { return 1; }
+    Cursor();
+
+    unsigned char column() const { return cursorColumn; }
+    unsigned char row() const { return cursorRow; }
+    void setPosition(unsigned char column, unsigned char row);
+
+private:
+    unsigned char cursorColumn;
+    unsigned char cursorRow;
 };
 
 } // namespace q5250
