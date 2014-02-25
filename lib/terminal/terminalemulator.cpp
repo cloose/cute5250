@@ -162,18 +162,18 @@ void TerminalEmulator::handleWriteToDisplayCommand(GeneralDataStream &stream)
             break;
         case 0x1d /*START OF FIELD*/:
             {
-                Field field;
+                Field *field = new Field();
 
                 unsigned char byte = stream.readByte();
                 if (byte & 0x40 /*is input field?*/) {
                     unsigned char ffw2 = stream.readByte();
-                    field.format = (byte << 8) | ffw2;
-                    field.attribute = stream.readByte();
+                    field->format = (byte << 8) | ffw2;
+                    field->attribute = stream.readByte();
                 } else {
-                    field.attribute = byte;
+                    field->attribute = byte;
                 }
 
-                field.length = stream.readWord();
+                field->length = stream.readWord();
 
                 displayBuffer->addField(field);
             }

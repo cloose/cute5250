@@ -50,7 +50,7 @@ public:
     void setCharacter(unsigned char character);
     void repeatCharacterToAddress(unsigned char column, unsigned char row, unsigned char character);
 
-    void addField(Field &field);
+    void addField(Field *field);
 
 private:
     unsigned int convertToAddress(unsigned char column, unsigned char row) const;
