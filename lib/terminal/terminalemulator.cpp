@@ -167,9 +167,7 @@ void TerminalEmulator::handleWriteToDisplayCommand(GeneralDataStream &stream)
                     field.attribute = byte;
                 }
 
-                unsigned char fieldLength1 = stream.readByte();
-                unsigned char fieldLength2 = stream.readByte();
-                field.length = (fieldLength1 << 8) | fieldLength2;
+                field.length = stream.readWord();
 
                 displayBuffer->addField(field);
             }
