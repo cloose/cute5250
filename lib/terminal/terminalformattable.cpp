@@ -29,11 +29,17 @@ namespace q5250 {
 
 void TerminalFormatTable::clear()
 {
+    fieldList.clear();
+}
+
+void TerminalFormatTable::append(Field *field)
+{
+    fieldList.append(field);
 }
 
 bool TerminalFormatTable::isEmpty() const
 {
-    return true;
+    return fieldList.isEmpty();
 }
 
 } // namespace q5250

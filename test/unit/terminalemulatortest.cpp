@@ -53,6 +53,7 @@ class FormatTableMock : public FormatTable
 {
 public:
     MOCK_METHOD0(clear, void());
+    MOCK_METHOD1(append, void(q5250::Field*));
     MOCK_CONST_METHOD0(isEmpty, bool());
 };
 

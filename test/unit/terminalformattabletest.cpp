@@ -26,6 +26,7 @@
 #include <gmock/gmock.h>
 using namespace testing;
 
+#include <terminal/field.h>
 #include <terminal/terminalformattable.h>
 using namespace q5250;
 
@@ -36,4 +37,14 @@ TEST(ATerminalFormatTable, isEmptyAfterClear)
     formatTable.clear();
 
     ASSERT_TRUE(formatTable.isEmpty());
+}
+
+TEST(ATerminalFormatTable, isNotEmptyAfterFieldAppended)
+{
+    q5250::Field field;
+    TerminalFormatTable formatTable;
+
+    formatTable.append(&field);
+
+    ASSERT_FALSE(formatTable.isEmpty());
 }

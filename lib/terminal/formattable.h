@@ -28,10 +28,13 @@
 
 namespace q5250 {
 
+struct Field;
+
 class FormatTable
 {
 public:
     virtual void clear() = 0;
+    virtual void append(Field *field) = 0;
 
     virtual bool isEmpty() const = 0;
 };

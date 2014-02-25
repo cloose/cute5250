@@ -29,14 +29,20 @@
 #include "q5250_global.h"
 #include "formattable.h"
 
+#include <QVector>
+
 namespace q5250 {
 
 class Q5250SHARED_EXPORT TerminalFormatTable : public FormatTable
 {
 public:
     void clear();
+    void append(Field *field);
 
     bool isEmpty() const;
+
+private:
+    QVector<Field*> fieldList;
 };
 
 } // namespace q5250
