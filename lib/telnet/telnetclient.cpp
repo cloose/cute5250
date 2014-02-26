@@ -52,6 +52,16 @@ void TelnetClient::readyRead()
     parser.parse(buffer);
 }
 
+void TelnetClient::sendData(const QByteArray &data)
+{
+    // append end-of-record command sequence
+    QByteArray reply(data);
+    reply.append((char)TelnetCommand::IAC);
+    reply.append((char)TelnetCommand::EOR);
+
+    connection->write(reply);
+}
+
 void TelnetClient::optionNegotiationReceived(const OptionNegotiation &optionNegotiation)
 {
     bool supported = isOptionSupported(optionNegotiation.option);

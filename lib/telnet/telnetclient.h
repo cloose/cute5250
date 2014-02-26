@@ -47,6 +47,7 @@ public:
     void setTerminalType(const QString &type);
 
     void readyRead();
+    void sendData(const QByteArray &data);
 
 signals:
     void dataReceived(const QByteArray &data);

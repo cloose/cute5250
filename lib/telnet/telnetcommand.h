@@ -30,6 +30,7 @@ namespace q5250 {
 
 enum class TelnetCommand : unsigned char
 {
+    EOR = 239,
     SE = 240,
     NOP = 241,
     SB = 250,

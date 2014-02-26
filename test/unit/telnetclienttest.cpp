@@ -187,3 +187,12 @@ TEST_F(ATelnetClient, statesSetTerminalTypeOnRequest)
     client.setTerminalType("IBM-3477-FC");
     client.readyRead();
 }
+
+TEST_F(ATelnetClient, writesDataToConnectionWithEndOfRecordMarkerAppended)
+{
+    TelnetConnectionMock connection;
+    TelnetClient client(&connection);
+    EXPECT_CALL(connection, write(QByteArray{"A\xff\xef"}));
+
+    client.sendData(ArbitraryRawData);
+}
