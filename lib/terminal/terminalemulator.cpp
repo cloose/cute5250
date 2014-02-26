@@ -134,6 +134,9 @@ void TerminalEmulator::keyPressed(int key, const QString &text)
     case Qt::Key_Up:
         cursor.moveUp();
         break;
+    case Qt::Key_Down:
+        cursor.moveDown();
+        break;
     default:
         QByteArray ebcdic = codec->fromUnicode(text);
         displayBuffer->setCharacter(ebcdic.at(0));

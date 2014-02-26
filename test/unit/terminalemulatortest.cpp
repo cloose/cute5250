@@ -362,3 +362,11 @@ TEST_F(ATerminalEmulator, movesCursorUpOnKeyUp)
     ASSERT_THAT(terminal.cursorPosition().column(), Eq(1));
     ASSERT_THAT(terminal.cursorPosition().row(), Eq(24));
 }
+
+TEST_F(ATerminalEmulator, movesCursorDownOnKeyDown)
+{
+    terminal.keyPressed(Qt::Key_Down, QString());
+
+    ASSERT_THAT(terminal.cursorPosition().column(), Eq(1));
+    ASSERT_THAT(terminal.cursorPosition().row(), Eq(2));
+}
