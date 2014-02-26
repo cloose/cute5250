@@ -99,6 +99,19 @@ TEST_F(ACursor, movesToEndOfCurrentColumnOnOverflowingTopDisplayBorder)
     ASSERT_THAT(cursor.row(), Eq(9));
 }
 
+TEST_F(ACursor, movesToStartOfCurrentColumnOnOverflowingBottomDisplayBorder)
+{
+    const unsigned char column = 5;
+    const unsigned char row = 9;
+    cursor.setPosition(column, row);
+    cursor.setDisplaySize(10, 10);
+
+    cursor.moveDown();
+
+    ASSERT_THAT(cursor.column(), Eq(column));
+    ASSERT_THAT(cursor.row(), Eq(1));
+}
+
 TEST_F(ACursor, movesToEndOfPreviousRowOnOverflowingLeftDisplayBorder)
 {
     const unsigned char column = 1;

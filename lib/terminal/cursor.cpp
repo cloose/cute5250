@@ -52,6 +52,10 @@ void Cursor::moveUp()
 void Cursor::moveDown()
 {
     cursorRow += 1;
+
+    if (cursorRow > displaySize.height() - 1) {
+        cursorRow = 1;
+    }
 }
 
 void Cursor::moveLeft()
