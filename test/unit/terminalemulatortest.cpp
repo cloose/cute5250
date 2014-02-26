@@ -355,6 +355,14 @@ TEST_F(ATerminalEmulator, addsPressedTextKeyToDisplayBuffer)
     terminal.keyPressed(Qt::Key_A, arbitraryTextKey);
 }
 
+TEST_F(ATerminalEmulator, doesNotAddKeyWithEmptyTextToDisplayBuffer)
+{
+    const QString emptyTextKey("");
+    EXPECT_CALL(displayBuffer, setCharacter(_)).Times(0);
+
+    terminal.keyPressed(0, emptyTextKey);
+}
+
 TEST_F(ATerminalEmulator, movesCursorUpOnKeyUp)
 {
     terminal.keyPressed(Qt::Key_Up, QString());

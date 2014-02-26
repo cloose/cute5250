@@ -144,8 +144,10 @@ void TerminalEmulator::keyPressed(int key, const QString &text)
         cursor.moveRight();
         break;
     default:
-        QByteArray ebcdic = codec->fromUnicode(text);
-        displayBuffer->setCharacter(ebcdic.at(0));
+        if (!text.isEmpty()) {
+            QByteArray ebcdic = codec->fromUnicode(text);
+            displayBuffer->setCharacter(ebcdic.at(0));
+        }
         break;
     }
 
