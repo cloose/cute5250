@@ -354,3 +354,11 @@ TEST_F(ATerminalEmulator, addsPressedTextKeyToDisplayBuffer)
 
     terminal.keyPressed(Qt::Key_A, arbitraryTextKey);
 }
+
+TEST_F(ATerminalEmulator, movesCursorUpOnKeyUp)
+{
+    terminal.keyPressed(Qt::Key_Up, QString());
+
+    ASSERT_THAT(terminal.cursorPosition().column(), Eq(1));
+    ASSERT_THAT(terminal.cursorPosition().row(), Eq(24));
+}

@@ -51,6 +51,8 @@ public:
     void setFormatTable(FormatTable *table);
     void setTerminalDisplay(TerminalDisplay *display);
 
+    Cursor cursorPosition() const;
+
 signals:
     void updateFinished();
 

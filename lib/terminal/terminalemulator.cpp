@@ -58,6 +58,11 @@ void TerminalEmulator::setTerminalDisplay(TerminalDisplay *display)
     terminalDisplay = display;
 }
 
+Cursor TerminalEmulator::cursorPosition() const
+{
+    return cursor;
+}
+
 void TerminalEmulator::dataReceived(const QByteArray &data)
 {
     GeneralDataStream stream(data);
@@ -125,8 +130,15 @@ void TerminalEmulator::update()
 
 void TerminalEmulator::keyPressed(int key, const QString &text)
 {
-    QByteArray ebcdic = codec->fromUnicode(text);
-    displayBuffer->setCharacter(ebcdic.at(0));
+    switch (key) {
+    case Qt::Key_Up:
+        cursor.moveUp();
+        break;
+    default:
+        QByteArray ebcdic = codec->fromUnicode(text);
+        displayBuffer->setCharacter(ebcdic.at(0));
+        break;
+    }
 
     update();
 }
