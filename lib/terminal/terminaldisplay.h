@@ -33,6 +33,7 @@ namespace q5250 {
 class TerminalDisplay
 {
 public:
+    virtual void clear() = 0;
     virtual void displayText(unsigned char column, unsigned char row, const QString &text) = 0;
     virtual void displayAttribute(unsigned char attribute) = 0;
     virtual void displayCursor(unsigned char column, unsigned char row) = 0;

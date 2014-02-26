@@ -77,6 +77,7 @@ class TerminalDisplayWidget : public QWidget, public TerminalDisplay
 public:
     TerminalDisplayWidget();
 
+    void clear();
     void displayText(unsigned char column, unsigned char row, const QString &text);
     void displayAttribute(unsigned char attribute);
     void displayCursor(unsigned char column, unsigned char row);
@@ -111,6 +112,11 @@ TerminalDisplayWidget::TerminalDisplayWidget() :
     painter->setFont(font);
 
     painter->setPen(Qt::green);
+}
+
+void TerminalDisplayWidget::clear()
+{
+    screen->fill(Qt::black);
 }
 
 void TerminalDisplayWidget::displayText(unsigned char column, unsigned char row, const QString &text)

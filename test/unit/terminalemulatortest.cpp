@@ -60,6 +60,7 @@ public:
 class TerminalDisplayMock : public TerminalDisplay
 {
 public:
+    MOCK_METHOD0(clear, void());
     MOCK_METHOD3(displayText, void(unsigned char, unsigned char, const QString&));
     MOCK_METHOD1(displayAttribute, void(unsigned char));
     MOCK_METHOD2(displayCursor, void(unsigned char, unsigned char));
@@ -339,7 +340,14 @@ TEST_F(ATerminalEmulator, emitsUpdateFinishedAfterUpdate)
     ASSERT_THAT(spy.count(), Eq(1));
 }
 
-TEST_F(ATerminalEmulator, displayCursorOnUpdate)
+TEST_F(ATerminalEmulator, clearsDisplayOnUpdate)
+{
+    EXPECT_CALL(terminalDisplay, clear());
+
+    terminal.update();
+}
+
+TEST_F(ATerminalEmulator, displaysCursorOnUpdate)
 {
     EXPECT_CALL(terminalDisplay, displayCursor(1, 1));
 
