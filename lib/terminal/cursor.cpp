@@ -43,6 +43,10 @@ void Cursor::setPosition(unsigned char column, unsigned char row)
 void Cursor::moveUp()
 {
     cursorRow -= 1;
+
+    if (cursorRow < 1) {
+        cursorRow = displaySize.height() - 1;
+    }
 }
 
 void Cursor::moveDown()
