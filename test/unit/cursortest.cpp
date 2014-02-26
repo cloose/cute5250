@@ -86,6 +86,19 @@ TEST_F(ACursor, addsOneToColumnOnMoveRight)
     ASSERT_THAT(cursor.column(), Eq(2));
 }
 
+TEST_F(ACursor, movesToEndOfPreviousRowOnOverflowingLeftDisplayBorder)
+{
+    const unsigned char column = 1;
+    const unsigned char row = 5;
+    cursor.setPosition(column, row);
+    cursor.setDisplaySize(10, 10);
+
+    cursor.moveLeft();
+
+    ASSERT_THAT(cursor.column(), Eq(10));
+    ASSERT_THAT(cursor.row(), Eq(row-1));
+}
+
 TEST_F(ACursor, movesToStartOfNextRowOnOverflowingRightDisplayBorder)
 {
     const unsigned char column = 10;
