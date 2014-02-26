@@ -29,21 +29,28 @@
 #include "q5250_global.h"
 
 #include <memory>
+#include <QIODevice>
 
 namespace q5250 {
 
 class Q5250SHARED_EXPORT GeneralDataStream
 {
 public:
+    GeneralDataStream();
     explicit GeneralDataStream(const QByteArray &data);
     ~GeneralDataStream();
 
     bool isValid() const;
     bool atEnd() const;
+    QIODevice::OpenMode openMode() const;
 
     unsigned char readByte();
     unsigned short readWord();
     void seekToPreviousByte();
+
+    QByteArray toByteArray() const;
+
+    GeneralDataStream &operator<<(quint8 byte);
 
 private:
     class Private;

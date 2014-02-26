@@ -31,6 +31,19 @@ using namespace testing;
 #include <generaldatastream.h>
 using namespace q5250;
 
+TEST(AGeneralDataStream, isReadOnlyIfCreatedByConstructorWithBuffer)
+{
+    QByteArray data;
+    GeneralDataStream stream(data);
+    ASSERT_TRUE(stream.openMode().testFlag(QIODevice::ReadOnly));
+}
+
+TEST(AGeneralDataStream, isWriteOnlyIfCreatedByDefaultConstructor)
+{
+    GeneralDataStream stream;
+    ASSERT_TRUE(stream.openMode().testFlag(QIODevice::WriteOnly));
+}
+
 TEST(AGeneralDataStream, reportsAtEndIfEmpty)
 {
     QByteArray data;
@@ -104,4 +117,25 @@ TEST(AGeneralDataStream, doesNotSeekToPreviousByteBeyondStartOfContent)
     stream.seekToPreviousByte();
 
     ASSERT_THAT(stream.readByte(), Eq(0x04));
+}
+
+TEST(AGeneralDataStream, addsHeaderToReturnedWriteBuffer)
+{
+    const char gdsHeader[] { 0x00, 0x0a, 0x12, (char)0xa0, 0x00, 0x00, 0x04, 0x00, 0x00, 0x00 };
+
+    GeneralDataStream stream;
+
+    ASSERT_THAT(stream.toByteArray(), Eq(QByteArray::fromRawData(gdsHeader, 10)));
+}
+
+TEST(AGeneralDataStream, returnsDataWrittenToStream)
+{
+    const char gdsHeader[] { 0x00, 0x0c, 0x12, (char)0xa0, 0x00, 0x00, 0x04, 0x00, 0x00, 0x00 };
+    const QByteArray ArbitraryByteData{"\x04\x40"};
+    QByteArray expectedData = QByteArray::fromRawData(gdsHeader, 10) + ArbitraryByteData;
+
+    GeneralDataStream stream;
+    stream << ArbitraryByteData.at(0) << ArbitraryByteData.at(1);
+
+    ASSERT_THAT(stream.toByteArray(), Eq(expectedData));
 }

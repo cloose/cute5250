@@ -43,13 +43,16 @@ public:
         quint8 opcode;
     };
 
+    QByteArray writeBuffer;
     QScopedPointer<QDataStream> stream;
     Header header;
     static const quint16 GdsRecordType{0x12a0};
     static const qint64 GdsHeaderLength{10};
 
+    Private();
     explicit Private(const QByteArray &data);
     void readHeader();
+    QByteArray addHeaderToBuffer(const QByteArray &buffer);
 
     bool isValid() const;
     bool atStart() const;
@@ -57,6 +60,11 @@ public:
     qint64 currentPosition() const;
     void seekToPosition(qint64 pos);
 };
+
+GeneralDataStream::Private::Private() :
+    stream(new QDataStream(&writeBuffer, QIODevice::WriteOnly))
+{
+}
 
 GeneralDataStream::Private::Private(const QByteArray &data) :
     stream(new QDataStream(data))
@@ -72,6 +80,25 @@ void GeneralDataStream::Private::readHeader()
             >> header.varHdrLen
             >> header.flags
             >> header.opcode;
+}
+
+QByteArray GeneralDataStream::Private::addHeaderToBuffer(const QByteArray &buffer)
+{
+    quint16 streamLength = GdsHeaderLength + buffer.size();
+
+    QByteArray gdsData;
+    QDataStream gds(&gdsData, QIODevice::WriteOnly);
+
+    gds << streamLength;
+    gds << GdsRecordType;
+    gds << (quint16)0x0000;     // reserved
+    gds << (quint8)0x04;        // variable header length
+    gds << (quint16)0x0000;     // flags
+    gds << (quint8)0x00;        // opcode
+
+    gdsData.append(buffer);
+
+    return gdsData;
 }
 
 bool GeneralDataStream::Private::isValid() const
@@ -96,6 +123,11 @@ void GeneralDataStream::Private::seekToPosition(qint64 pos)
 }
 
 
+GeneralDataStream::GeneralDataStream() :
+    d(new Private())
+{
+}
+
 GeneralDataStream::GeneralDataStream(const QByteArray &data) :
     d(new Private(data))
 {
@@ -113,6 +145,11 @@ bool GeneralDataStream::isValid() const
 bool GeneralDataStream::atEnd() const
 {
     return d->stream->atEnd();
+}
+
+QIODevice::OpenMode GeneralDataStream::openMode() const
+{
+    return d->stream->device()->openMode();
 }
 
 unsigned char GeneralDataStream::readByte()
@@ -135,6 +172,17 @@ void GeneralDataStream::seekToPreviousByte()
         return;
 
     d->seekToPosition(d->currentPosition()-1);
+}
+
+QByteArray GeneralDataStream::toByteArray() const
+{
+    return d->addHeaderToBuffer(d->writeBuffer);
+}
+
+GeneralDataStream &GeneralDataStream::operator<<(quint8 byte)
+{
+    *d->stream << byte;
+    return *this;
 }
 
 } // namespace q5250
