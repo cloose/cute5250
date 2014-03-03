@@ -242,15 +242,10 @@ TEST_F(ATerminalEmulator, drawsMultipleTextInBufferOnDisplay)
     const QByteArray ebcdicText2 = textAsEbcdic(QStringLiteral("DEF"));
     const char startRow = 2;
     const char startColumn = 78;
-    const char sbaStreamData[] { SetBufferAddressOrder, startRow, startColumn };
-    const QByteArray data = createWriteToDisplayCommandWithOrderLength(9)
-                          + ebcdicText
-                          + QByteArray::fromRawData(sbaStreamData, 3)
-                          + ebcdicText2;
     const QString firstLine = QString("%1%2").arg(ArbitraryText).arg(' ', 77);
     const QString secondLine = QString("%1%2").arg(' ', 77).arg("DEF");
 
-    ON_CALL(displayBuffer, size()).WillByDefault(Return(QSize(80, 2)));
+    EXPECT_CALL(displayBuffer, size()).WillRepeatedly(Return(QSize(80, 2)));
     EXPECT_CALL(displayBuffer, characterAt(_, _)).WillRepeatedly(Return(0x00));
     EXPECT_CALL(displayBuffer, characterAt(1, 1)).WillOnce(Return(ebcdicText.at(0)));
     EXPECT_CALL(displayBuffer, characterAt(2, 1)).WillOnce(Return(ebcdicText.at(1)));
@@ -258,34 +253,34 @@ TEST_F(ATerminalEmulator, drawsMultipleTextInBufferOnDisplay)
     EXPECT_CALL(displayBuffer, characterAt(startColumn, startRow)).WillOnce(Return(ebcdicText2.at(0)));
     EXPECT_CALL(displayBuffer, characterAt(startColumn+1, startRow)).WillOnce(Return(ebcdicText2.at(1)));
     EXPECT_CALL(displayBuffer, characterAt(startColumn+2, startRow)).WillOnce(Return(ebcdicText2.at(2)));
+    EXPECT_CALL(terminalDisplay, clear());
     EXPECT_CALL(terminalDisplay, displayText(1, 1, firstLine));
     EXPECT_CALL(terminalDisplay, displayText(1, startRow, secondLine));
+    EXPECT_CALL(terminalDisplay, displayCursor(1, 1));
 
-    terminal.dataReceived(data);
+    terminal.update();
 }
 
 TEST_F(ATerminalEmulator, drawsTextWithSurroundingAttributesInBufferOnDisplay)
 {
     const QByteArray ebcdicText = textAsEbcdic(ArbitraryText);
-    const QByteArray data = createWriteToDisplayCommandWithOrderLength(5)
-                          + QByteArrayLiteral(GreenAttribute)
-                          + ebcdicText
-                          + QByteArrayLiteral(NonDisplay4Attribute);
     const QString remainingLine(5, ' ');
 
-    ON_CALL(displayBuffer, size()).WillByDefault(Return(QSize(10, 1)));
+    EXPECT_CALL(displayBuffer, size()).WillRepeatedly(Return(QSize(10, 1)));
     EXPECT_CALL(displayBuffer, characterAt(_, _)).WillRepeatedly(Return(0x00));
     EXPECT_CALL(displayBuffer, characterAt(1, 1)).WillOnce(Return(GreenAttribute));
     EXPECT_CALL(displayBuffer, characterAt(2, 1)).WillOnce(Return(ebcdicText.at(0)));
     EXPECT_CALL(displayBuffer, characterAt(3, 1)).WillOnce(Return(ebcdicText.at(1)));
     EXPECT_CALL(displayBuffer, characterAt(4, 1)).WillOnce(Return(ebcdicText.at(2)));
     EXPECT_CALL(displayBuffer, characterAt(5, 1)).WillOnce(Return(NonDisplay4Attribute));
+    EXPECT_CALL(terminalDisplay, clear());
     EXPECT_CALL(terminalDisplay, displayAttribute(GreenAttribute));
     EXPECT_CALL(terminalDisplay, displayText(2, 1, ArbitraryText));
     EXPECT_CALL(terminalDisplay, displayAttribute(NonDisplay4Attribute));
     EXPECT_CALL(terminalDisplay, displayText(6, 1, remainingLine));
+    EXPECT_CALL(terminalDisplay, displayCursor(1, 1));
 
-    terminal.dataReceived(data);
+    terminal.update();
 }
 
 TEST_F(ATerminalEmulator, clearsFormatTableOnReceivingStartOfHeader)
