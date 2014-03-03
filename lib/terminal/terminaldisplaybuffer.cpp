@@ -73,9 +73,7 @@ unsigned char TerminalDisplayBuffer::characterAt(unsigned char column, unsigned 
 
 void TerminalDisplayBuffer::setCharacter(unsigned char character)
 {
-    unsigned int address = convertToAddress(addressColumn, addressRow);
-    (*buffer)[address] = character;
-    increaseBufferAddress();
+    setCharacterAt(addressColumn, addressRow, character);
 }
 
 void TerminalDisplayBuffer::setCharacterAt(unsigned char column, unsigned char row, unsigned char character)
