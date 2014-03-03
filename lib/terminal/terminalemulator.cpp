@@ -106,7 +106,7 @@ void TerminalEmulator::handleKeypress(int key, const QString &text)
 
             if (currentField && !currentField->isBypassField()) {
                 QByteArray ebcdic = codec->fromUnicode(text);
-                displayBuffer->setCharacter(ebcdic.at(0));
+                displayBuffer->setCharacterAt(cursor.column(), cursor.row(), ebcdic.at(0));
             }
         }
         break;

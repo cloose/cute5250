@@ -78,6 +78,13 @@ void TerminalDisplayBuffer::setCharacter(unsigned char character)
     increaseBufferAddress();
 }
 
+void TerminalDisplayBuffer::setCharacterAt(unsigned char column, unsigned char row, unsigned char character)
+{
+    unsigned int address = convertToAddress(column, row);
+    (*buffer)[address] = character;
+    increaseBufferAddress();
+}
+
 void TerminalDisplayBuffer::repeatCharacterToAddress(unsigned char column, unsigned char row, unsigned char character)
 {
     unsigned int fromAddress = convertToAddress(addressColumn, addressRow);

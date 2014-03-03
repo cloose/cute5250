@@ -43,6 +43,7 @@ public:
 
     virtual unsigned char characterAt(unsigned char column, unsigned char row) const = 0;
     virtual void setCharacter(unsigned char character) = 0;
+    virtual void setCharacterAt(unsigned char column, unsigned char row, unsigned char character) = 0;
     virtual void repeatCharacterToAddress(unsigned char column, unsigned char row, unsigned char character) = 0;
 
     virtual void addField(Field *field) = 0;

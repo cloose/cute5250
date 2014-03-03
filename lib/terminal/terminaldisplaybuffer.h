@@ -48,6 +48,7 @@ public:
 
     unsigned char characterAt(unsigned char column, unsigned char row) const;
     void setCharacter(unsigned char character);
+    void setCharacterAt(unsigned char column, unsigned char row, unsigned char character);
     void repeatCharacterToAddress(unsigned char column, unsigned char row, unsigned char character);
 
     void addField(Field *field);

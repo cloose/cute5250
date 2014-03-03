@@ -45,6 +45,7 @@ public:
     MOCK_METHOD2(setBufferAddress, void(unsigned char, unsigned char));
     MOCK_CONST_METHOD2(characterAt, unsigned char(unsigned char, unsigned char));
     MOCK_METHOD1(setCharacter, void(unsigned char));
+    MOCK_METHOD3(setCharacterAt, void(unsigned char, unsigned char, unsigned char));
     MOCK_METHOD3(repeatCharacterToAddress, void(unsigned char, unsigned char, unsigned char));
     MOCK_METHOD1(addField, void(q5250::Field*));
 };
@@ -387,7 +388,7 @@ TEST_F(ATerminalEmulator, addsPressedTextKeyToDisplayBufferIfCursorInsideField)
 
     EXPECT_CALL(displayBuffer, size()).WillRepeatedly(Return(QSize(20, 20)));
     EXPECT_CALL(formatTable, fieldAt(cursor, 20)).WillOnce(Return(&inputField));
-    EXPECT_CALL(displayBuffer, setCharacter(ebcdicText.at(0)));
+    EXPECT_CALL(displayBuffer, setCharacterAt(cursor.column(), cursor.row(), ebcdicText.at(0)));
 
     terminal.handleKeypress(Qt::Key_A, arbitraryTextKey);
 }
@@ -403,7 +404,7 @@ TEST_F(ATerminalEmulator, doesNotAddTextKeyToDisplayBufferIfCursorOutsideField)
 
     EXPECT_CALL(displayBuffer, size()).WillRepeatedly(Return(QSize(20, 20)));
     EXPECT_CALL(formatTable, fieldAt(cursor, 20)).WillOnce(Return((q5250::Field*)0));
-    EXPECT_CALL(displayBuffer, setCharacter(ebcdicText.at(0))).Times(0);
+    EXPECT_CALL(displayBuffer, setCharacterAt(cursor.column(), cursor.row(), ebcdicText.at(0))).Times(0);
 
     terminal.handleKeypress(Qt::Key_A, arbitraryTextKey);
 }
@@ -420,7 +421,7 @@ TEST_F(ATerminalEmulator, doesNotAddTextKeyToDisplayBufferIfFieldIsBypass)
 
     EXPECT_CALL(displayBuffer, size()).WillRepeatedly(Return(QSize(20, 20)));
     EXPECT_CALL(formatTable, fieldAt(cursor, 20)).WillOnce(Return(&inputField));
-    EXPECT_CALL(displayBuffer, setCharacter(ebcdicText.at(0))).Times(0);
+    EXPECT_CALL(displayBuffer, setCharacterAt(cursor.column(), cursor.row(), ebcdicText.at(0))).Times(0);
 
     terminal.handleKeypress(Qt::Key_A, arbitraryTextKey);
 }
@@ -428,7 +429,7 @@ TEST_F(ATerminalEmulator, doesNotAddTextKeyToDisplayBufferIfFieldIsBypass)
 TEST_F(ATerminalEmulator, doesNotAddKeyWithEmptyTextToDisplayBuffer)
 {
     const QString emptyTextKey("");
-    EXPECT_CALL(displayBuffer, setCharacter(_)).Times(0);
+    EXPECT_CALL(displayBuffer, setCharacterAt(_, _, _)).Times(0);
 
     terminal.handleKeypress(0, emptyTextKey);
 }
