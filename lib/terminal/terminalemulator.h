@@ -62,6 +62,7 @@ public slots:
     void keyPressed(int key, const QString &text);
 
 private:
+    void handleClearUnitCommand();
     void handleWriteToDisplayCommand(GeneralDataStream &stream);
 
     DisplayBuffer *displayBuffer;

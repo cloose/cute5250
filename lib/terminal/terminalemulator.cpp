@@ -78,9 +78,7 @@ void TerminalEmulator::dataReceived(const QByteArray &data)
                 handleWriteToDisplayCommand(stream);
                 break;
             case 0x40 /*CLEAR UNIT*/:
-                displayBuffer->setSize(80, 25);
-                formatTable->clear();
-                cursor.setPosition(1, 1);
+                handleClearUnitCommand();
                 break;
             }
         }
@@ -154,6 +152,13 @@ void TerminalEmulator::keyPressed(int key, const QString &text)
     }
 
     update();
+}
+
+void TerminalEmulator::handleClearUnitCommand()
+{
+    displayBuffer->setSize(80, 25);
+    formatTable->clear();
+    cursor.setPosition(1, 1);
 }
 
 void TerminalEmulator::handleWriteToDisplayCommand(GeneralDataStream &stream)
