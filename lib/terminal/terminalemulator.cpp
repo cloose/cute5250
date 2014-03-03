@@ -102,8 +102,12 @@ void TerminalEmulator::handleKeypress(int key, const QString &text)
         break;
     default:
         if (!text.isEmpty()) {
-            QByteArray ebcdic = codec->fromUnicode(text);
-            displayBuffer->setCharacter(ebcdic.at(0));
+            Field *currentField = formatTable->fieldAt(cursor, displayBuffer->size().width());
+
+            if (currentField) {
+                QByteArray ebcdic = codec->fromUnicode(text);
+                displayBuffer->setCharacter(ebcdic.at(0));
+            }
         }
         break;
     }

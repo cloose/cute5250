@@ -116,6 +116,17 @@ public:
         static QTextCodec *codec = QTextCodec::codecForName("IBM500");
         return codec->fromUnicode(text);
     }
+
+    void moveCursorTo(unsigned char column, unsigned char row)
+    {
+        for (int i = 1; i < column; ++i) {
+            terminal.handleKeypress(Qt::Key_Right, QString());
+        }
+
+        for (int i = 1; i < row; ++i) {
+            terminal.handleKeypress(Qt::Key_Down, QString());
+        }
+    }
 };
 
 static const QString ArbitraryText{"ABC"};
@@ -124,8 +135,17 @@ namespace q5250 {
 
 inline bool operator==(const Field &lhs, const Field &rhs)
 {
-    return lhs.attribute == rhs.attribute &&
-           lhs.length == rhs.length;
+    return lhs.format == rhs.format &&
+           lhs.attribute == rhs.attribute &&
+           lhs.length == rhs.length &&
+           lhs.startColumn == rhs.startColumn &&
+           lhs.startRow == rhs.startRow;
+}
+
+inline bool operator==(const Cursor &lhs, const Cursor &rhs)
+{
+    return lhs.column() == rhs.column() &&
+           lhs.row() == rhs.row();
 }
 
 }
@@ -355,11 +375,35 @@ TEST_F(ATerminalEmulator, displaysCursorOnUpdate)
     terminal.update();
 }
 
-TEST_F(ATerminalEmulator, addsPressedTextKeyToDisplayBuffer)
+TEST_F(ATerminalEmulator, addsPressedTextKeyToDisplayBufferIfCursorInsideField)
 {
+    const unsigned char column = 5;
+    const unsigned char row = 5;
+    moveCursorTo(column, row);
+    Cursor cursor; cursor.setPosition(column, row);
+    q5250::Field inputField = { .format = 0x4000, .attribute = GreenUnderlineAttribute, .length = 10, .startColumn = column, .startRow = row };
     const QString arbitraryTextKey("A");
     const QByteArray ebcdicText = textAsEbcdic(arbitraryTextKey);
+
+    EXPECT_CALL(displayBuffer, size()).WillRepeatedly(Return(QSize(20, 20)));
+    EXPECT_CALL(formatTable, fieldAt(cursor, 20)).WillOnce(Return(&inputField));
     EXPECT_CALL(displayBuffer, setCharacter(ebcdicText.at(0)));
+
+    terminal.handleKeypress(Qt::Key_A, arbitraryTextKey);
+}
+
+TEST_F(ATerminalEmulator, doesNotAddTextKeyToDisplayBufferIfCursorOutsideField)
+{
+    const unsigned char column = 5;
+    const unsigned char row = 5;
+    moveCursorTo(column, row);
+    Cursor cursor; cursor.setPosition(column, row);
+    const QString arbitraryTextKey("A");
+    const QByteArray ebcdicText = textAsEbcdic(arbitraryTextKey);
+
+    EXPECT_CALL(displayBuffer, size()).WillRepeatedly(Return(QSize(20, 20)));
+    EXPECT_CALL(formatTable, fieldAt(cursor, 20)).WillOnce(Return((q5250::Field*)0));
+    EXPECT_CALL(displayBuffer, setCharacter(ebcdicText.at(0))).Times(0);
 
     terminal.handleKeypress(Qt::Key_A, arbitraryTextKey);
 }
