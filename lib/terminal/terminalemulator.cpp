@@ -85,6 +85,30 @@ void TerminalEmulator::parseStreamData(const QByteArray &data)
     }
 }
 
+void TerminalEmulator::handleKeypress(int key, const QString &text)
+{
+    switch (key) {
+    case Qt::Key_Up:
+        cursor.moveUp();
+        break;
+    case Qt::Key_Down:
+        cursor.moveDown();
+        break;
+    case Qt::Key_Left:
+        cursor.moveLeft();
+        break;
+    case Qt::Key_Right:
+        cursor.moveRight();
+        break;
+    default:
+        if (!text.isEmpty()) {
+            QByteArray ebcdic = codec->fromUnicode(text);
+            displayBuffer->setCharacter(ebcdic.at(0));
+        }
+        break;
+    }
+}
+
 void TerminalEmulator::dataReceived(const QByteArray &data)
 {
     parseStreamData(data);
@@ -134,27 +158,7 @@ void TerminalEmulator::update()
 
 void TerminalEmulator::keyPressed(int key, const QString &text)
 {
-    switch (key) {
-    case Qt::Key_Up:
-        cursor.moveUp();
-        break;
-    case Qt::Key_Down:
-        cursor.moveDown();
-        break;
-    case Qt::Key_Left:
-        cursor.moveLeft();
-        break;
-    case Qt::Key_Right:
-        cursor.moveRight();
-        break;
-    default:
-        if (!text.isEmpty()) {
-            QByteArray ebcdic = codec->fromUnicode(text);
-            displayBuffer->setCharacter(ebcdic.at(0));
-        }
-        break;
-    }
-
+    handleKeypress(key, text);
     update();
 }
 

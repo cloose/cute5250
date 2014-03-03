@@ -54,6 +54,7 @@ public:
     Cursor cursorPosition() const;
 
     void parseStreamData(const QByteArray &data);
+    void handleKeypress(int key, const QString &text);
 
 signals:
     void updateFinished();

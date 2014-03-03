@@ -361,7 +361,7 @@ TEST_F(ATerminalEmulator, addsPressedTextKeyToDisplayBuffer)
     const QByteArray ebcdicText = textAsEbcdic(arbitraryTextKey);
     EXPECT_CALL(displayBuffer, setCharacter(ebcdicText.at(0)));
 
-    terminal.keyPressed(Qt::Key_A, arbitraryTextKey);
+    terminal.handleKeypress(Qt::Key_A, arbitraryTextKey);
 }
 
 TEST_F(ATerminalEmulator, doesNotAddKeyWithEmptyTextToDisplayBuffer)
@@ -369,12 +369,12 @@ TEST_F(ATerminalEmulator, doesNotAddKeyWithEmptyTextToDisplayBuffer)
     const QString emptyTextKey("");
     EXPECT_CALL(displayBuffer, setCharacter(_)).Times(0);
 
-    terminal.keyPressed(0, emptyTextKey);
+    terminal.handleKeypress(0, emptyTextKey);
 }
 
 TEST_F(ATerminalEmulator, movesCursorUpOnKeyUp)
 {
-    terminal.keyPressed(Qt::Key_Up, QString());
+    terminal.handleKeypress(Qt::Key_Up, QString());
 
     ASSERT_THAT(terminal.cursorPosition().column(), Eq(1));
     ASSERT_THAT(terminal.cursorPosition().row(), Eq(24));
@@ -382,7 +382,7 @@ TEST_F(ATerminalEmulator, movesCursorUpOnKeyUp)
 
 TEST_F(ATerminalEmulator, movesCursorDownOnKeyDown)
 {
-    terminal.keyPressed(Qt::Key_Down, QString());
+    terminal.handleKeypress(Qt::Key_Down, QString());
 
     ASSERT_THAT(terminal.cursorPosition().column(), Eq(1));
     ASSERT_THAT(terminal.cursorPosition().row(), Eq(2));
@@ -390,7 +390,7 @@ TEST_F(ATerminalEmulator, movesCursorDownOnKeyDown)
 
 TEST_F(ATerminalEmulator, movesCursorLeftOnKeyLeft)
 {
-    terminal.keyPressed(Qt::Key_Left, QString());
+    terminal.handleKeypress(Qt::Key_Left, QString());
 
     ASSERT_THAT(terminal.cursorPosition().column(), Eq(80));
     ASSERT_THAT(terminal.cursorPosition().row(), Eq(24));
@@ -398,7 +398,7 @@ TEST_F(ATerminalEmulator, movesCursorLeftOnKeyLeft)
 
 TEST_F(ATerminalEmulator, movesCursorRightOnKeyRight)
 {
-    terminal.keyPressed(Qt::Key_Right, QString());
+    terminal.handleKeypress(Qt::Key_Right, QString());
 
     ASSERT_THAT(terminal.cursorPosition().column(), Eq(2));
     ASSERT_THAT(terminal.cursorPosition().row(), Eq(1));
