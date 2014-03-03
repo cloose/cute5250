@@ -408,6 +408,23 @@ TEST_F(ATerminalEmulator, doesNotAddTextKeyToDisplayBufferIfCursorOutsideField)
     terminal.handleKeypress(Qt::Key_A, arbitraryTextKey);
 }
 
+TEST_F(ATerminalEmulator, doesNotAddTextKeyToDisplayBufferIfFieldIsBypass)
+{
+    const unsigned char column = 5;
+    const unsigned char row = 5;
+    moveCursorTo(column, row);
+    Cursor cursor; cursor.setPosition(column, row);
+    q5250::Field inputField = { .format = 0x6000, .attribute = GreenUnderlineAttribute, .length = 10, .startColumn = column, .startRow = row };
+    const QString arbitraryTextKey("A");
+    const QByteArray ebcdicText = textAsEbcdic(arbitraryTextKey);
+
+    EXPECT_CALL(displayBuffer, size()).WillRepeatedly(Return(QSize(20, 20)));
+    EXPECT_CALL(formatTable, fieldAt(cursor, 20)).WillOnce(Return(&inputField));
+    EXPECT_CALL(displayBuffer, setCharacter(ebcdicText.at(0))).Times(0);
+
+    terminal.handleKeypress(Qt::Key_A, arbitraryTextKey);
+}
+
 TEST_F(ATerminalEmulator, doesNotAddKeyWithEmptyTextToDisplayBuffer)
 {
     const QString emptyTextKey("");

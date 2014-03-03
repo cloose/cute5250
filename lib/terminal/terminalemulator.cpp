@@ -104,7 +104,7 @@ void TerminalEmulator::handleKeypress(int key, const QString &text)
         if (!text.isEmpty()) {
             Field *currentField = formatTable->fieldAt(cursor, displayBuffer->size().width());
 
-            if (currentField) {
+            if (currentField && !currentField->isBypassField()) {
                 QByteArray ebcdic = codec->fromUnicode(text);
                 displayBuffer->setCharacter(ebcdic.at(0));
             }
