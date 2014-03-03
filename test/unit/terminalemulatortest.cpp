@@ -141,7 +141,7 @@ TEST_F(ATerminalEmulator, handlesMultipleCommandsInReceivedData)
     EXPECT_CALL(displayBuffer, setCharacter('A'));
     EXPECT_CALL(displayBuffer, setSize(80, 25));
 
-    terminal.dataReceived(data);
+    terminal.parseStreamData(data);
 }
 
 TEST_F(ATerminalEmulator, setDisplayBufferToDefaultSizeOnReceivingClearUnit)
@@ -151,7 +151,7 @@ TEST_F(ATerminalEmulator, setDisplayBufferToDefaultSizeOnReceivingClearUnit)
 
     EXPECT_CALL(displayBuffer, setSize(80, 25));
 
-    terminal.dataReceived(data);
+    terminal.parseStreamData(data);
 }
 
 TEST_F(ATerminalEmulator, clearsFormatTableOnReceivingClearUnit)
@@ -161,7 +161,7 @@ TEST_F(ATerminalEmulator, clearsFormatTableOnReceivingClearUnit)
 
     EXPECT_CALL(formatTable, clear());
 
-    terminal.dataReceived(data);
+    terminal.parseStreamData(data);
 }
 
 TEST_F(ATerminalEmulator, setDisplayBufferToReceivedAddress)
@@ -173,7 +173,7 @@ TEST_F(ATerminalEmulator, setDisplayBufferToReceivedAddress)
 
     EXPECT_CALL(displayBuffer, setBufferAddress(column, row));
 
-    terminal.dataReceived(data);
+    terminal.parseStreamData(data);
 }
 
 TEST_F(ATerminalEmulator, writesCharactersToDisplayBuffer)
@@ -185,7 +185,7 @@ TEST_F(ATerminalEmulator, writesCharactersToDisplayBuffer)
     EXPECT_CALL(displayBuffer, setCharacter(ebcdicText.at(1)));
     EXPECT_CALL(displayBuffer, setCharacter(ebcdicText.at(2)));
 
-    terminal.dataReceived(data);
+    terminal.parseStreamData(data);
 }
 
 TEST_F(ATerminalEmulator, writesAttributesToDisplayBuffer)
@@ -196,7 +196,7 @@ TEST_F(ATerminalEmulator, writesAttributesToDisplayBuffer)
     EXPECT_CALL(displayBuffer, setCharacter(GreenAttribute));
     EXPECT_CALL(displayBuffer, setCharacter(NonDisplay4Attribute));
 
-    terminal.dataReceived(data);
+    terminal.parseStreamData(data);
 }
 
 TEST_F(ATerminalEmulator, repeatsCharactersToReceivedAddress)
@@ -212,7 +212,7 @@ TEST_F(ATerminalEmulator, repeatsCharactersToReceivedAddress)
     EXPECT_CALL(displayBuffer, setBufferAddress(startColumn, startRow));
     EXPECT_CALL(displayBuffer, repeatCharacterToAddress(endColumn, endRow, ebcdicText.at(0)));
 
-    terminal.dataReceived(data);
+    terminal.parseStreamData(data);
 }
 
 TEST_F(ATerminalEmulator, drawsMultipleTextInBufferOnDisplay)
@@ -275,7 +275,7 @@ TEST_F(ATerminalEmulator, clearsFormatTableOnReceivingStartOfHeader)
 
     EXPECT_CALL(formatTable, clear());
 
-    terminal.dataReceived(data);
+    terminal.parseStreamData(data);
 }
 
 TEST_F(ATerminalEmulator, addsOutputFieldToDisplayBuffer)
@@ -287,7 +287,7 @@ TEST_F(ATerminalEmulator, addsOutputFieldToDisplayBuffer)
 
     EXPECT_CALL(displayBuffer, addField(Pointee(outputField)));
 
-    terminal.dataReceived(data);
+    terminal.parseStreamData(data);
 }
 
 TEST_F(ATerminalEmulator, doesNotAddOutputFieldToFormatTable)
@@ -299,7 +299,7 @@ TEST_F(ATerminalEmulator, doesNotAddOutputFieldToFormatTable)
 
     EXPECT_CALL(formatTable, append(Pointee(outputField))).Times(0);
 
-    terminal.dataReceived(data);
+    terminal.parseStreamData(data);
 }
 
 TEST_F(ATerminalEmulator, addsInputFieldWithoutControlWordsToDisplayBuffer)
@@ -311,7 +311,7 @@ TEST_F(ATerminalEmulator, addsInputFieldWithoutControlWordsToDisplayBuffer)
 
     EXPECT_CALL(displayBuffer, addField(Pointee(inputField)));
 
-    terminal.dataReceived(data);
+    terminal.parseStreamData(data);
 }
 
 TEST_F(ATerminalEmulator, addsInputFieldWithoutControlWordsToFormatTable)
@@ -323,7 +323,7 @@ TEST_F(ATerminalEmulator, addsInputFieldWithoutControlWordsToFormatTable)
 
     EXPECT_CALL(formatTable, append(Pointee(inputField)));
 
-    terminal.dataReceived(data);
+    terminal.parseStreamData(data);
 }
 
 TEST_F(ATerminalEmulator, emitsUpdateFinishedAfterUpdate)

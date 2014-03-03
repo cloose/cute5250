@@ -53,6 +53,8 @@ public:
 
     Cursor cursorPosition() const;
 
+    void parseStreamData(const QByteArray &data);
+
 signals:
     void updateFinished();
 

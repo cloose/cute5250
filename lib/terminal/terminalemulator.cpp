@@ -63,7 +63,7 @@ Cursor TerminalEmulator::cursorPosition() const
     return cursor;
 }
 
-void TerminalEmulator::dataReceived(const QByteArray &data)
+void TerminalEmulator::parseStreamData(const QByteArray &data)
 {
     GeneralDataStream stream(data);
 
@@ -83,7 +83,11 @@ void TerminalEmulator::dataReceived(const QByteArray &data)
             }
         }
     }
+}
 
+void TerminalEmulator::dataReceived(const QByteArray &data)
+{
+    parseStreamData(data);
     update();
 }
 
