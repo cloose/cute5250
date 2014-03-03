@@ -28,6 +28,7 @@
 
 namespace q5250 {
 
+class Cursor;
 struct Field;
 
 class FormatTable
@@ -35,6 +36,8 @@ class FormatTable
 public:
     virtual void clear() = 0;
     virtual void append(Field *field) = 0;
+
+    virtual Field* fieldAt(const Cursor &cursor, int displayWidth) const = 0;
 
     virtual bool isEmpty() const = 0;
 };

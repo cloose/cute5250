@@ -39,6 +39,8 @@ public:
     void clear();
     void append(Field *field);
 
+    virtual Field* fieldAt(const Cursor &cursor, int displayWidth) const;
+
     bool isEmpty() const;
 
 private:

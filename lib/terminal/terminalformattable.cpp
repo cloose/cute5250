@@ -25,6 +25,7 @@
  */
 #include "terminalformattable.h"
 
+#include "cursor.h"
 #include "field.h"
 
 namespace q5250 {
@@ -38,6 +39,23 @@ void TerminalFormatTable::clear()
 void TerminalFormatTable::append(Field *field)
 {
     fieldList.append(field);
+}
+
+Field *TerminalFormatTable::fieldAt(const Cursor &cursor, int displayWidth) const
+{
+    unsigned short cursorAddress = cursor.address();
+
+    Field *resultField = 0;
+    foreach (Field *field, fieldList) {
+        unsigned startFieldAddress = field->startRow * displayWidth + field->startColumn;
+        unsigned endFieldAddress = startFieldAddress + field->length - 1;
+        if (cursorAddress >= startFieldAddress && cursorAddress <= endFieldAddress) {
+            resultField = field;
+            break;
+        }
+    }
+
+    return resultField;
 }
 
 bool TerminalFormatTable::isEmpty() const

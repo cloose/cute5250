@@ -26,25 +26,59 @@
 #include <gmock/gmock.h>
 using namespace testing;
 
+#include <terminal/cursor.h>
 #include <terminal/field.h>
 #include <terminal/terminalformattable.h>
 using namespace q5250;
 
-TEST(ATerminalFormatTable, isEmptyAfterClear)
+class ATerminalFormatTable : public Test
 {
+public:
     TerminalFormatTable formatTable;
 
+    const unsigned int ArbitraryDisplayWidth = 80;
+};
+
+TEST_F(ATerminalFormatTable, isEmptyAfterClear)
+{
     formatTable.clear();
 
     ASSERT_TRUE(formatTable.isEmpty());
 }
 
-TEST(ATerminalFormatTable, isNotEmptyAfterFieldAppended)
+TEST_F(ATerminalFormatTable, isNotEmptyAfterFieldAppended)
 {
     q5250::Field field;
-    TerminalFormatTable formatTable;
 
     formatTable.append(&field);
 
     ASSERT_FALSE(formatTable.isEmpty());
+}
+
+TEST_F(ATerminalFormatTable, returnsNullForFieldAtIfEmpty)
+{
+    Cursor cursor;
+    formatTable.clear();
+
+    ASSERT_THAT(formatTable.fieldAt(cursor, ArbitraryDisplayWidth), IsNull());
+}
+
+TEST_F(ATerminalFormatTable, returnsNullForFieldAtIfCursorNotInside)
+{
+    Cursor cursor;
+    q5250::Field field = { .format = 0x0000, .attribute = 0x00, .length = 1, .startColumn = 5, .startRow = 5 };
+    formatTable.append(&field);
+
+    ASSERT_THAT(formatTable.fieldAt(cursor, ArbitraryDisplayWidth), IsNull());
+}
+
+TEST_F(ATerminalFormatTable, returnsFieldAtCursorPosition)
+{
+    const unsigned char column = 5;
+    const unsigned char row = 5;
+    Cursor cursor; cursor.setPosition(column, row);
+    q5250::Field field = { .format = 0x0000, .attribute = 0x00, .length = 1, .startColumn = column, .startRow = row };
+    formatTable.append(&field);
+
+    ASSERT_THAT(formatTable.fieldAt(cursor, ArbitraryDisplayWidth), Eq(&field));
 }
