@@ -52,6 +52,18 @@ TEST_F(ACursor, returnsSetColumnRowPosition)
     ASSERT_THAT(cursor.row(), Eq(row));
 }
 
+TEST_F(ACursor, returnsSetColumnRowPositionAsAddress)
+{
+    const unsigned char displayWidth = 80;
+    const unsigned char displayHeight = 25;
+    const unsigned char column = 5;
+    const unsigned char row = 5;
+    cursor.setDisplaySize(displayWidth, displayHeight);
+    cursor.setPosition(column, row);
+
+    ASSERT_THAT(cursor.address(), Eq(row * displayWidth + column));
+}
+
 TEST_F(ACursor, subtractsOneFromRowOnMoveUp)
 {
     const unsigned char column = 5;

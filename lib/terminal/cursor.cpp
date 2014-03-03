@@ -34,6 +34,11 @@ Cursor::Cursor() :
     setDisplaySize(80, 25);
 }
 
+unsigned short Cursor::address() const
+{
+    return cursorRow * displaySize.width() + cursorColumn;
+}
+
 void Cursor::setPosition(unsigned char column, unsigned char row)
 {
     cursorColumn = column;
