@@ -465,3 +465,18 @@ TEST_F(ATerminalEmulator, movesCursorRightOnKeyRight)
     ASSERT_THAT(terminal.cursorPosition().column(), Eq(2));
     ASSERT_THAT(terminal.cursorPosition().row(), Eq(1));
 }
+
+TEST_F(ATerminalEmulator, movesCursorRightAfterKeyPress)
+{
+    const unsigned char column = 5;
+    const unsigned char row = 5;
+    moveCursorTo(column, row);
+    q5250::Field inputField = { .format = 0x4000, .attribute = GreenUnderlineAttribute, .length = 10, .startColumn = column, .startRow = row };
+    const QString arbitraryTextKey("A");
+    ON_CALL(formatTable, fieldAt(_, _)).WillByDefault(Return(&inputField));
+
+    terminal.handleKeypress(Qt::Key_A, arbitraryTextKey);
+
+    ASSERT_THAT(terminal.cursorPosition().column(), Eq(column+1));
+    ASSERT_THAT(terminal.cursorPosition().row(), Eq(row));
+}
