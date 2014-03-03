@@ -151,6 +151,15 @@ inline bool operator==(const Cursor &lhs, const Cursor &rhs)
 
 }
 
+TEST_F(ATerminalEmulator, callsUpdateAfterParsingReceivedData)
+{
+    EXPECT_CALL(displayBuffer, size()).Times(2).WillRepeatedly(Return(QSize(0, 0)));
+    EXPECT_CALL(terminalDisplay, clear()).Times(1);
+    EXPECT_CALL(terminalDisplay, displayCursor(_, _)).Times(1);
+
+    terminal.dataReceived(QByteArray());
+}
+
 TEST_F(ATerminalEmulator, handlesMultipleCommandsInReceivedData)
 {
     const char writeToDisplayCommand[]{ESC, WriteToDisplayCommand, 0x00, 0x18, 'A'};
@@ -369,6 +378,15 @@ TEST_F(ATerminalEmulator, displaysCursorOnUpdate)
     EXPECT_CALL(terminalDisplay, displayCursor(1, 1));
 
     terminal.update();
+}
+
+TEST_F(ATerminalEmulator, callsUpdateAfterHandlingKeypress)
+{
+    EXPECT_CALL(displayBuffer, size()).Times(2).WillRepeatedly(Return(QSize(0, 0)));
+    EXPECT_CALL(terminalDisplay, clear()).Times(1);
+    EXPECT_CALL(terminalDisplay, displayCursor(_, _)).Times(1);
+
+    terminal.keyPressed(0, QString());
 }
 
 TEST_F(ATerminalEmulator, addsPressedTextKeyToDisplayBufferIfCursorInsideField)
