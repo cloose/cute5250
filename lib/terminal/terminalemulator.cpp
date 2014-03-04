@@ -222,7 +222,7 @@ void TerminalEmulator::handleWriteToDisplayCommand(GeneralDataStream &stream)
                     field->attribute = byte;
                 }
 
-                field->length = stream.readWord();
+                field->setLength(stream.readWord());
 
                 displayBuffer->addField(field);
 

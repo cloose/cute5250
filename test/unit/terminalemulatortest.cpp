@@ -89,6 +89,8 @@ public:
     static const char GreenUnderlineAttribute = 0x24;
     static const char NonDisplay4Attribute = 0x3f;
 
+    static const char EbcdicBlank = '\x40';
+
     ATerminalEmulator()
     {
         terminal.setDisplayBuffer(&displayBuffer);
@@ -140,7 +142,8 @@ inline bool operator==(const Field &lhs, const Field &rhs)
            lhs.attribute == rhs.attribute &&
            lhs.length == rhs.length &&
            lhs.startColumn == rhs.startColumn &&
-           lhs.startRow == rhs.startRow;
+           lhs.startRow == rhs.startRow &&
+           lhs.content == rhs.content;
 }
 
 inline bool operator==(const Cursor &lhs, const Cursor &rhs)
@@ -308,7 +311,8 @@ TEST_F(ATerminalEmulator, addsOutputFieldToDisplayBuffer)
     const char fieldLength = 5;
     const char streamData[]{StartOfFieldOrder, GreenUnderlineAttribute, 0x00, fieldLength};
     const QByteArray data = createWriteToDisplayCommandWithOrderLength(4) + QByteArray::fromRawData(streamData, 4);
-    q5250::Field outputField = { .format = 0, .attribute = GreenUnderlineAttribute, .length = fieldLength };
+    q5250::Field outputField = { .format = 0, .attribute = GreenUnderlineAttribute, .length = fieldLength,
+                                 .startColumn = 0, .startRow = 0, .content = QByteArray(fieldLength, EbcdicBlank) };
 
     EXPECT_CALL(displayBuffer, addField(Pointee(outputField)));
 
@@ -320,9 +324,8 @@ TEST_F(ATerminalEmulator, doesNotAddOutputFieldToFormatTable)
     const char fieldLength = 5;
     const char streamData[]{StartOfFieldOrder, GreenUnderlineAttribute, 0x00, fieldLength};
     const QByteArray data = createWriteToDisplayCommandWithOrderLength(4) + QByteArray::fromRawData(streamData, 4);
-    q5250::Field outputField = { .format = 0, .attribute = GreenUnderlineAttribute, .length = fieldLength };
 
-    EXPECT_CALL(formatTable, append(Pointee(outputField))).Times(0);
+    EXPECT_CALL(formatTable, append(_)).Times(0);
 
     terminal.parseStreamData(data);
 }
@@ -332,7 +335,8 @@ TEST_F(ATerminalEmulator, addsInputFieldWithoutControlWordsToDisplayBuffer)
     const char fieldLength = 5;
     const char streamData[]{StartOfFieldOrder, 0x40, 0x00, GreenUnderlineAttribute, 0x00, fieldLength};
     const QByteArray data = createWriteToDisplayCommandWithOrderLength(6) + QByteArray::fromRawData(streamData, 6);
-    q5250::Field inputField = { .format = 0x4000, .attribute = GreenUnderlineAttribute, .length = fieldLength };
+    q5250::Field inputField = { .format = 0x4000, .attribute = GreenUnderlineAttribute, .length = fieldLength,
+                                .startColumn = 0, .startRow = 0, .content = QByteArray(fieldLength, EbcdicBlank) };
 
     EXPECT_CALL(displayBuffer, addField(Pointee(inputField)));
 
@@ -344,7 +348,8 @@ TEST_F(ATerminalEmulator, addsInputFieldWithoutControlWordsToFormatTable)
     const char fieldLength = 5;
     const char streamData[]{StartOfFieldOrder, 0x40, 0x00, GreenUnderlineAttribute, 0x00, fieldLength};
     const QByteArray data = createWriteToDisplayCommandWithOrderLength(6) + QByteArray::fromRawData(streamData, 6);
-    q5250::Field inputField = { .format = 0x4000, .attribute = GreenUnderlineAttribute, .length = fieldLength };
+    q5250::Field inputField = { .format = 0x4000, .attribute = GreenUnderlineAttribute, .length = fieldLength,
+                                .startColumn = 0, .startRow = 0, .content = QByteArray(fieldLength, EbcdicBlank) };
 
     EXPECT_CALL(formatTable, append(Pointee(inputField)));
 
