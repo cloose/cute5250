@@ -439,11 +439,10 @@ TEST_F(ATerminalEmulator, doesNotAddTextKeyToDisplayBufferIfCursorOutsideField)
     moveCursorTo(column, row);
     Cursor cursor; cursor.setPosition(column, row);
     const QString arbitraryTextKey("A");
-    const QByteArray ebcdicText = textAsEbcdic(arbitraryTextKey);
 
     EXPECT_CALL(displayBuffer, size()).WillRepeatedly(Return(QSize(20, 20)));
-    EXPECT_CALL(formatTable, fieldAt(cursor, 20)).WillOnce(Return((q5250::Field*)0));
-    EXPECT_CALL(displayBuffer, setCharacterAt(cursor.column(), cursor.row(), ebcdicText.at(0))).Times(0);
+    EXPECT_CALL(formatTable, fieldAt(cursor, 20)).WillOnce(ReturnNull());
+    EXPECT_CALL(displayBuffer, setCharacterAt(_, _, _)).Times(0);
 
     terminal.handleKeypress(Qt::Key_A, arbitraryTextKey);
 }
@@ -456,11 +455,10 @@ TEST_F(ATerminalEmulator, doesNotAddTextKeyToDisplayBufferIfFieldIsBypass)
     Cursor cursor; cursor.setPosition(column, row);
     q5250::Field inputField = { .format = 0x6000, .attribute = GreenUnderlineAttribute, .length = 10, .startColumn = column, .startRow = row };
     const QString arbitraryTextKey("A");
-    const QByteArray ebcdicText = textAsEbcdic(arbitraryTextKey);
 
     EXPECT_CALL(displayBuffer, size()).WillRepeatedly(Return(QSize(20, 20)));
     EXPECT_CALL(formatTable, fieldAt(cursor, 20)).WillOnce(Return(&inputField));
-    EXPECT_CALL(displayBuffer, setCharacterAt(cursor.column(), cursor.row(), ebcdicText.at(0))).Times(0);
+    EXPECT_CALL(displayBuffer, setCharacterAt(_, _, _)).Times(0);
 
     terminal.handleKeypress(Qt::Key_A, arbitraryTextKey);
 }
@@ -525,6 +523,24 @@ TEST_F(ATerminalEmulator, sendsCursorPositionAndAidByteOnKeyReturn)
     QSignalSpy spy(&terminal, SIGNAL(sendData(QByteArray)));
     const QByteArray cursorAndAidBytes {"\x01\x01\xf1"};
     const QByteArray generalDataStream = createGdsHeaderWithLength(cursorAndAidBytes.size(), 0x00) + cursorAndAidBytes;
+
+    terminal.handleKeypress(Qt::Key_Return, QString());
+
+    ASSERT_THAT(spy.count(), Eq(1));
+    ASSERT_THAT(spy[0][0].toByteArray(), Eq(generalDataStream));
+}
+
+TEST_F(ATerminalEmulator, sendsFieldPositionAndContentOnKeyReturn)
+{
+    QSignalSpy spy(&terminal, SIGNAL(sendData(QByteArray)));
+    const QByteArray fieldPosition {"\x11\x05\x0a"};
+    const QByteArray fieldContent {"ABCDE"};
+    const QByteArray cursorAndAidBytes {"\x01\x01\xf1"};
+    const unsigned streamLength = cursorAndAidBytes.size() + fieldPosition.size() + fieldContent.size();
+    const QByteArray generalDataStream = createGdsHeaderWithLength(streamLength, 0x00) + cursorAndAidBytes + fieldPosition + fieldContent;
+    q5250::Field inputField = { .format = 0x4000, .attribute = GreenUnderlineAttribute, .length = 5,
+                                .startColumn = 10, .startRow = 5, .content = fieldContent };
+    EXPECT_CALL(formatTable, map(_)).WillOnce(InvokeArgument<0>(&inputField));
 
     terminal.handleKeypress(Qt::Key_Return, QString());
 

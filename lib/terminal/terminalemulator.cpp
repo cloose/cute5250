@@ -106,6 +106,16 @@ void TerminalEmulator::handleKeypress(int key, const QString &text)
 
             stream << cursor.row() << cursor.column() << 0xf1 /*AID*/;
 
+            formatTable->map([&](Field* field) {
+                stream << 0x11
+                       << field->startRow
+                       << field->startColumn;
+
+                for (int i = 0; i < field->content.size(); ++i) {
+                    stream << field->content.at(i);
+                }
+            });
+
             emit sendData(stream.toByteArray());
         }
         break;
