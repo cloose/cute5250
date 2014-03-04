@@ -48,6 +48,11 @@ bool Field::isModified() const
     return format & MODIFIED_MASK;
 }
 
+void Field::markAsModified()
+{
+    format |= MODIFIED_MASK;
+}
+
 void Field::setLength(unsigned short length)
 {
     this->length = length;
