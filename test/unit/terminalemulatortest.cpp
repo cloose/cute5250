@@ -100,10 +100,10 @@ public:
         DefaultValue<QSize>::Set(QSize(0, 0));
     }
 
-    QByteArray createGdsHeaderWithLength(char length)
+    QByteArray createGdsHeaderWithLength(char length, char opCode = 0x03)
     {
         char fullLength = 0x0a + length;
-        const char gdsHeader[] { 0x00, fullLength, 0x12, (char)0xa0, 0x00, 0x00, 0x04, 0x00, 0x00, 0x03 };
+        const char gdsHeader[] { 0x00, fullLength, 0x12, (char)0xa0, 0x00, 0x00, 0x04, 0x00, 0x00, opCode };
         return QByteArray(gdsHeader, 10);
     }
 
@@ -504,7 +504,7 @@ TEST_F(ATerminalEmulator, movesCursorRightOnKeyRight)
     ASSERT_THAT(terminal.cursorPosition().row(), Eq(1));
 }
 
-TEST_F(ATerminalEmulator, movesCursorRightAfterKeyPress)
+TEST_F(ATerminalEmulator, movesCursorRightAfterTextKeyPress)
 {
     const unsigned char column = 5;
     const unsigned char row = 5;
@@ -517,4 +517,16 @@ TEST_F(ATerminalEmulator, movesCursorRightAfterKeyPress)
 
     ASSERT_THAT(terminal.cursorPosition().column(), Eq(column+1));
     ASSERT_THAT(terminal.cursorPosition().row(), Eq(row));
+}
+
+TEST_F(ATerminalEmulator, sendsCursorPositionAndAidByteOnKeyReturn)
+{
+    QSignalSpy spy(&terminal, SIGNAL(sendData(QByteArray)));
+    const QByteArray cursorAndAidBytes {"\x01\x01\xf1"};
+    const QByteArray generalDataStream = createGdsHeaderWithLength(cursorAndAidBytes.size(), 0x00) + cursorAndAidBytes;
+
+    terminal.handleKeypress(Qt::Key_Return, QString());
+
+    ASSERT_THAT(spy.count(), Eq(1));
+    ASSERT_THAT(spy[0][0].toByteArray(), Eq(generalDataStream));
 }

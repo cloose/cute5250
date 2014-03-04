@@ -100,6 +100,15 @@ void TerminalEmulator::handleKeypress(int key, const QString &text)
     case Qt::Key_Right:
         cursor.moveRight();
         break;
+    case Qt::Key_Return:
+        {
+            GeneralDataStream stream;
+
+            stream << cursor.row() << cursor.column() << 0xf1 /*AID*/;
+
+            emit sendData(stream.toByteArray());
+        }
+        break;
     default:
         if (!text.isEmpty()) {
             Field *currentField = formatTable->fieldAt(cursor, displayBuffer->size().width());

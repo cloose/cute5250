@@ -155,7 +155,7 @@ void TerminalDisplayWidget::displayAttribute(unsigned char attribute)
 
 void TerminalDisplayWidget::displayCursor(unsigned char column, unsigned char row)
 {
-    qDebug() << Q_FUNC_INFO << column << row;
+//    qDebug() << Q_FUNC_INFO << column << row;
 
     QFontMetrics fm = painter->fontMetrics();
     unsigned int x = column * fm.width('X');
@@ -170,7 +170,7 @@ void TerminalDisplayWidget::displayCursor(unsigned char column, unsigned char ro
 
 void TerminalDisplayWidget::paintEvent(QPaintEvent *event)
 {
-    qDebug() << Q_FUNC_INFO;
+//    qDebug() << Q_FUNC_INFO;
     QPainter p(this);
     p.drawPixmap(0, 0, *screen);
 }
@@ -239,8 +239,12 @@ Main::Main(QObject *parent) :
 {
     connect(connection, &TcpSocketTelnetConnection::readyRead,
             client, &TelnetClient::readyRead);
+
     connect(client, &TelnetClient::dataReceived,
             terminal, &TerminalEmulator::dataReceived);
+    connect(terminal, &TerminalEmulator::sendData,
+            client, &TelnetClient::sendData);
+
     connect(display, &TerminalDisplayWidget::sizeChanged,
             terminal, &TerminalEmulator::update);
     connect(display, &TerminalDisplayWidget::keyPressed,
@@ -252,7 +256,7 @@ Main::Main(QObject *parent) :
     terminal->setDisplayBuffer(new TerminalDisplayBuffer());
     terminal->setFormatTable(new TerminalFormatTable());
     terminal->setTerminalDisplay(display);
-    connection->connectToHost(QStringLiteral("ASKNIDEV"), 23);
+    connection->connectToHost(QStringLiteral("ASKNIDEV.int.kn"), 23);
 
     display->show();
     terminal->update();
