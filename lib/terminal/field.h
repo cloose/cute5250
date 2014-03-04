@@ -47,6 +47,7 @@ struct Q5250SHARED_EXPORT Field
     bool isBypassField() const;
 
     void setLength(unsigned short length);
+    void setContent(unsigned char column, unsigned char row, const QByteArray &input);
 };
 
 } // namespace q5250

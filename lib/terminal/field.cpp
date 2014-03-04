@@ -48,4 +48,10 @@ void Field::setLength(unsigned short length)
     content.fill(EBCDIC_BLANK, length);
 }
 
+void Field::setContent(unsigned char column, unsigned char row, const QByteArray &input)
+{
+    unsigned char pos = column - startColumn;
+    content[pos] = input.at(0);
+}
+
 } // namespace q5250

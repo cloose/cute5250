@@ -73,3 +73,39 @@ TEST(AField, fillsContentWithBlanksWhenSettingTheLength)
 
     ASSERT_THAT(field.content, Eq(QByteArray(Length, EbcdicBlank)));
 }
+
+TEST(AField, setsContentAtStartOfField)
+{
+    const char EbcdicBlank = 0x40;
+    const QByteArray input{"A"};
+    q5250::Field field; field.startColumn = 1; field.startRow = 1;
+    field.setLength(5);
+
+    field.setContent(1, 1, input);
+
+    ASSERT_THAT(field.content, Eq(input + QByteArray(4, EbcdicBlank)));
+}
+
+TEST(AField, setsContentAtMiddleOfField)
+{
+    const char EbcdicBlank = 0x40;
+    const QByteArray input{"A"};
+    q5250::Field field; field.startColumn = 1; field.startRow = 1;
+    field.setLength(5);
+
+    field.setContent(3, 1, input);
+
+    ASSERT_THAT(field.content, Eq(QByteArray(2, EbcdicBlank) + input + QByteArray(2, EbcdicBlank)));
+}
+
+TEST(AField, setsContentAtEndOfField)
+{
+    const char EbcdicBlank = 0x40;
+    const QByteArray input{"A"};
+    q5250::Field field; field.startColumn = 1; field.startRow = 1;
+    field.setLength(5);
+
+    field.setContent(5, 1, input);
+
+    ASSERT_THAT(field.content, Eq(QByteArray(4, EbcdicBlank) + input));
+}
