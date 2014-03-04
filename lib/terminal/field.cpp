@@ -40,4 +40,9 @@ bool Field::isBypassField() const
     return format & BYPASS_FIELD_MASK;
 }
 
+void Field::setLength(unsigned short length)
+{
+    this->length = length;
+}
+
 } // namespace q5250

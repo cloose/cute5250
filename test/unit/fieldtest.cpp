@@ -52,3 +52,13 @@ TEST(AField, reportsIsBypassFieldIfBit13Set)
     field.format = 0x2000;
     ASSERT_TRUE(field.isBypassField());
 }
+
+TEST(AField, setsLengthToPassedValue)
+{
+    q5250::Field field;
+    field.length = 0;
+
+    field.setLength(10);
+
+    ASSERT_THAT(field.length, Eq(10));
+}

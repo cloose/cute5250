@@ -28,6 +28,8 @@
 
 #include "q5250_global.h"
 
+#include <QByteArray>
+
 namespace q5250 {
 
 struct Q5250SHARED_EXPORT Field
@@ -41,6 +43,8 @@ struct Q5250SHARED_EXPORT Field
 
     bool isInputField() const;
     bool isBypassField() const;
+
+    void setLength(unsigned short length);
 };
 
 } // namespace q5250
