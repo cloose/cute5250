@@ -82,3 +82,17 @@ TEST_F(ATerminalFormatTable, returnsFieldAtCursorPosition)
 
     ASSERT_THAT(formatTable.fieldAt(cursor, ArbitraryDisplayWidth), Eq(&field));
 }
+
+TEST_F(ATerminalFormatTable, appliesPassedFunctionToEachElementOfFieldList)
+{
+    unsigned count = 0;
+    q5250::Field field1, field2;
+    formatTable.append(&field1);
+    formatTable.append(&field2);
+
+    formatTable.map([&](q5250::Field *field) {
+        ++count;
+    });
+
+    ASSERT_THAT(count, Eq(2));
+}

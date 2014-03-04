@@ -40,6 +40,8 @@ public:
     virtual Field* fieldAt(const Cursor &cursor, int displayWidth) const = 0;
 
     virtual bool isEmpty() const = 0;
+
+    virtual void map(std::function<void (Field*)> func) const = 0;
 };
 
 } // namespace q5250

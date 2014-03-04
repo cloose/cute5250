@@ -43,6 +43,8 @@ public:
 
     bool isEmpty() const;
 
+    void map(std::function<void (Field*)> func) const;
+
 private:
     QVector<Field*> fieldList;
 };

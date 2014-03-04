@@ -63,4 +63,11 @@ bool TerminalFormatTable::isEmpty() const
     return fieldList.isEmpty();
 }
 
+void TerminalFormatTable::map(std::function<void (Field *)> func) const
+{
+    foreach (Field *field, fieldList) {
+        func(field);
+    }
+}
+
 } // namespace q5250

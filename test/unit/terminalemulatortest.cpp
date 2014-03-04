@@ -57,6 +57,7 @@ public:
     MOCK_METHOD1(append, void(q5250::Field*));
     MOCK_CONST_METHOD2(fieldAt, q5250::Field*(const Cursor &, int));
     MOCK_CONST_METHOD0(isEmpty, bool());
+    MOCK_CONST_METHOD1(map, void(std::function<void (q5250::Field*)> func));
 };
 
 class TerminalDisplayMock : public TerminalDisplay
