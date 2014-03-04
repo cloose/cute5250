@@ -80,6 +80,7 @@ public:
     static const char ESC = 0x04;
     static const char ClearUnitCommand = 0x40;
     static const char WriteToDisplayCommand = 0x11;
+    static const char WriteStructuredFieldCommand = 0xf3;
 
     static const char StartOfHeaderOrder = 0x01;
     static const char RepeatToAddressOrder = 0x02;
@@ -113,6 +114,18 @@ public:
         static const char streamData[]{ESC, WriteToDisplayCommand, 0x00, 0x18};
         char fullLength = length + 4;
         return createGdsHeaderWithLength(fullLength) + QByteArray::fromRawData(streamData, 4);
+    }
+
+    QByteArray create5250QueryCommand()
+    {
+        static const char streamData[]{ESC, WriteStructuredFieldCommand, 0x00, 0x05, (char)0xd9, (char)0x70, 0x00};
+        return createGdsHeaderWithLength(6) + QByteArray::fromRawData(streamData, 6);
+    }
+
+    QByteArray createGeneralDataStream(const QByteArray &data)
+    {
+        const char opCode = 0x00;
+        return createGdsHeaderWithLength(data.size(), opCode) + data;
     }
 
     QByteArray textAsEbcdic(const QString &text)
@@ -546,4 +559,23 @@ TEST_F(ATerminalEmulator, sendsFieldPositionAndContentOnKeyReturn)
 
     ASSERT_THAT(spy.count(), Eq(1));
     ASSERT_THAT(spy[0][0].toByteArray(), Eq(generalDataStream));
+}
+
+#include <QDebug>
+TEST_F(ATerminalEmulator, repliesTo5250QueryCommand)
+{
+    QSignalSpy spy(&terminal, SIGNAL(sendData(QByteArray)));
+    const char queryResponse[]{
+        0x00, 0x00, (char)0x88,
+        0x00, 0x44, (char)0xd9, (char)0x70, (char)0x80,
+        0x06, 0x00,                                                                                     // workstation control unit
+        0x01, 0x01, 0x00,                                                                               // code level
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // reserved
+        0x01                                                                                            // Workstation Type
+    };
+
+    terminal.parseStreamData(create5250QueryCommand());
+
+    ASSERT_THAT(spy.count(), Eq(1));
+    ASSERT_THAT(spy[0][0].toByteArray(), Eq(createGeneralDataStream(QByteArray::fromRawData(queryResponse, 30))));
 }

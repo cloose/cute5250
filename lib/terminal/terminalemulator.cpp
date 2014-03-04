@@ -80,6 +80,9 @@ void TerminalEmulator::parseStreamData(const QByteArray &data)
             case 0x40 /*CLEAR UNIT*/:
                 handleClearUnitCommand();
                 break;
+            case 0xf3 /*WRITE STRUCTURED FIELD*/:
+                handleWriteStructuredFieldCommand(stream);
+                break;
             }
         }
     }
@@ -255,6 +258,45 @@ void TerminalEmulator::handleWriteToDisplayCommand(GeneralDataStream &stream)
             displayBuffer->setCharacter(byte);
             break;
         }
+    }
+}
+
+void TerminalEmulator::handleWriteStructuredFieldCommand(GeneralDataStream &stream)
+{
+    unsigned short length = stream.readWord();
+    unsigned char commandClass = stream.readByte();
+    unsigned char commandType = stream.readByte();
+    unsigned char flags = stream.readByte();
+
+    qDebug() << "[WSF] len =" << length
+             << "class =" << hex << showbase << commandClass
+             << "type =" << hex << showbase << commandType
+             << "flags =" << bin << showbase << flags;
+
+    // 5250 QUERY command
+    if (commandClass == 0xd9 && commandType == 0x70) {
+        GeneralDataStream stream;
+
+        // [ROW] [COLUMN] [AID] [STRUCTURED FIELD]
+        stream << 0x00                          // cursor row
+               << 0x00                          // cursor column
+               << 0x88;                         // 5250 QUERY reply
+
+        // [LL] [C] [T] [F1] [Data Field]
+        stream << 0x00 << 0x44                  // Total length of structured field
+               << 0xd9                          // Command Class
+               << 0x70                          // Command Type: 5250 QUERY
+               << 0x80;                         // Fixed flag byte for QUERY response
+
+        stream << 0x06 << 0x00                  // Workstation Control Unit
+               << 0x01 << 0x01 << 0x00          // Code Level
+               << 0x00 << 0x00 << 0x00 << 0x00  // Reserved (16 bytes)
+               << 0x00 << 0x00 << 0x00 << 0x00
+               << 0x00 << 0x00 << 0x00 << 0x00
+               << 0x00 << 0x00 << 0x00 << 0x00
+               << 0x01;                         // Workstation Type: Display
+
+        emit sendData(stream.toByteArray());
     }
 }
 

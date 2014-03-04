@@ -68,6 +68,7 @@ public slots:
 private:
     void handleClearUnitCommand();
     void handleWriteToDisplayCommand(GeneralDataStream &stream);
+    void handleWriteStructuredFieldCommand(GeneralDataStream &stream);
 
     DisplayBuffer *displayBuffer;
     TerminalDisplay *terminalDisplay;
