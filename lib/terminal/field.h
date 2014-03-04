@@ -41,6 +41,8 @@ struct Q5250SHARED_EXPORT Field
     unsigned char startColumn;
     unsigned char startRow;
 
+    QByteArray content;
+
     bool isInputField() const;
     bool isBypassField() const;
 

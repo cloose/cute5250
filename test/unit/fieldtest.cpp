@@ -62,3 +62,14 @@ TEST(AField, setsLengthToPassedValue)
 
     ASSERT_THAT(field.length, Eq(10));
 }
+
+TEST(AField, fillsContentWithBlanksWhenSettingTheLength)
+{
+    const char EbcdicBlank = 0x40;
+    const unsigned short Length = 5;
+    q5250::Field field;
+
+    field.setLength(Length);
+
+    ASSERT_THAT(field.content, Eq(QByteArray(Length, EbcdicBlank)));
+}
