@@ -411,6 +411,26 @@ TEST_F(ATerminalEmulator, addsPressedTextKeyToDisplayBufferIfCursorInsideField)
     terminal.handleKeypress(Qt::Key_A, arbitraryTextKey);
 }
 
+TEST_F(ATerminalEmulator, addsTextKeyToFieldContent)
+{
+    const unsigned char column = 5;
+    const unsigned char row = 5;
+    moveCursorTo(column, row);
+    Cursor cursor; cursor.setPosition(column, row);
+    q5250::Field inputField = { .format = 0x4000, .attribute = GreenUnderlineAttribute, .length = 5,
+                                .startColumn = column, .startRow = row, .content = QByteArray(5, EbcdicBlank) };
+    const QString arbitraryTextKey("A");
+    const QByteArray ebcdicText = textAsEbcdic(arbitraryTextKey);
+
+    EXPECT_CALL(displayBuffer, size()).WillRepeatedly(Return(QSize(20, 20)));
+    EXPECT_CALL(formatTable, fieldAt(cursor, 20)).WillOnce(Return(&inputField));
+    EXPECT_CALL(displayBuffer, setCharacterAt(cursor.column(), cursor.row(), ebcdicText.at(0)));
+
+    terminal.handleKeypress(Qt::Key_A, arbitraryTextKey);
+
+    ASSERT_THAT(inputField.content, Eq(ebcdicText + QByteArray{"\x40\x40\x40\x40"}));
+}
+
 TEST_F(ATerminalEmulator, doesNotAddTextKeyToDisplayBufferIfCursorOutsideField)
 {
     const unsigned char column = 5;
