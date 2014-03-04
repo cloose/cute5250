@@ -63,6 +63,8 @@ void Field::setContent(unsigned char column, unsigned char row, const QByteArray
 {
     unsigned char pos = column - startColumn;
     content[pos] = input.at(0);
+
+    markAsModified();
 }
 
 } // namespace q5250

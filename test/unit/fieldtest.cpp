@@ -130,3 +130,13 @@ TEST(AField, setsContentAtEndOfField)
 
     ASSERT_THAT(field.content, Eq(QByteArray(4, EbcdicBlank) + input));
 }
+
+TEST(AField, reportsAsModifiedIfContentIsSet)
+{
+    q5250::Field field; field.format = 0x0000; field.startColumn = 1; field.startRow = 1;
+    field.setLength(5);
+
+    field.setContent(1, 1, QByteArray{"A"});
+
+    ASSERT_TRUE(field.isModified());
+}
