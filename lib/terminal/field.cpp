@@ -31,6 +31,7 @@ static const char EBCDIC_BLANK = '\x40';
 
 static const unsigned short INPUT_FIELD_MASK = 0xc000;  // Bit 14-15
 static const unsigned short BYPASS_FIELD_MASK = 0x2000; // Bit 13
+static const unsigned short MODIFIED_MASK = 0x0800;     // Bit 11
 
 bool Field::isInputField() const
 {
@@ -40,6 +41,11 @@ bool Field::isInputField() const
 bool Field::isBypassField() const
 {
     return format & BYPASS_FIELD_MASK;
+}
+
+bool Field::isModified() const
+{
+    return format & MODIFIED_MASK;
 }
 
 void Field::setLength(unsigned short length)

@@ -53,6 +53,17 @@ TEST(AField, reportsIsBypassFieldIfBit13Set)
     ASSERT_TRUE(field.isBypassField());
 }
 
+TEST(AField, reportsIsModifiedIfBit14Set)
+{
+    q5250::Field field;
+
+    field.format = 0x0000;
+    ASSERT_FALSE(field.isModified());
+
+    field.format = 0x0800;
+    ASSERT_TRUE(field.isModified());
+}
+
 TEST(AField, setsLengthToPassedValue)
 {
     q5250::Field field;

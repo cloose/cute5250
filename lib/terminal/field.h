@@ -45,6 +45,7 @@ struct Q5250SHARED_EXPORT Field
 
     bool isInputField() const;
     bool isBypassField() const;
+    bool isModified() const;
 
     void setLength(unsigned short length);
     void setContent(unsigned char column, unsigned char row, const QByteArray &input);
