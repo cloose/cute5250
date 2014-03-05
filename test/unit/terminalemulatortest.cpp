@@ -568,14 +568,44 @@ TEST_F(ATerminalEmulator, repliesTo5250QueryCommand)
     const char queryResponse[]{
         0x00, 0x00, (char)0x88,
         0x00, 0x44, (char)0xd9, (char)0x70, (char)0x80,
-        0x06, 0x00,                                                                                     // workstation control unit
-        0x01, 0x01, 0x00,                                                                               // code level
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // reserved
-        0x01                                                                                            // Workstation Type
+        0x06, 0x00,                                                                                     // Workstation Control Unit
+        0x01, 0x01, 0x00,                                                                               // Code Level
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // Reserved
+        0x01,                                                                                           // Workstation Type
+        (char)0xf5, (char)0xf2, (char)0xf5, (char)0xf1,                                                 // Machine Type
+        (char)0xf0, (char)0xf1, (char)0xf1,                                                             // Model Number
+        0x02,                                                                                           // Keyboard ID: Standard
+        0x00,                                                                                           // Extended Keyboard ID
+        0x00,                                                                                           // Reserved
+        0x00, 0x00, 0x00, 0x00,                                                                         // Serial Number
+        0x01, 0x00,                                                                                     // Input Fields: 256
+        0x00,                                                                                           // Control Unit Customization
+        0x00, 0x00,                                                                                     // Reserved
+        // Device Capabilities
+        0x23,                                                                                           // 0010 0011
+        0x31,                                                                                           // 0011 0001
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,                                                                                           // Reserved
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,                                                                                           // Reserved
+        0x00,
+        0x00,
+        0x00,                                                                                           // Reserved
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00, 0x00, 0x00                                                                                // Reserved
     };
 
     terminal.parseStreamData(create5250QueryCommand());
 
     ASSERT_THAT(spy.count(), Eq(1));
-    ASSERT_THAT(spy[0][0].toByteArray(), Eq(createGeneralDataStream(QByteArray::fromRawData(queryResponse, 30))));
+    ASSERT_THAT(spy[0][0].toByteArray(), Eq(createGeneralDataStream(QByteArray::fromRawData(queryResponse, 71))));
 }

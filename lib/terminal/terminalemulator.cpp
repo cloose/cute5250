@@ -277,7 +277,7 @@ void TerminalEmulator::handleWriteStructuredFieldCommand(GeneralDataStream &stre
     if (commandClass == 0xd9 && commandType == 0x70) {
         GeneralDataStream stream;
 
-        // [ROW] [COLUMN] [AID] [STRUCTURED FIELD]
+        // [ROW] [COLUMN] [AID] [Structured Field]
         stream << 0x00                          // cursor row
                << 0x00                          // cursor column
                << 0x88;                         // 5250 QUERY reply
@@ -295,6 +295,69 @@ void TerminalEmulator::handleWriteStructuredFieldCommand(GeneralDataStream &stre
                << 0x00 << 0x00 << 0x00 << 0x00
                << 0x00 << 0x00 << 0x00 << 0x00
                << 0x01;                         // Workstation Type: Display
+
+        QByteArray machineType = codec->fromUnicode(QStringLiteral("5251"));
+        for (int i = 0; i < machineType.size(); ++i) {
+            stream << machineType.at(i);
+        }
+
+        QByteArray modelNumber = codec->fromUnicode(QStringLiteral("011"));
+        for (int i = 0; i < modelNumber.size(); ++i) {
+            stream << modelNumber.at(i);
+        }
+
+        stream << 0x02                          // Keyboard ID: Standard
+               << 0x00                          // Extended Keyboard ID
+               << 0x00                          // Reserved
+               << 0x00 << 0x00 << 0x00 << 0x00  // Serial Number: None
+               << 0x01 << 0x00                  // Maximum Number of Input Fields: 256
+               << 0x00                          // Control Unit Customization
+                                                //  Bit 7   : host can send a 5250 WSC CUSTOMIZATION command
+                                                //  Bit 6   : host can send a 5250 QUERY STATION STATE command
+                                                //  Bit 5   : host can send a 5250 WORKSTATION CUSTOMIZATION
+                                                //            command to select the SBA code returned in READ
+                                                //            commands for displays with ideographic extended
+                                                //            attributes
+                                                //  Bit 4   : 5250 WORKSTATION CUSTOMIZATION command may
+                                                //           be 6 bytes or greater than 8 bytes in length
+                                                //  Bits 3-0: Reserved
+               << 0x00 << 0x00                  // Reserved (2 bytes)
+               // Device Capabilities (22 bytes)
+               << 0x23                          // Byte 0 - Operating Capabilities:  0b00100011
+                                                //  Bits 7-6: Row 1/Column 1 support (00=No, 01=Limited)
+                                                //  Bit 5   : READ MDT ALTERNATE command is supported
+                                                //  Bit 4   : Workstation has PA1 and PA2 support
+                                                //  Bit 3   : Workstation has PA3 support
+                                                //  Bit 2   : Workstation has cursor select support
+                                                //  Bit 1   : Move Cursor order, Transparent Data order and
+                                                //            Transparent entry field FCW support
+                                                //  Bit 0   : READ MODIFIED IMMEDIATE ALTERNATE command
+                                                //            is supported
+               << 0x31                          // Byte 1 - Display Screen Capabilities: 0b00110001
+                                                //  Bits 7-6: Reserved
+                                                //  Bit 5   : 27 x 132 screen size is supported
+                                                //  Bit 4   : 24 x 80 screen size is supported
+                                                //  Bit 3   : SLP is supported
+                                                //  Bit 2   : MSR is supported
+                                                //  Bits 1-0: color support (00=Monochrome, 01=Color)
+               << 0x00                          // Byte 2
+               << 0x00                          // Byte 3
+               << 0x00                          // Byte 4
+               << 0x00                          // Byte 5
+               << 0x00                          // Byte 6 - Reserved
+               << 0x00                          // Byte 7 - 5250 Image/Fax Support
+               << 0x00                          // Byte 8 - 5250 Image/Fax Support
+               << 0x00                          // Byte 9
+               << 0x00                          // Byte 10
+               << 0x00                          // Byte 11 - Reserved
+               << 0x00                          // Byte 12 - Number of Grid Line Buffers supported: None
+               << 0x00                          // Byte 13 - Type of Grid Line Support: No Support
+               << 0x00                          // Byte 14 - Reserved
+               << 0x00                          // Byte 15 - Number of Fax or Images: No Support
+               << 0x00                          // Byte 16 - Image/Fax Scaling Granularity: No Support
+               << 0x00                          // Byte 17 - Image/Fax Rotating Granularity: No Support
+               << 0x00                          // Byte 18 - 5250 Image/Fax Support: No Support
+               << 0x00 << 0x00 << 0x00;         // Bytes 19-21 - Reserved
 
         emit sendData(stream.toByteArray());
     }
