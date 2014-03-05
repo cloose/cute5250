@@ -157,3 +157,15 @@ TEST_F(ATelnetParser, removesEndOfRecordCommandFromRawData)
     ASSERT_THAT(spy.count(), Eq(1));
     ASSERT_THAT(spy[0][0].toByteArray(), Eq(ArbitraryRawData));
 }
+
+TEST_F(ATelnetParser, splitsMultipleRawDataRecords)
+{
+    QSignalSpy spy(&parser, SIGNAL(dataReceived(QByteArray)));
+    const QByteArray data = ArbitraryRawData + EndOfRecordCommand + ArbitraryRawData + EndOfRecordCommand;
+
+    parser.parse(data);
+
+    ASSERT_THAT(spy.count(), Eq(2));
+    ASSERT_THAT(spy[0][0].toByteArray(), Eq(ArbitraryRawData));
+    ASSERT_THAT(spy[1][0].toByteArray(), Eq(ArbitraryRawData));
+}

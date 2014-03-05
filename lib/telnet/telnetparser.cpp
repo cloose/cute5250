@@ -38,7 +38,7 @@ public:
 
     int parseCommand(const QByteArray &data);
     QByteArray replaceEscapedIACBytes(const QByteArray &data);
-    QByteArray removeEndOfRecordCommand(const QByteArray &data);
+    QList<QByteArray> splitAtEndOfRecordCommand(const QByteArray &data);
     QByteArray subnegotiationParameters(const QByteArray &data);
     bool isCommand(const QByteArray &data);
     bool isOptionNegotiation(const QByteArray &data);
@@ -81,12 +81,26 @@ QByteArray TelnetParser::Private::replaceEscapedIACBytes(const QByteArray &data)
     return result;
 }
 
-QByteArray TelnetParser::Private::removeEndOfRecordCommand(const QByteArray &data)
+QList<QByteArray> TelnetParser::Private::splitAtEndOfRecordCommand(const QByteArray &data)
 {
-    QByteArray result(data);
-    if (result.endsWith(EndOfRecord)) {
-        result.chop(EndOfRecord.length());
+    QList<QByteArray> result;
+
+    int from = 0;
+    int to   = data.indexOf(EndOfRecord, from);
+
+    // no end of record at all?
+    if (to < 0) {
+        result.append(data);
     }
+
+    while (to >= 0) {
+        int length = to - from;
+        result.append(data.mid(from, length));
+
+        from = to + EndOfRecord.length();
+        to   = data.indexOf(EndOfRecord, from);
+    }
+
     return result;
 }
 
@@ -176,7 +190,10 @@ void TelnetParser::parse(const QByteArray &data)
         int commandLength = d->parseCommand(data);
         parse(data.mid(commandLength));
     } else {
-        emit dataReceived(d->removeEndOfRecordCommand(d->replaceEscapedIACBytes(data)));
+        QList<QByteArray> dataRecords = d->splitAtEndOfRecordCommand(d->replaceEscapedIACBytes(data));
+        foreach(const QByteArray data, dataRecords) {
+            emit dataReceived(data);
+        }
     }
 }
 
