@@ -28,8 +28,13 @@
 namespace q5250 {
 
 Cursor::Cursor() :
-    cursorColumn(1),
-    cursorRow(1)
+    Cursor(1, 1)
+{
+}
+
+Cursor::Cursor(unsigned char column, unsigned char row)  :
+    cursorColumn(column),
+    cursorRow(row)
 {
     setDisplaySize(80, 25);
 }

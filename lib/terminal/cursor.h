@@ -36,6 +36,7 @@ class Q5250SHARED_EXPORT Cursor
 {
 public:
     Cursor();
+    Cursor(unsigned char column, unsigned char row);
 
     unsigned char column() const { return cursorColumn; }
     unsigned char row() const { return cursorRow; }
