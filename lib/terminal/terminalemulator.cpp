@@ -202,10 +202,14 @@ void TerminalEmulator::handleWriteToDisplayCommand(GeneralDataStream &stream)
     unsigned char cc1 = stream.readByte();
     unsigned char cc2 = stream.readByte();
 
-    qDebug() << bin << showbase << cc1 << cc2;
+    qDebug() << "[WTD] cc1 =" << bin << showbase << cc1
+             << "cc2 =" << bin << showbase << cc2;
 
     while (!stream.atEnd()) {
         unsigned char byte = stream.readByte();
+
+        char ch = (char)byte;
+        qDebug() << "[WTD] order/data =" << codec->toUnicode(&ch, 1) << hex << showbase << byte;
 
         switch (byte) {
         case 0x01 /*START OF HEADER*/:
@@ -230,6 +234,7 @@ void TerminalEmulator::handleWriteToDisplayCommand(GeneralDataStream &stream)
                 unsigned char row = stream.readByte();
                 unsigned char column = stream.readByte();
                 displayBuffer->setBufferAddress(column, row);
+                qDebug() << "[WTD:SBA] row =" << row << "column =" << column;
             }
             break;
         case 0x1d /*START OF FIELD*/:
@@ -252,6 +257,9 @@ void TerminalEmulator::handleWriteToDisplayCommand(GeneralDataStream &stream)
                 if (field->isInputField()) {
                     formatTable->append(field);
                 }
+                qDebug() << "[WTD:SF ] format =" << hex << showbase << field->format
+                         << "attribute =" << hex << showbase << field->attribute
+                         << "length =" << dec << field->length;
             }
             break;
         default:
