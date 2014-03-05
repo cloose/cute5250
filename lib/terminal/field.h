@@ -32,6 +32,8 @@
 
 namespace q5250 {
 
+class Cursor;
+
 struct Q5250SHARED_EXPORT Field
 {
     unsigned short format;
@@ -49,7 +51,7 @@ struct Q5250SHARED_EXPORT Field
     void markAsModified();
 
     void setLength(unsigned short length);
-    void setContent(unsigned char column, unsigned char row, const QByteArray &input);
+    void setContent(const Cursor &cursor, int displayWidth, const QByteArray &input);
 };
 
 } // namespace q5250

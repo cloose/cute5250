@@ -26,6 +26,7 @@
 #include <gmock/gmock.h>
 using namespace testing;
 
+#include <terminal/cursor.h>
 #include <terminal/field.h>
 
 TEST(AField, reportsIsInputFieldIfMostSignificantBitsEqual01)
@@ -97,46 +98,68 @@ TEST(AField, fillsContentWithBlanksWhenSettingTheLength)
 
 TEST(AField, setsContentAtStartOfField)
 {
+    const int DisplayWidth = 80;
     const char EbcdicBlank = 0x40;
     const QByteArray input{"A"};
+    q5250::Cursor cursor; cursor.setPosition(1, 1);
     q5250::Field field; field.startColumn = 1; field.startRow = 1;
     field.setLength(5);
 
-    field.setContent(1, 1, input);
+    field.setContent(cursor, DisplayWidth, input);
 
     ASSERT_THAT(field.content, Eq(input + QByteArray(4, EbcdicBlank)));
 }
 
 TEST(AField, setsContentAtMiddleOfField)
 {
+    const int DisplayWidth = 80;
     const char EbcdicBlank = 0x40;
     const QByteArray input{"A"};
+    q5250::Cursor cursor; cursor.setPosition(3, 1);
     q5250::Field field; field.startColumn = 1; field.startRow = 1;
     field.setLength(5);
 
-    field.setContent(3, 1, input);
+    field.setContent(cursor, DisplayWidth, input);
 
     ASSERT_THAT(field.content, Eq(QByteArray(2, EbcdicBlank) + input + QByteArray(2, EbcdicBlank)));
 }
 
 TEST(AField, setsContentAtEndOfField)
 {
+    const int DisplayWidth = 80;
     const char EbcdicBlank = 0x40;
     const QByteArray input{"A"};
+    q5250::Cursor cursor; cursor.setPosition(5, 1);
     q5250::Field field; field.startColumn = 1; field.startRow = 1;
     field.setLength(5);
 
-    field.setContent(5, 1, input);
+    field.setContent(cursor, DisplayWidth, input);
 
     ASSERT_THAT(field.content, Eq(QByteArray(4, EbcdicBlank) + input));
 }
 
+TEST(AField, setsContentOfFieldSpanningMultipleRows)
+{
+    const int DisplayWidth = 80;
+    const char EbcdicBlank = 0x40;
+    const QByteArray input{"A"};
+    q5250::Cursor cursor; cursor.setPosition(2, 2);
+    q5250::Field field; field.startColumn = 1; field.startRow = 1;
+    field.setLength(100);
+
+    field.setContent(cursor, DisplayWidth, input);
+
+    ASSERT_THAT(field.content, Eq(QByteArray(81, EbcdicBlank) + input + QByteArray(18, EbcdicBlank)));
+}
+
 TEST(AField, reportsAsModifiedIfContentIsSet)
 {
+    const int DisplayWidth = 80;
+    q5250::Cursor cursor; cursor.setPosition(1, 1);
     q5250::Field field; field.format = 0x0000; field.startColumn = 1; field.startRow = 1;
     field.setLength(5);
 
-    field.setContent(1, 1, QByteArray{"A"});
+    field.setContent(cursor, DisplayWidth, QByteArray{"A"});
 
     ASSERT_TRUE(field.isModified());
 }

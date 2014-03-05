@@ -25,6 +25,8 @@
  */
 #include "field.h"
 
+#include "cursor.h"
+
 namespace q5250 {
 
 static const char EBCDIC_BLANK = '\x40';
@@ -59,9 +61,9 @@ void Field::setLength(unsigned short length)
     content.fill(EBCDIC_BLANK, length);
 }
 
-void Field::setContent(unsigned char column, unsigned char row, const QByteArray &input)
+void Field::setContent(const Cursor &cursor, int displayWidth, const QByteArray &input)
 {
-    unsigned char pos = column - startColumn;
+    unsigned short pos = (cursor.row()-startRow) * displayWidth + (cursor.column() - startColumn);
     content[pos] = input.at(0);
 
     markAsModified();
