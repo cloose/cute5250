@@ -413,7 +413,7 @@ TEST_F(ATerminalEmulator, addsPressedTextKeyToDisplayBufferIfCursorInsideField)
     const unsigned char column = 5;
     const unsigned char row = 5;
     moveCursorTo(column, row);
-    Cursor cursor; cursor.setPosition(column, row);
+    Cursor cursor(column, row);
     q5250::Field inputField = { .format = 0x4000, .attribute = GreenUnderlineAttribute, .length = 10, .startColumn = column, .startRow = row };
     const QString arbitraryTextKey("A");
     const QByteArray ebcdicText = textAsEbcdic(arbitraryTextKey);
@@ -430,7 +430,7 @@ TEST_F(ATerminalEmulator, addsTextKeyToFieldContent)
     const unsigned char column = 5;
     const unsigned char row = 5;
     moveCursorTo(column, row);
-    Cursor cursor; cursor.setPosition(column, row);
+    Cursor cursor(column, row);
     q5250::Field inputField = { .format = 0x4000, .attribute = GreenUnderlineAttribute, .length = 5,
                                 .startColumn = column, .startRow = row, .content = QByteArray(5, EbcdicBlank) };
     const QString arbitraryTextKey("A");
@@ -450,7 +450,7 @@ TEST_F(ATerminalEmulator, doesNotAddTextKeyToDisplayBufferIfCursorOutsideField)
     const unsigned char column = 5;
     const unsigned char row = 5;
     moveCursorTo(column, row);
-    Cursor cursor; cursor.setPosition(column, row);
+    Cursor cursor(column, row);
     const QString arbitraryTextKey("A");
 
     EXPECT_CALL(displayBuffer, size()).WillRepeatedly(Return(QSize(20, 20)));
@@ -465,7 +465,7 @@ TEST_F(ATerminalEmulator, doesNotAddTextKeyToDisplayBufferIfFieldIsBypass)
     const unsigned char column = 5;
     const unsigned char row = 5;
     moveCursorTo(column, row);
-    Cursor cursor; cursor.setPosition(column, row);
+    Cursor cursor(column, row);
     q5250::Field inputField = { .format = 0x6000, .attribute = GreenUnderlineAttribute, .length = 10, .startColumn = column, .startRow = row };
     const QString arbitraryTextKey("A");
 
@@ -561,7 +561,6 @@ TEST_F(ATerminalEmulator, sendsFieldPositionAndContentOnKeyReturn)
     ASSERT_THAT(spy[0][0].toByteArray(), Eq(generalDataStream));
 }
 
-#include <QDebug>
 TEST_F(ATerminalEmulator, repliesTo5250QueryCommand)
 {
     QSignalSpy spy(&terminal, SIGNAL(sendData(QByteArray)));
