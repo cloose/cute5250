@@ -114,8 +114,9 @@ void TerminalEmulator::handleKeypress(int key, const QString &text)
                        << field->startRow
                        << field->startColumn;
 
-                for (int i = 0; i < field->content.size(); ++i) {
-                    stream << field->content.at(i);
+                QByteArray content = displayBuffer->fieldContent(field);
+                for (int i = 0; i < content.size(); ++i) {
+                    stream << content.at(i);
                 }
             });
 
@@ -129,7 +130,7 @@ void TerminalEmulator::handleKeypress(int key, const QString &text)
             if (currentField && !currentField->isBypassField()) {
                 QByteArray ebcdic = codec->fromUnicode(text);
                 displayBuffer->setCharacterAt(cursor.column(), cursor.row(), ebcdic.at(0));
-                currentField->setContent(cursor, displayBuffer->size().width(), ebcdic);
+                currentField->markAsModified();
                 cursor.moveRight();
             }
         }
@@ -250,7 +251,7 @@ void TerminalEmulator::handleWriteToDisplayCommand(GeneralDataStream &stream)
                     field->attribute = byte;
                 }
 
-                field->setLength(stream.readWord());
+                field->length = stream.readWord();
 
                 displayBuffer->addField(field);
 

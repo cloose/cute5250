@@ -47,6 +47,7 @@ public:
     virtual void repeatCharacterToAddress(unsigned char column, unsigned char row, unsigned char character) = 0;
 
     virtual void addField(Field *field) = 0;
+    virtual QByteArray fieldContent(const Field *field) const = 0;
 };
 
 } // namespace q5250

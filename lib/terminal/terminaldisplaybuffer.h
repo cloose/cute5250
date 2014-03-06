@@ -52,6 +52,7 @@ public:
     void repeatCharacterToAddress(unsigned char column, unsigned char row, unsigned char character);
 
     void addField(Field *field);
+    QByteArray fieldContent(const Field *field) const;
 
 private:
     unsigned int convertToAddress(unsigned char column, unsigned char row) const;

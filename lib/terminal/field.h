@@ -43,15 +43,10 @@ struct Q5250SHARED_EXPORT Field
     unsigned char startColumn;
     unsigned char startRow;
 
-    QByteArray content;
-
     bool isInputField() const;
     bool isBypassField() const;
     bool isModified() const;
     void markAsModified();
-
-    void setLength(unsigned short length);
-    void setContent(const Cursor &cursor, int displayWidth, const QByteArray &input);
 };
 
 } // namespace q5250

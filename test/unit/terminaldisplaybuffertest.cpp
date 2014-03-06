@@ -119,3 +119,41 @@ TEST_F(ATerminalDisplayBuffer, setsStartPositionOfFieldOnAddField)
     ASSERT_THAT(outputField.startColumn, Eq(startColumn+1));
     ASSERT_THAT(outputField.startRow, Eq(startRow));
 }
+
+TEST_F(ATerminalDisplayBuffer, returnsContentForPassedField)
+{
+    const unsigned char startColumn = 10;
+    const unsigned char startRow = 5;
+    q5250::Field inputField = { .format = 0x4000, .attribute = UnderlineAttribute, .length = 3,
+                                .startColumn = startColumn, .startRow = startRow };
+    displayBuffer->setBufferAddress(startColumn-1, startRow);
+    displayBuffer->setCharacter(UnderlineAttribute);
+    displayBuffer->setCharacter('A');
+    displayBuffer->setCharacter('B');
+    displayBuffer->setCharacter('C');
+    displayBuffer->setCharacter(NormalAttribute);
+
+    QByteArray content = displayBuffer->fieldContent(&inputField);
+
+    ASSERT_THAT(content, Eq(QByteArray{"ABC"}));
+}
+
+
+TEST_F(ATerminalDisplayBuffer, returnsFieldContentWithoutNulls)
+{
+    const char expectedResult[] { '\x40', 'A' };
+    const unsigned char startColumn = 10;
+    const unsigned char startRow = 5;
+    q5250::Field inputField = { .format = 0x4000, .attribute = UnderlineAttribute, .length = 3,
+                                .startColumn = startColumn, .startRow = startRow };
+    displayBuffer->setBufferAddress(startColumn-1, startRow);
+    displayBuffer->setCharacter(UnderlineAttribute);
+    displayBuffer->setCharacter('\0');
+    displayBuffer->setCharacter('A');
+    displayBuffer->setCharacter('\0');
+    displayBuffer->setCharacter(NormalAttribute);
+
+    QByteArray content = displayBuffer->fieldContent(&inputField);
+
+    ASSERT_THAT(content, Eq(QByteArray::fromRawData(expectedResult, 2)));
+}

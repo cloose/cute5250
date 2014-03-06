@@ -107,6 +107,26 @@ void TerminalDisplayBuffer::addField(Field *field)
     setCharacter(0x20);
 }
 
+QByteArray TerminalDisplayBuffer::fieldContent(const Field *field) const
+{
+    int index = convertToAddress(field->startColumn, field->startRow);
+    QByteArray content = buffer->mid(index, field->length);
+
+    // FIXME: Should be moved into separate method
+    // find last non-NULL character
+    int length = content.size();
+    while (length > 0 && content.at(length-1) == '\0') {
+        --length;
+    }
+
+    // strip trailing NULL characters
+    content = content.mid(0, length);
+
+    // FIXME: only for READ MDT FIELDS command!
+    // replace leading and embedded NULL characters with blanks
+    return content.replace('\0', '\x40');
+}
+
 unsigned int TerminalDisplayBuffer::convertToAddress(unsigned char column, unsigned char row) const
 {
     return (row-1) * bufferSize.width() + (column-1);
@@ -114,10 +134,11 @@ unsigned int TerminalDisplayBuffer::convertToAddress(unsigned char column, unsig
 
 void TerminalDisplayBuffer::increaseBufferAddress(unsigned char increment)
 {
+    // FIXME: Needs unit test!
     addressColumn += increment;
 
-    if (addressColumn > bufferSize.width()) {
-        addressColumn = 1;
+    while (addressColumn > bufferSize.width()) {
+        addressColumn -= bufferSize.width();
         addressRow += 1;
     }
 

@@ -48,6 +48,7 @@ public:
     MOCK_METHOD3(setCharacterAt, void(unsigned char, unsigned char, unsigned char));
     MOCK_METHOD3(repeatCharacterToAddress, void(unsigned char, unsigned char, unsigned char));
     MOCK_METHOD1(addField, void(q5250::Field*));
+    MOCK_CONST_METHOD1(fieldContent, QByteArray(const q5250::Field *));
 };
 
 class FormatTableMock : public FormatTable
@@ -156,8 +157,7 @@ inline bool operator==(const Field &lhs, const Field &rhs)
            lhs.attribute == rhs.attribute &&
            lhs.length == rhs.length &&
            lhs.startColumn == rhs.startColumn &&
-           lhs.startRow == rhs.startRow &&
-           lhs.content == rhs.content;
+           lhs.startRow == rhs.startRow;
 }
 
 inline bool operator==(const Cursor &lhs, const Cursor &rhs)
@@ -326,7 +326,7 @@ TEST_F(ATerminalEmulator, addsOutputFieldToDisplayBuffer)
     const char streamData[]{StartOfFieldOrder, GreenUnderlineAttribute, 0x00, fieldLength};
     const QByteArray data = createWriteToDisplayCommandWithOrderLength(4) + QByteArray::fromRawData(streamData, 4);
     q5250::Field outputField = { .format = 0, .attribute = GreenUnderlineAttribute, .length = fieldLength,
-                                 .startColumn = 0, .startRow = 0, .content = QByteArray(fieldLength, EbcdicBlank) };
+                                 .startColumn = 0, .startRow = 0 };
 
     EXPECT_CALL(displayBuffer, addField(Pointee(outputField)));
 
@@ -350,7 +350,7 @@ TEST_F(ATerminalEmulator, addsInputFieldWithoutControlWordsToDisplayBuffer)
     const char streamData[]{StartOfFieldOrder, 0x40, 0x00, GreenUnderlineAttribute, 0x00, fieldLength};
     const QByteArray data = createWriteToDisplayCommandWithOrderLength(6) + QByteArray::fromRawData(streamData, 6);
     q5250::Field inputField = { .format = 0x4000, .attribute = GreenUnderlineAttribute, .length = fieldLength,
-                                .startColumn = 0, .startRow = 0, .content = QByteArray(fieldLength, EbcdicBlank) };
+                                .startColumn = 0, .startRow = 0 };
 
     EXPECT_CALL(displayBuffer, addField(Pointee(inputField)));
 
@@ -363,7 +363,7 @@ TEST_F(ATerminalEmulator, addsInputFieldWithoutControlWordsToFormatTable)
     const char streamData[]{StartOfFieldOrder, 0x40, 0x00, GreenUnderlineAttribute, 0x00, fieldLength};
     const QByteArray data = createWriteToDisplayCommandWithOrderLength(6) + QByteArray::fromRawData(streamData, 6);
     q5250::Field inputField = { .format = 0x4000, .attribute = GreenUnderlineAttribute, .length = fieldLength,
-                                .startColumn = 0, .startRow = 0, .content = QByteArray(fieldLength, EbcdicBlank) };
+                                .startColumn = 0, .startRow = 0 };
 
     EXPECT_CALL(formatTable, append(Pointee(inputField)));
 
@@ -423,26 +423,6 @@ TEST_F(ATerminalEmulator, addsPressedTextKeyToDisplayBufferIfCursorInsideField)
     EXPECT_CALL(displayBuffer, setCharacterAt(cursor.column(), cursor.row(), ebcdicText.at(0)));
 
     terminal.handleKeypress(Qt::Key_A, arbitraryTextKey);
-}
-
-TEST_F(ATerminalEmulator, addsTextKeyToFieldContent)
-{
-    const unsigned char column = 5;
-    const unsigned char row = 5;
-    moveCursorTo(column, row);
-    Cursor cursor(column, row);
-    q5250::Field inputField = { .format = 0x4000, .attribute = GreenUnderlineAttribute, .length = 5,
-                                .startColumn = column, .startRow = row, .content = QByteArray(5, EbcdicBlank) };
-    const QString arbitraryTextKey("A");
-    const QByteArray ebcdicText = textAsEbcdic(arbitraryTextKey);
-
-    EXPECT_CALL(displayBuffer, size()).WillRepeatedly(Return(QSize(20, 20)));
-    EXPECT_CALL(formatTable, fieldAt(cursor, 20)).WillOnce(Return(&inputField));
-    EXPECT_CALL(displayBuffer, setCharacterAt(cursor.column(), cursor.row(), ebcdicText.at(0)));
-
-    terminal.handleKeypress(Qt::Key_A, arbitraryTextKey);
-
-    ASSERT_THAT(inputField.content, Eq(ebcdicText + QByteArray{"\x40\x40\x40\x40"}));
 }
 
 TEST_F(ATerminalEmulator, doesNotAddTextKeyToDisplayBufferIfCursorOutsideField)
@@ -552,8 +532,9 @@ TEST_F(ATerminalEmulator, sendsFieldPositionAndContentOnKeyReturn)
     const unsigned streamLength = cursorAndAidBytes.size() + fieldPosition.size() + fieldContent.size();
     const QByteArray generalDataStream = createGdsHeaderWithLength(streamLength, 0x00) + cursorAndAidBytes + fieldPosition + fieldContent;
     q5250::Field inputField = { .format = 0x4000, .attribute = GreenUnderlineAttribute, .length = 5,
-                                .startColumn = 10, .startRow = 5, .content = fieldContent };
+                                .startColumn = 10, .startRow = 5 };
     EXPECT_CALL(formatTable, map(_)).WillOnce(InvokeArgument<0>(&inputField));
+    EXPECT_CALL(displayBuffer, fieldContent(Pointee(inputField))).WillOnce(Return(fieldContent));
 
     terminal.handleKeypress(Qt::Key_Return, QString());
 
