@@ -42,9 +42,12 @@ class DisplayBufferMock : public DisplayBuffer
 public:
     MOCK_CONST_METHOD0(size, QSize());
     MOCK_METHOD2(setSize, void(unsigned char, unsigned char));
+    MOCK_CONST_METHOD0(bufferColumn, unsigned char());
+    MOCK_CONST_METHOD0(bufferRow, unsigned char());;
     MOCK_METHOD2(setBufferAddress, void(unsigned char, unsigned char));
     MOCK_CONST_METHOD2(characterAt, unsigned char(unsigned char, unsigned char));
     MOCK_METHOD1(setCharacter, void(unsigned char));
+    MOCK_METHOD2(setCharacterAt, void(unsigned char, unsigned char));
     MOCK_METHOD3(setCharacterAt, void(unsigned char, unsigned char, unsigned char));
     MOCK_METHOD3(repeatCharacterToAddress, void(unsigned char, unsigned char, unsigned char));
     MOCK_METHOD1(addField, void(q5250::Field*));
@@ -90,6 +93,7 @@ public:
 
     static const char GreenAttribute = 0x20;
     static const char GreenUnderlineAttribute = 0x24;
+    static const char RedUnderlineAttribute = 0x2c;
     static const char NonDisplay4Attribute = 0x3f;
 
     static const char EbcdicBlank = '\x40';
@@ -325,10 +329,10 @@ TEST_F(ATerminalEmulator, addsOutputFieldToDisplayBuffer)
     const char fieldLength = 5;
     const char streamData[]{StartOfFieldOrder, GreenUnderlineAttribute, 0x00, fieldLength};
     const QByteArray data = createWriteToDisplayCommandWithOrderLength(4) + QByteArray::fromRawData(streamData, 4);
-    q5250::Field outputField = { .format = 0, .attribute = GreenUnderlineAttribute, .length = fieldLength,
-                                 .startColumn = 0, .startRow = 0 };
 
-    EXPECT_CALL(displayBuffer, addField(Pointee(outputField)));
+    EXPECT_CALL(displayBuffer, setCharacter(GreenUnderlineAttribute));
+    EXPECT_CALL(displayBuffer, bufferColumn());
+    EXPECT_CALL(displayBuffer, bufferRow());
 
     terminal.parseStreamData(data);
 }
@@ -349,10 +353,11 @@ TEST_F(ATerminalEmulator, addsInputFieldWithoutControlWordsToDisplayBuffer)
     const char fieldLength = 5;
     const char streamData[]{StartOfFieldOrder, 0x40, 0x00, GreenUnderlineAttribute, 0x00, fieldLength};
     const QByteArray data = createWriteToDisplayCommandWithOrderLength(6) + QByteArray::fromRawData(streamData, 6);
-    q5250::Field inputField = { .format = 0x4000, .attribute = GreenUnderlineAttribute, .length = fieldLength,
-                                .startColumn = 0, .startRow = 0 };
 
-    EXPECT_CALL(displayBuffer, addField(Pointee(inputField)));
+    EXPECT_CALL(displayBuffer, setCharacter(GreenUnderlineAttribute));
+    EXPECT_CALL(displayBuffer, bufferColumn());
+    EXPECT_CALL(displayBuffer, bufferRow());
+    EXPECT_CALL(displayBuffer, setCharacterAt(fieldLength, GreenAttribute));
 
     terminal.parseStreamData(data);
 }
@@ -366,6 +371,34 @@ TEST_F(ATerminalEmulator, addsInputFieldWithoutControlWordsToFormatTable)
                                 .startColumn = 0, .startRow = 0 };
 
     EXPECT_CALL(formatTable, append(Pointee(inputField)));
+
+    terminal.parseStreamData(data);
+}
+
+TEST_F(ATerminalEmulator, modifiesExistingInputField)
+{
+    const char fieldLength = 5;
+    const char streamData[]{StartOfFieldOrder, 0x40, 0x00, GreenUnderlineAttribute, 0x00, fieldLength,
+                            StartOfFieldOrder, 0x40, 0x20, RedUnderlineAttribute, 0x00, fieldLength};
+    const QByteArray data = createWriteToDisplayCommandWithOrderLength(6) + QByteArray::fromRawData(streamData, 12);
+    q5250::Field inputField = { .format = 0x4000, .attribute = GreenUnderlineAttribute, .length = fieldLength,
+                                .startColumn = 0, .startRow = 0 };
+
+    {
+        InSequence seq;
+
+        EXPECT_CALL(displayBuffer, setCharacter(GreenUnderlineAttribute));
+        EXPECT_CALL(displayBuffer, bufferColumn());
+        EXPECT_CALL(displayBuffer, bufferRow());
+        EXPECT_CALL(formatTable, fieldAt(_, _)).WillOnce(ReturnNull());
+        EXPECT_CALL(displayBuffer, setCharacterAt(fieldLength, GreenAttribute));
+        EXPECT_CALL(formatTable, append(Pointee(inputField))).Times(1);
+
+        EXPECT_CALL(displayBuffer, setCharacter(RedUnderlineAttribute));
+        EXPECT_CALL(displayBuffer, bufferColumn());
+        EXPECT_CALL(displayBuffer, bufferRow());
+        EXPECT_CALL(formatTable, fieldAt(_, _)).WillOnce(Return(&inputField));
+    }
 
     terminal.parseStreamData(data);
 }

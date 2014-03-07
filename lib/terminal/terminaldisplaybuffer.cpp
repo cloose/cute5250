@@ -59,6 +59,16 @@ void TerminalDisplayBuffer::setSize(unsigned char columns, unsigned char rows)
     buffer = new QByteArray(columns*rows, '\0');
 }
 
+unsigned char TerminalDisplayBuffer::bufferColumn() const
+{
+    return addressColumn;
+}
+
+unsigned char TerminalDisplayBuffer::bufferRow() const
+{
+    return addressRow;
+}
+
 void TerminalDisplayBuffer::setBufferAddress(unsigned char column, unsigned char row)
 {
     addressColumn = column;
@@ -74,13 +84,19 @@ unsigned char TerminalDisplayBuffer::characterAt(unsigned char column, unsigned 
 void TerminalDisplayBuffer::setCharacter(unsigned char character)
 {
     setCharacterAt(addressColumn, addressRow, character);
+    increaseBufferAddress();
+}
+
+void TerminalDisplayBuffer::setCharacterAt(unsigned char increment, unsigned char character)
+{
+    unsigned int address = convertToAddress(addressColumn, addressRow);
+    (*buffer)[address+increment] = character;
 }
 
 void TerminalDisplayBuffer::setCharacterAt(unsigned char column, unsigned char row, unsigned char character)
 {
     unsigned int address = convertToAddress(column, row);
     (*buffer)[address] = character;
-    increaseBufferAddress();
 }
 
 void TerminalDisplayBuffer::repeatCharacterToAddress(unsigned char column, unsigned char row, unsigned char character)

@@ -44,10 +44,13 @@ public:
     QSize size() const;
     void setSize(unsigned char columns, unsigned char rows);
 
+    unsigned char bufferColumn() const;
+    unsigned char bufferRow() const;
     void setBufferAddress(unsigned char column, unsigned char row);
 
     unsigned char characterAt(unsigned char column, unsigned char row) const;
     void setCharacter(unsigned char character);
+    void setCharacterAt(unsigned char increment, unsigned char character);
     void setCharacterAt(unsigned char column, unsigned char row, unsigned char character);
     void repeatCharacterToAddress(unsigned char column, unsigned char row, unsigned char character);
 

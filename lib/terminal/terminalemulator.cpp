@@ -217,6 +217,7 @@ void TerminalEmulator::handleWriteToDisplayCommand(GeneralDataStream &stream)
             {
                 unsigned dataLength = stream.readByte();
                 formatTable->clear();
+                qDebug() << "[WTD:SOH]";
             }
             break;
         case 0x02 /*REPEAT TO ADDRESS*/:
@@ -225,6 +226,7 @@ void TerminalEmulator::handleWriteToDisplayCommand(GeneralDataStream &stream)
                 unsigned char column = stream.readByte();
                 unsigned char character = stream.readByte();
                 displayBuffer->repeatCharacterToAddress(column, row, character);
+                qDebug() << "[WTD:RA ]";
             }
             break;
         case 0x04 /*ESC*/:
@@ -253,11 +255,28 @@ void TerminalEmulator::handleWriteToDisplayCommand(GeneralDataStream &stream)
 
                 field->length = stream.readWord();
 
-                displayBuffer->addField(field);
+                // leading field attribute
+                displayBuffer->setCharacter(field->attribute);
+
+                field->startColumn = displayBuffer->bufferColumn();
+                field->startRow    = displayBuffer->bufferRow();
 
                 if (field->isInputField()) {
-                    formatTable->append(field);
+                    Cursor cursor(field->startColumn, field->startRow);
+                    Field *existingField = formatTable->fieldAt(cursor, displayBuffer->size().width());
+                    if (existingField) {
+                        qDebug() << "[WTD:SF ] modify existing field";
+                        existingField->format = field->format;
+                        existingField->attribute = field->attribute;
+                        delete field;
+                    } else {
+                        qDebug() << "[WTD:SF ] add new field";
+                        // ending field attribute
+                        displayBuffer->setCharacterAt(field->length, 0x20);
+                        formatTable->append(field);
+                    }
                 }
+
                 qDebug() << "[WTD:SF ] format =" << hex << showbase << field->format
                          << "attribute =" << hex << showbase << field->attribute
                          << "length =" << dec << field->length;
